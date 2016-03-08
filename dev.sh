@@ -50,8 +50,9 @@ if [ "true" != "${running}" ]; then
 		--add-host ${project_name}:127.0.0.1 \
 		-e TERM=$TERM \
 		-v ${project_path}:/project:rw \
+		-v /var/run/docker.sock:/var/run/docker.sock \
 		--name ${container_name} \
 		mkenney/dev
 fi
 
-docker exec -ti ${container_name} script /dev/null -c 'sh /tmux.sh'
+docker exec -ti $container_name script /dev/null -c 'sh /tmux.sh'
