@@ -109,7 +109,7 @@ function start_container {
 			-v ${project_path}:/project:rw \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			--name ${container_name} \
-			mkenney/dev
+			mkenney/devenv
 	fi
 }
 
