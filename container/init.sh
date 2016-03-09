@@ -3,7 +3,15 @@
 ##############################################################################
 # System logger
 ##############################################################################
+
 sudo rsyslogd
+
+##############################################################################
+# Project setup
+##############################################################################
+
+cd /project && sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript -R
+echo ":set tags=~/web.tags" >> /home/developer/.vimrc
 
 ##############################################################################
 # Tmux setup
@@ -32,6 +40,6 @@ then
 	echo "Done."
 
 	tmux select-window      -t $TMUXSESSION:3 # so my window toggle order
-#	tmux select-window      -t $TMUXSESSION:2
+	tmux select-window      -t $TMUXSESSION:2
 	tmux attach-session     -t $TMUXSESSION
 fi

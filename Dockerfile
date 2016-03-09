@@ -89,11 +89,22 @@ RUN apt-get install -y \
 	wget
 
 ##############################################################################
+# Vim
+##############################################################################
+
+RUN apt-get install -y \
+	exuberant-ctags \
+	vim
+
+RUN pear install --alldeps php_codesniffer && \
+	composer global require phpmd/phpmd
+
+##############################################################################
 # Users
 ##############################################################################
 
 # Add a user
-COPY tmux.sh /
+COPY container/init.sh /
 RUN groupadd developer && \
 	useradd developer -s /bin/bash -m -g developer -G root && \
 	echo developer:password | chpasswd && \
@@ -103,22 +114,19 @@ RUN groupadd developer && \
 	mkdir -p /root/src && \
 	cd /root/src && \
 	git clone https://github.com/mkenney/terminal_config.git && \
+	cd terminal_config/ && \
+	git submodule update --init --recursive && \
+	cd ../ && \
 	rsync -av terminal_config/ ~/ && \
 	rsync -av terminal_config/ ~developer/ && \
 	chown -R developer:developer ~developer/ && \
-	rm -rf terminal_config/
+	rm -rf terminal_config/ && \
+	/usr/bin/vim +BundleInstall +qall > /dev/null
 
 USER developer
-RUN export TERM=xterm
+RUN export TERM=xterm && \
+	/usr/bin/vim +BundleInstall +qall > /dev/null
 USER root
-
-##############################################################################
-# Vim
-##############################################################################
-
-RUN apt-get install -y \
-	exuberant-ctags \
-	vim
 
 ##############################################################################
 # Init
@@ -128,6 +136,8 @@ RUN apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
 USER developer
+RUN export PATH=/root/.composer/vendor/bin:$PATH
+
 VOLUME ["/project"]
-WORKDIR  /project
+WORKDIR /project
 CMD ["/bin/bash"]
