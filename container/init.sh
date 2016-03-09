@@ -8,6 +8,19 @@ then
 	echo "Creating new dev session..."
 
 ##############################################################################
+# Dev env
+##############################################################################
+
+	git clone https://github.com/mkenney/terminal_config.git && \
+	cd terminal_config/ && \
+	git submodule update --init --recursive && \
+	cd ../ && \
+	rsync -av terminal_config/ ~/ && \
+	sudo rsync -av terminal_config/ ~root/ && \
+	rm -rf terminal_config/ && \
+	/usr/bin/vim +BundleInstall +qall > /dev/null && \
+
+##############################################################################
 # System logger
 ##############################################################################
 

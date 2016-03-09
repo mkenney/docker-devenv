@@ -99,7 +99,7 @@ function start_container {
 	if [ "true" == $running ]; then
 		echo "Container '${container_name}' is already running"
 	else
-		echo "Starting dev container '${container_name}'..."
+		echo "Starting dev container '${container_name}' at ${project_path}..."
 		docker run \
 			-itd \
 			-h ${project_name} \
