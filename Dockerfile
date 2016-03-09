@@ -2,27 +2,30 @@ FROM debian:latest
 
 MAINTAINER Michael Kenney <mkenney@webbedlam.com>
 
+ENV HOSTNAME 'devenv' # should get overridden
 ENV DEBIAN_FRONTEND noninteractive
-ENV HOSTNAME 'dev-env'
 USER root
-RUN apt-get update
+RUN apt-get update && \
+	apt-get install -y apt-utils
+
+##############################################################################
+# Configuration
+##############################################################################
+
+ENV PHP_TIMEZONE 'America/Denver'
 
 ##############################################################################
 # System logger
 ##############################################################################
 
 RUN apt-get install -y rsyslog && \
-	rm -rf /var/run/rsyslogd.pid && \
-	exec /usr/sbin/rsyslogd
+	rm -rf /var/run/rsyslogd.pid
 
 ##############################################################################
-# Locale
+# UTF-8 Locale
 ##############################################################################
 
-# UTF-8 locale
-RUN apt-get install -y \
-		apt-utils \
-		locales && \
+RUN apt-get install -y locales && \
 
 	locale-gen en_US.UTF-8 en_us && \
 	dpkg-reconfigure locales && \
@@ -49,10 +52,15 @@ RUN apt-get install -y \
 	php5-mcrypt \
 	php-pear
 
-# PHP configurations
-ENV PHP_INI_DIR '/etc/php5/cli'
-RUN echo "memory_limit=-1" > $PHP_INI_DIR/conf.d/memory-limit.ini && \
-	echo "date.timezone=${PHP_TIMEZONE:-UTC}" > $PHP_INI_DIR/conf.d/date_timezone.ini
+# PHP configuration
+ENV PHP_INI_DIR '/etc/php5/cli/conf.d'
+RUN echo "memory_limit = -1"               > $PHP_INI_DIR/memory_limit.ini && \
+	echo "date.timezone = ${PHP_TIMEZONE}" > $PHP_INI_DIR/date_timezone.ini && \
+	echo "error_reporting = E_ALL"         > $PHP_INI_DIR/error_reporting.ini && \
+	echo "display_errors = On"             > $PHP_INI_DIR/display_errors.ini && \
+	echo "log_errors = On"                 > $PHP_INI_DIR/log_errors.ini && \
+	echo "report_memleaks = On"            > $PHP_INI_DIR/report_memleaks.ini && \
+	echo "error_log = syslog"              > $PHP_INI_DIR/error_log.ini
 
 ##############################################################################
 # Composer
@@ -125,19 +133,18 @@ RUN groupadd developer && \
 
 USER developer
 RUN export TERM=xterm && \
+	export PATH=/root/.composer/vendor/bin:$PATH && \
 	/usr/bin/vim +BundleInstall +qall > /dev/null
 USER root
 
 ##############################################################################
-# Init
+# ~ fin ~
 ##############################################################################
 
 RUN apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
 USER developer
-RUN export PATH=/root/.composer/vendor/bin:$PATH
-
 VOLUME ["/project"]
 WORKDIR /project
 CMD ["/bin/bash"]
