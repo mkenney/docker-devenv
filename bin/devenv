@@ -7,18 +7,18 @@ restart=0
 stop=0
 
 while getopts "hrs" opt; do
-    case "$opt" in
-    h)
-        show_help=1
-        shift
-        ;;
-    r)  restart=1
-        shift
-        ;;
-    s)  stop=1
-        shift
-        ;;
-    esac
+	case "$opt" in
+	h)
+		show_help=1
+		shift
+		;;
+	r)  restart=1
+		shift
+		;;
+	s)  stop=1
+		shift
+		;;
+	esac
 done
 
 #
@@ -64,17 +64,17 @@ fi
 # Help screen
 #
 function show_help {
-    echo
-    echo "devenv [OPTIONS] [PATH]"
-    echo
-    echo "    If path is omitted, the current directory is assumed"
-    echo
-    echo "Options:"
-    echo
-    echo "    -h    Show help"
-    echo "    -s    Stop a running environment for '${project_name}'"
-    echo "    -r    Restart an environment for '${project_name}'"
-    echo
+	echo
+	echo "devenv [OPTIONS] [PATH]"
+	echo
+	echo "    If path is omitted, the current directory is assumed"
+	echo
+	echo "Options:"
+	echo
+	echo "    -h    Show help"
+	echo "    -s    Stop a running environment for '${project_name}'"
+	echo "    -r    Restart an environment for '${project_name}'"
+	echo
 }
 
 #
@@ -82,14 +82,14 @@ function show_help {
 #
 function stop_container {
 	if [ "true" == $running ]; then
-        echo "Stopping '${container_name}'..."
-        docker stop $container_name > /dev/null
-        echo "Removing '${container_name}'..."
-        docker rm $container_name > /dev/null
+		echo "Stopping '${container_name}'..."
+		docker stop $container_name > /dev/null
+		echo "Removing '${container_name}'..."
+		docker rm $container_name > /dev/null
 	else
 		echo "Container '${container_name}' is not running"
 	fi
-    running='false'
+	running='false'
 }
 
 #
@@ -108,27 +108,28 @@ function start_container {
 			-e TERM=$TERM \
 			-v ${project_path}:/project:rw \
 			-v /var/run/docker.sock:/var/run/docker.sock \
+			-v ~/:/home/developer:rw \
 			--name ${container_name} \
 			mkenney/devenv
 	fi
 }
 
 if [ 1 == $show_help ]; then
-    show_help
-    exit 0;
+	show_help
+	exit 0;
 fi
 
 if [ 1 == $stop ]; then
-    stop_container
-    exit 0
+	stop_container
+	exit 0
 fi
 
 if [ 1 == $restart ]; then
-    stop_container
+	stop_container
 fi
 
 if [ "true" != $running ]; then
-    start_container
+	start_container
 fi
 
 docker exec -ti $container_name script /dev/null -c 'sh /init-env.sh'
