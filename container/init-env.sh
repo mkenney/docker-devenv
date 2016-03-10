@@ -5,7 +5,7 @@ TMUXSESSION=tmuxdev
 tmux attach-session -t $TMUXSESSION
 if [ $? != 0 ]
 then
-	echo "Creating new dev session..."
+    echo "Creating new dev session..."
 
 ##############################################################################
 # Dev env
@@ -30,7 +30,6 @@ then
 	if [ ! -f "/web.tags" ]; then
 		sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript -R && chmod +r /web.tags
 	fi
-	echo ":set tags=~/web.tags" >> /home/developer/.vimrc
 
 ##############################################################################
 # Tmux setup
@@ -55,8 +54,8 @@ then
 
 	echo "Done."
 
-	sudo groupmod -g $(stat -c '%g' /project) developer && \
-	sudo usermod -u $(stat -c '%u' .) developer
+	sudo groupmod -g $(stat -c '%g' ~/.) dev
+	sudo usermod -u $(stat -c '%u' ~/.) dev
 
 	tmux attach-session    -t $TMUXSESSION
 fi

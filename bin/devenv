@@ -5,21 +5,46 @@ OPTIND=1
 show_help=0
 restart=0
 stop=0
+attach=0
+container_name=""
 
-while getopts "hrs" opt; do
+while getopts ":ha:n:r:s:" opt 2>/dev/null; do
 	case "$opt" in
+    \?)
+        echo "Invalid option '${OPTARG}'"
+        exit 1
+        ;;
+    :)
+        echo "Option '-${OPTARG}' requires an argument"
+        exit 1
+        ;;
 	h)
 		show_help=1
 		shift
 		;;
+	a)  attach=1
+		container_name=$OPTARG
+		shift
+		shift
+		;;
+	n)  container_name=$OPTARG
+		shift
+		shift
+		;;
 	r)  restart=1
+		container_name=$OPTARG
+		shift
 		shift
 		;;
 	s)  stop=1
+		container_name=$OPTARG
+		shift
 		shift
 		;;
 	esac
 done
+
+#echo "args: ${1}|${2}|${3}"
 
 #
 # Project path and container name
@@ -29,8 +54,10 @@ if [ "" == "${1}" ]; then
 else
 	project_path=$(realpath "${1}")
 fi
-project_name=$(basename $project_path)
-container_name=dev-${project_name}
+
+if [ "" == "${container_name}" ]; then
+	container_name=dev-$(basename $project_path)
+fi
 
 #
 # Container state
@@ -44,7 +71,7 @@ paused=$(docker inspect --format="{{ .State.Paused }}" ${container_name} 2> /dev
 exited=$(docker ps -a -f "status=exited" | grep "${container_name}")
 
 #
-# Make any necessary changes
+# Do anyany necessary cleanup
 #
 if [ "" != "${exited}" ]; then
 	docker rm $container_name
@@ -72,8 +99,18 @@ function show_help {
 	echo "Options:"
 	echo
 	echo "    -h    Show help"
-	echo "    -s    Stop a running environment for '${project_name}'"
-	echo "    -r    Restart an environment for '${project_name}'"
+	echo
+	echo "    -a CONTAINER_NAME"
+	echo "          Attach to the specified container"
+	echo
+	echo "    -n CONTAINER_NAME"
+	echo "          Name the dev container when creating a new instance"
+	echo
+	echo "    -s CONTAINER_NAME"
+	echo "          Stop the specified container'"
+	echo
+	echo "    -r CONTAINER_NAME"
+	echo "          Restart the specified container"
 	echo
 }
 
@@ -82,12 +119,12 @@ function show_help {
 #
 function stop_container {
 	if [ "true" == $running ]; then
-		echo "Stopping '${container_name}'..."
-		docker stop $container_name > /dev/null
-		echo "Removing '${container_name}'..."
-		docker rm $container_name > /dev/null
+		echo "Stopping '$1'..."
+		docker stop $1 > /dev/null
+		echo "Removing '$1'..."
+		docker rm $1 > /dev/null
 	else
-		echo "Container '${container_name}' is not running"
+		echo "Container '$1' is not running"
 	fi
 	running='false'
 }
@@ -97,19 +134,20 @@ function stop_container {
 #
 function start_container {
 	if [ "true" == $running ]; then
-		echo "Container '${container_name}' is already running"
+		echo "Container '${1}' is already running"
 	else
-		echo "Starting dev container '${container_name}' at ${project_path}..."
+		echo "Starting dev container '${1}' at ${2}..."
+		local host_name=$(basename $2)
 		docker run \
 			-itd \
-			-h ${project_name} \
-			-e HOSTNAME=${project_name} \
-			--add-host ${project_name}:127.0.0.1 \
+			-h ${host_name} \
+			-e HOSTNAME=${host_name} \
+			--add-host ${host_name}:127.0.0.1 \
 			-e TERM=$TERM \
-			-v ${project_path}:/project:rw \
+			-v ${2}:/project:rw \
 			-v /var/run/docker.sock:/var/run/docker.sock \
-			-v ~/:/home/developer:rw \
-			--name ${container_name} \
+			-v ~/:/home/dev:rw \
+			--name ${1} \
 			mkenney/devenv
 	fi
 }
@@ -120,16 +158,23 @@ if [ 1 == $show_help ]; then
 fi
 
 if [ 1 == $stop ]; then
-	stop_container
+	stop_container $container_name
 	exit 0
 fi
 
-if [ 1 == $restart ]; then
-	stop_container
+if [ 1 == $attach ]; then
+    if ["true" != "${running}" ]; then
+        echo "The container '${container_name}' is not running"
+        exit 1
+    fi
 fi
 
-if [ "true" != $running ]; then
-	start_container
+if [ 1 == $restart ]; then
+	stop_container $container_name
+fi
+
+if [ "true" != "${running}" ]; then
+	start_container $container_name $project_path
 fi
 
 docker exec -ti $container_name script /dev/null -c 'sh /init-env.sh'
