@@ -113,10 +113,9 @@ RUN pear install --alldeps php_codesniffer && \
 ##############################################################################
 
 # Add a user
-COPY container/init.sh /
 RUN groupadd developer && \
 	useradd developer -s /bin/bash -m -g developer -G root && \
-	echo developer:password | chpasswd && \
+	echo "developer:password" | chpasswd && \
 	echo "developer ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 ##############################################################################
@@ -126,9 +125,8 @@ RUN groupadd developer && \
 RUN apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
+COPY container/init-env.sh /
 USER developer
-RUN export TERM=xterm && \
-	export PATH=/root/.composer/vendor/bin:$PATH
 VOLUME ["/project"]
 WORKDIR /project
 CMD ["/bin/bash"]

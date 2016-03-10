@@ -131,4 +131,4 @@ if [ "true" != $running ]; then
     start_container
 fi
 
-docker exec -ti $container_name script /dev/null -c 'sh /init.sh'
+docker exec -ti $container_name script /dev/null -c 'sh /init-env.sh'

@@ -11,14 +11,19 @@ then
 # Dev env
 ##############################################################################
 
-	git clone https://github.com/mkenney/terminal_config.git && \
-	cd terminal_config/ && \
-	git submodule update --init --recursive && \
-	cd ../ && \
-	rsync -av terminal_config/ ~/ && \
-	sudo rsync -av terminal_config/ ~root/ && \
-	rm -rf terminal_config/ && \
-	/usr/bin/vim +BundleInstall +qall > /dev/null && \
+
+	export TERM=xterm
+	export PATH=/root/.composer/vendor/bin:$PATH
+
+	cd $HOME && \
+		git clone https://github.com/mkenney/terminal_config.git && \
+		cd terminal_config/ && \
+		git submodule update --init --recursive && \
+		rsync -av ./ ../ && \
+		sudo rsync -av ./ ~root/ && \
+		cd .. && \
+		rm -rf terminal_config/ && \
+		/usr/bin/vim +BundleInstall +qall > /dev/null
 
 ##############################################################################
 # System logger
@@ -32,7 +37,10 @@ then
 # Project setup
 ##############################################################################
 
-	cd /project && sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript -R
+	cd /project
+	if [ ! -f "/web.tags" ]; then
+		sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript -R && chmod +r /web.tags
+	fi
 	echo ":set tags=~/web.tags" >> /home/developer/.vimrc
 
 ##############################################################################
@@ -59,4 +67,7 @@ then
 	echo "Done."
 
 	tmux attach-session    -t $TMUXSESSION
+
+	sudo groupmod -g $(stat -c '%g' /project) developer && \
+	sudo usermod -u $(stat -c '%u' .) developer
 fi
