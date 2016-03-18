@@ -1,15 +1,275 @@
 #!/bin/bash
 
+##############################################################################
+# Define all functions
+##############################################################################
+
+# Show the help screen
+function _devenv_show_help {
+    echo "NAME"
+    echo "    devenv -- Manage mkenney/devenv docker work environment containers"
+    echo ""
+    echo "SYNOPSYS"
+    echo "    devenv [-h] [-t target] [-p path] [command]"
+    echo ""
+    echo "DESCRIPTION"
+    echo "    The devenv utility is used to manage mkenney/devenv docker containers"
+    echo "    to create a consistent bash-based shell environment."
+    echo ""
+    echo "OPTIONS"
+    echo "    Command modifiers. Options are parsed using the \`getops\` utility,"
+    echo "    so all options must come before any command arguments"
+    echo ""
+    echo "        -h"
+    echo "            Show this help screen"
+    echo ""
+    echo "        -p path"
+    echo "            Specify the project path, this directory is mounted"
+    echo "            into /project inside the environment. If omitted, the"
+    echo "            project path is set to the current directory."
+    echo ""
+    echo "        -t target"
+    echo "            Specify an environment name. If omitted, the environment"
+    echo "            name is set to the basename of the project path."
+    echo ""
+    echo "COMMANDS"
+    echo "    Available commands $(basename ${0}) can execute"
+    echo ""
+    echo "        attach"
+    echo "            Attach to a running environment specified by the -t option."
+    echo ""
+    echo "            \`devenv [-t env_name] attach\`"
+    echo ""
+    echo "        create"
+    echo "            Create and start a new environment at the path specified"
+    echo "            by the -p option."
+    echo ""
+    echo "            \`devenv [-t env_name] [-p project_path] create\`"
+    echo ""
+    echo "        help"
+    echo "            Show this help screen"
+    echo ""
+    echo "        kill"
+    echo "            Stop a running environment and clean up"
+    echo ""
+    echo "            \`devenv [-t env_name] kill\`"
+    echo ""
+    echo "        ls"
+    echo "            List currently running environments"
+    echo ""
+    #echo "    refresh"
+    #echo "        Stop, remove and re-create a running environment"
+    #echo ""
+    echo "        rename"
+    echo "            Rename an environment"
+    echo ""
+    echo "            \`devenv [-t env_name] rename new_name\`"
+    echo ""
+    echo "        self-update"
+    echo "            Update to the latest image"
+    echo ""
+    echo "        start"
+    echo "            Start a suspended environment"
+    echo ""
+    echo "            \`devenv [-t env_name] start\`"
+    echo ""
+    echo "        stop"
+    echo "            Suspend a running environment"
+    echo ""
+    echo "            \`devenv [-t env_name] stop\`"
+    echo ""
+    echo "AUTHORS"
+    echo "    Michael Kenney <mkenney@webbedlam.com>"
+    echo ""
+    exit 1
+}
+
+# Stop a dev container
+#
+# @param environment name returned by _devenv_list_environments
+function _devenv_stop_container {
+    if [ "true" == "$(_devenv_is_running ${1})" ]; then
+        echo "Stopping '$1'..."
+        docker stop ${1}-devenv- > /dev/null
+        echo "Removing '$1'..."
+        docker rm ${1}-devenv- > /dev/null
+    else
+        echo "Container '$1' is not running"
+    fi
+    running='false'
+}
+
+# Start a dev container
+#
+# @param environment name returned by _devenv_list_environments
+# @param path
+function _devenv_start_container {
+    if [ "true" == "$(_devenv_is_running ${1})" ]; then
+        echo "Container '${1}' is already running"
+    else
+
+        echo "Starting dev container '${1}' at ${2}..."
+        local host_name=$(basename $2)
+        docker run \
+            -itd \
+            -h ${host_name} \
+            -e HOSTNAME=${host_name} \
+            --add-host ${host_name}:127.0.0.1 \
+            -e TERM=$TERM \
+            -v ${2}:/project:rw \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v ~/:/home/dev:rw \
+            --name ${1}-devenv- \
+            mkenney/devenv
+    fi
+}
+
+# Attach to a dev environment
+#
+# @param environment name returned by _devenv_list_environments
+function _devenv_attach {
+    docker exec -ti ${1}-devenv- script /dev/null -c 'sh /init-env.sh'
+}
+
+# Rename a dev environment
+#
+# @param environment name returned by _devenv_list_environments
+function _devenv_rename_container {
+    docker rename ${1}-devenv- ${2}-devenv-
+}
+
+# Pull the latest image
+#
+# @todo This should update this script also
+function _devenv_self_update {
+    docker pull mkenney/devenv
+}
+
+# Check to see if a named environment is running
+#
+# @param environment name returned by _devenv_list_environments
+function _devenv_is_running {
+    running='true'
+    container_name="${1}-devenv-"
+    # Container state
+    running=$(docker inspect --format="{{ .State.Running }}" ${container_name} 2> /dev/null)
+    if [ $? -eq 1 ]; then
+        running='false'
+    fi
+    ghost=$(docker inspect --format="{{ .State.Ghost }}" ${container_name} 2> /dev/null)
+    paused=$(docker inspect --format="{{ .State.Paused }}" ${container_name} 2> /dev/null)
+    exited=$(docker ps -a -f "status=exited" | grep "${container_name}")
+
+    if [ "" != "${exited}" ]; then
+        running='false'
+    fi
+    if [ "true" == "${ghost}" ]; then
+        running='false'
+    fi
+    if [ "true" == "${paused}" ]; then
+        running='true'
+    fi
+
+    echo ${running}
+}
+
+# List current environments
+function _devenv_list_environments {
+
+    # Stopped environments
+    if [ "" != "$(docker ps -a -f "status=exited" | grep '\-devenv\-$')" ]; then
+        for a in $(docker inspect --format='{{.Name}}' $(docker ps -aq -f "status=exited" --no-trunc) | grep '\-devenv\-$'); do
+            name=${a:1:${#a}-1}
+            echo " stopped: ${name%-devenv-}"
+        done
+    fi
+
+    # Running environments
+    local name
+    if [ "" != "$(docker ps | grep '\-devenv\-$')" ]; then
+        for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep '\-devenv\-$'); do
+            name=${a:1:${#a}-1}
+            echo " running: ${name%-devenv-}"
+        done
+    fi
+
+    exit 0
+}
+
+# Display error message
+function _devenv_error_notarget {
+    echo ""
+    echo "The target enviroment must be specified with the -t flag. Available"
+    echo "envirnments can be listed with the 'ls' command: \`devenv ls\`"
+    echo ""
+    exit 1
+}
+
+# Display error message
+function _devenv_error_nopath {
+    echo ""
+    echo "The target enviroment must be specified with the -t flag. Available"
+    echo "envirnments can be listed with the 'ls' command: \`devenv ls\`"
+    echo ""
+    exit 1
+}
+
+# Display error message
+function _devenv_error_target_not_running {
+    echo ""
+    echo "The specified enviroment is not running, try starting it with"
+    echo "\`devenv start -t [environment_name]\`"
+    echo ""
+    exit 1
+}
+
+# Display error message
+function _devenv_error_target_exists_stopped {
+    echo ""
+    echo "The specified enviroment already exists, try starting it with"
+    echo "\`devenv start -t [environment_name]\`"
+    echo ""
+    exit 1
+}
+
+# Display error message
+function _devenv_error_target_exists_running {
+    echo ""
+    echo "The specified enviroment already exists, try attaching to it with"
+    echo "\`devenv attach -t [environment_name]\`"
+    echo ""
+    exit 1
+}
+
+# Display error message
+function _devenv_error_target_does_not_exist {
+    echo ""
+    echo "The specified enviroment does not exist, try creating it with"
+    echo "\`devenv create -t [environment_name] -p [environment_path]\`"
+    echo ""
+    exit 1
+}
+
+# Display error message
+function _devenv_error_new_name_not_specified {
+    echo ""
+    echo "You must specify a new name to rename an environment:"
+    echo "\`devenv rename -t oldname newname\`"
+    echo ""
+    exit 1
+}
+
+##############################################################################
+# Parse command options
+##############################################################################
+
+_devenv_help=0
+_devenv_path=""
+_devenv_target=""
+
 OPTIND=1
-
-show_help=0
-restart=0
-stop=0
-attach=0
-container_name=""
-
-while getopts ":ha:n:r:s:" opt 2>/dev/null; do
-	case "$opt" in
+while getopts ":ht:p:" opt 2>/dev/null; do
+    case "$opt" in
     \?)
         echo "Invalid option '${OPTARG}'"
         exit 1
@@ -18,163 +278,124 @@ while getopts ":ha:n:r:s:" opt 2>/dev/null; do
         echo "Option '-${OPTARG}' requires an argument"
         exit 1
         ;;
-	h)
-		show_help=1
-		shift
-		;;
-	a)  attach=1
-		container_name=$OPTARG
-		shift
-		shift
-		;;
-	n)  container_name=$OPTARG
-		shift
-		shift
-		;;
-	r)  restart=1
-		container_name=$OPTARG
-		shift
-		shift
-		;;
-	s)  stop=1
-		container_name=$OPTARG
-		shift
-		shift
-		;;
-	esac
+    h)
+        _devenv_help=1
+        shift
+        ;;
+    p)  _devenv_path=$OPTARG
+        shift
+        shift
+        ;;
+    t)  _devenv_target=$OPTARG
+        shift
+        shift
+        ;;
+    esac
 done
 
-#echo "args: ${1}|${2}|${3}"
+##############################################################################
+# Init script variables
+##############################################################################
 
-#
-# Project path and container name
-#
-if [ "" == "${1}" ]; then
-	project_path=$(realpath ".")
+# Setup the project path, default to the current directory
+if [ "" == "${_devenv_path}" ]; then
+    _devenv_path='.'
+fi
+_devenv_project_path=$(realpath "${_devenv_path}")
+
+# Setup the container name, defalut to the basename of the project path
+if [ "" == "${_devenv_target}" ]; then
+    _devenv_container_name=$(basename $_devenv_project_path)
 else
-	project_path=$(realpath "${1}")
+    _devenv_container_name=${_devenv_target}
 fi
 
-if [ "" == "${container_name}" ]; then
-	container_name=dev-$(basename $project_path)
+# Flag noting whether the environment specified by _devenv_container_name exists
+_devenv_target_exists='false'
+if [ "" != "$(_devenv_list_environments | grep '^${_devenv_target}')" ]; then
+    _devenv_target_exists='true'
 fi
 
-#
-# Container state
-#
-running=$(docker inspect --format="{{ .State.Running }}" ${container_name} 2> /dev/null)
-if [ $? -eq 1 ]; then
-	running='false'
-fi
-ghost=$(docker inspect --format="{{ .State.Ghost }}" ${container_name} 2> /dev/null)
-paused=$(docker inspect --format="{{ .State.Paused }}" ${container_name} 2> /dev/null)
-exited=$(docker ps -a -f "status=exited" | grep "${container_name}")
-
-#
-# Do anyany necessary cleanup
-#
-if [ "" != "${exited}" ]; then
-	docker rm $container_name
-	running='false'
-fi
-if [ "true" == "${ghost}" ]; then
-	docker kill $container_name
-	docker rm   $container_name
-	running='false'
-fi
-if [ "true" == "${paused}" ]; then
-	docker start $container_name
-	running='true'
+# Default command
+_devenv_command=$1
+if [ "" == "${_devenv_command}" ]; then
+    _devenv_command='attach'
 fi
 
-#
-# Help screen
-#
-function show_help {
-	echo
-	echo "devenv [OPTIONS] [PATH]"
-	echo
-	echo "    If path is omitted, the current directory is assumed"
-	echo
-	echo "Options:"
-	echo
-	echo "    -h    Show help"
-	echo
-	echo "    -a CONTAINER_NAME"
-	echo "          Attach to the specified container"
-	echo
-	echo "    -n CONTAINER_NAME"
-	echo "          Name the dev container when creating a new instance"
-	echo
-	echo "    -s CONTAINER_NAME"
-	echo "          Stop the specified container'"
-	echo
-	echo "    -r CONTAINER_NAME"
-	echo "          Restart the specified container"
-	echo
-}
+# Secondary command, I.E. `rename [secondary command]`
+_devenv_secondary_command=$2
 
-#
-# Stop a dev container
-#
-function stop_container {
-	if [ "true" == $running ]; then
-		echo "Stopping '$1'..."
-		docker stop $1 > /dev/null
-		echo "Removing '$1'..."
-		docker rm $1 > /dev/null
-	else
-		echo "Container '$1' is not running"
-	fi
-	running='false'
-}
+##############################################################################
+# Execute
+##############################################################################
 
-#
-# Start a dev container
-#
-function start_container {
-	if [ "true" == $running ]; then
-		echo "Container '${1}' is already running"
-	else
-		echo "Starting dev container '${1}' at ${2}..."
-		local host_name=$(basename $2)
-		docker run \
-			-itd \
-			-h ${host_name} \
-			-e HOSTNAME=${host_name} \
-			--add-host ${host_name}:127.0.0.1 \
-			-e TERM=$TERM \
-			-v ${2}:/project:rw \
-			-v /var/run/docker.sock:/var/run/docker.sock \
-			-v ~/:/home/dev:rw \
-			--name ${1} \
-			mkenney/devenv
-	fi
-}
+# Show the help screen
+if [ "help" == "${_devenv_command}" ] || [ 1 == ${_devenv_help} ]; then
+    _devenv_show_help
 
-if [ 1 == $show_help ]; then
-	show_help
-	exit 0;
-fi
-
-if [ 1 == $stop ]; then
-	stop_container $container_name
-	exit 0
-fi
-
-if [ 1 == $attach ]; then
-    if ["true" != "${running}" ]; then
-        echo "The container '${container_name}' is not running"
-        exit 1
+# Attach to a running container
+elif [ "attach" == "${_devenv_command}" ]; then
+    if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ] && [ "" != "${1}" ]; then
+        _devenv_error_target_not_running
+    elif [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+        _devenv_start_container ${_devenv_container_name} ${_devenv_project_path}
     fi
+    _devenv_attach $_devenv_container_name
+
+
+# Create and start a new container
+elif [ "create" == "${_devenv_command}" ]; then
+    if [ "true" == "${_devenv_target_exists}" ] && [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+        _devenv_error_target_exists_stopped
+
+    elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+        _devenv_error_target_exists_running
+    fi
+
+    _devenv_start_container ${_devenv_container_name} ${_devenv_project_path}
+
+# Kill a running container
+elif [ "kill" == "${_devenv_command}" ]; then
+    _devenv_stop_container ${_devenv_container_name}
+
+# List current containers
+elif [ "ls" == "${_devenv_command}" ]; then
+    _devenv_list_environments
+
+# Refresh the specified container
+elif [ "refresh" == "${_devenv_command}" ]; then
+    echo "not yet implemented, use container labels to store the project path"
+    exit 1
+
+# Rename a current container
+elif [ "rename" == "${_devenv_command}" ]; then
+    if [ "" == "${_devenv_secondary_command}" ]; then
+        _devenv_error_new_name_not_specified
+    fi
+
+    if [ "false" == "${_devenv_target_exists})" ]; then
+        _devenv_error_target_does_not_exist
+    fi
+
+    _devenv_rename_container ${_devenv_container_name} ${_devenv_secondary_command}
+
+# Update to the latest image
+elif [ "self-update" == "${_devenv_command}" ]; then
+    _devenv_self_update
+
+# Start a stopped container
+elif [ "start" == "${_devenv_command}" ]; then
+    _devenv_start_container ${_devenv_container_name} ${_devenv_project_path}
+
+# Stop a running container
+elif [ "stop" == "${_devenv_command}" ]; then
+    _devenv_stop_container ${_devenv_container_name}
+
+# Unknown command
+else
+    echo "Unknown command \`${_devenv_command}\`"
+    echo ""
+    _devenv_show_help
 fi
 
-if [ 1 == $restart ]; then
-	stop_container $container_name
-fi
-
-if [ "true" != "${running}" ]; then
-	start_container $container_name $project_path
-fi
-
-docker exec -ti $container_name script /dev/null -c 'sh /init-env.sh'
+exit 0
