@@ -1,14 +1,14 @@
-NAME
+# NAME
     devenv -- Manage mkenney/devenv docker work environment containers
 
-SYNOPSYS
-    devenv [-h] [-t target] [-p path] [command]
+# SYNOPSYS
+    devenv [*-h*] [*-t target*] [*-p path*] COMMAND
 
-DESCRIPTION
+# DESCRIPTION
     The devenv utility is used to manage mkenney/devenv docker containers
     to create a consistent bash-based shell environment.
 
-OPTIONS
+# OPTIONS
     Command modifiers. Options are parsed using the \`getops\` utility,
     so all options must come before any command arguments
 
@@ -24,7 +24,7 @@ OPTIONS
             Specify an environment name. If omitted, the environment
             name is set to the basename of the project path.
 
-COMMANDS
+# COMMANDS
     Available commands $(basename ${0}) can execute
 
         attach
@@ -67,5 +67,5 @@ COMMANDS
 
             \`devenv [-t env_name] stop\`
 
-AUTHORS
+# AUTHORS
     Michael Kenney <mkenney@webbedlam.com>
