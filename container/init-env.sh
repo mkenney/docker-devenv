@@ -31,8 +31,8 @@ then
 		sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript -R && chmod +r /web.tags
 	fi
 
-	sudo groupmod -g $(stat -c '%g' ~/.) dev
-	sudo usermod -u $(stat -c '%u' ~/.) dev
+	sudo groupmod -g $(stat -c '%g' ~/.) dev > /dev/null
+	sudo usermod -u $(stat -c '%u' ~/.) dev > /dev/null
 
 ##############################################################################
 # Tmux setup
