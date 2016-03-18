@@ -9,7 +9,7 @@
     to create a consistent bash-based shell environment.
 
 # OPTIONS
-    Command modifiers. Options are parsed using the \`getops\` utility,
+    Command modifiers. Options are parsed using the `getops` utility,
     so all options must come before any command arguments
 
         -h
@@ -30,13 +30,13 @@
         attach
             Attach to a running environment specified by the -t option.
 
-            \`devenv [-t env_name] attach\`
+            `devenv [-t env_name] attach`
 
         create
             Create and start a new environment at the path specified
             by the -p option.
 
-            \`devenv [-t env_name] [-p project_path] create\`
+            `devenv [-t env_name] [-p project_path] create`
 
         help
             Show this help screen
@@ -44,7 +44,7 @@
         kill
             Stop a running environment and clean up
 
-            \`devenv [-t env_name] kill\`
+            `devenv [-t env_name] kill`
 
         ls
             List currently running environments
@@ -52,12 +52,12 @@
         refresh / restart"
             Stop, remove and re-create the specified running environment"
 
-            \`devenv [-t env_name] refresh\`"
+            `devenv [-t env_name] refresh`"
 
         rename
             Rename an environment
 
-            \`devenv [-t env_name] rename new_name\`
+            `devenv [-t env_name] rename new_name`
 
         self-update
             Update to the latest image
@@ -65,12 +65,12 @@
         start
             Start a suspended environment
 
-            \`devenv [-t env_name] start\`
+            `devenv [-t env_name] start`
 
         stop
             Suspend a running environment
 
-            \`devenv [-t env_name] stop\`
+            `devenv [-t env_name] stop`
 
 # AUTHORS
     Michael Kenney <mkenney@webbedlam.com>
