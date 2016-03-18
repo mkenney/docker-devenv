@@ -87,7 +87,6 @@ RUN apt-get install -y \
 	git \
 	htop \
 	less \
-	php-pear \
 	rsync \
 	sudo \
 	tcpdump \
@@ -105,7 +104,9 @@ RUN apt-get install -y \
 	vim
 
 RUN pear install --alldeps php_codesniffer && \
-	composer global require phpmd/phpmd && \
+	pear channel-discover pear.phpmd.org && \
+	pear channel-discover pear.pdepend.org && \
+    pear install phpmd/PHP_PMD && \
 	export PATH=/root/.composer/vendor/bin:$PATH
 
 ##############################################################################
