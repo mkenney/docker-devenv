@@ -31,6 +31,9 @@ then
 		sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript -R && chmod +r /web.tags
 	fi
 
+	sudo groupmod -g $(stat -c '%g' ~/.) dev
+	sudo usermod -u $(stat -c '%u' ~/.) dev
+
 ##############################################################################
 # Tmux setup
 ##############################################################################
@@ -53,9 +56,6 @@ then
 	tmux select-window     -t $TMUXSESSION:2
 
 	echo "Done."
-
-	sudo groupmod -g $(stat -c '%g' ~/.) dev
-	sudo usermod -u $(stat -c '%u' ~/.) dev
 
 	tmux attach-session    -t $TMUXSESSION
 fi
