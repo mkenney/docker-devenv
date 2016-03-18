@@ -18,9 +18,9 @@ then
 # System logger
 ##############################################################################
 
-	sudo killall -9 rsyslogd
-	sudo rm -rf /var/run/rsyslogd.pid
-	sudo /usr/sbin/rsyslogd
+	sudo killall -9 rsyslogd > /dev/null
+	sudo rm -rf /var/run/rsyslogd.pid  > /dev/null
+	sudo /usr/sbin/rsyslogd  > /dev/null
 
 ##############################################################################
 # Project setup

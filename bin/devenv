@@ -118,7 +118,7 @@ function _devenv_start_container {
             -e TERM=$TERM \
             -v ${2}:/project:rw \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -v ~/:/home/dev:rw \
+            -v ~/.ssh/:/home/dev/.ssh/:ro \
             --name ${1}-devenv- \
             mkenney/devenv
     fi
@@ -128,6 +128,9 @@ function _devenv_start_container {
 #
 # @param environment name returned by _devenv_list_environments
 function _devenv_attach {
+    if [ -n "$TMUX" ]; then
+        _devenv_error_in_tmux
+    fi
     docker exec -ti ${1}-devenv- script /dev/null -c 'sh /init-env.sh'
 }
 
@@ -194,6 +197,16 @@ function _devenv_list_environments {
     fi
 
     exit 0
+}
+
+#
+function _devenv_error_in_tmux {
+    echo ""
+    echo "This shell is currently running in a Tmux session and attaching to"
+    echo "a \`devenv\` environment will launch a new Tmux session. Sessions"
+    echo "should be nested with care, unset $TMUX to force."
+    echo ""
+    exit 1
 }
 
 # Display error message

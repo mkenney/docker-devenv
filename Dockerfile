@@ -116,7 +116,22 @@ RUN pear install --alldeps php_codesniffer && \
 RUN groupadd dev && \
 	useradd dev -s /bin/bash -m -g dev -G root && \
 	echo "dev:password" | chpasswd && \
-	echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
+	echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+	cd ~dev/ && \
+	git clone https://github.com/mkenney/terminal_config.git && \
+	rsync -av terminal_config/ ./ && \
+	chown -R dev:dev . && \
+	rsync -av terminal_config/ ~/ && \
+	cd ~/ && \
+	git submodule update --init --recursive && \
+	vim +PluginInstall +qall > /dev/null
+
+USER dev
+RUN cd ~/ && \
+	git submodule update --init --recursive && \
+	vim +PluginInstall +qall > /dev/null
+USER root
+
 
 ##############################################################################
 # ~ fin ~
