@@ -111,16 +111,18 @@ function _devenv_start_container {
 	else
 
 		echo "Starting dev container '${1}' at ${2}..."
-		local host_name=$(basename $2)
+		local folder_name=$(basename $2)
 		docker run \
 			-itd \
-			-h ${host_name} \
-			-e HOSTNAME=${host_name} \
-			--add-host ${host_name}:127.0.0.1 \
+			-h ${folder_name} \
+			-e HOSTNAME=${folder_name} \
+			-e PROJECT_PATH=/app/${folder_name} \
+			--add-host ${folder_name}:127.0.0.1 \
 			-e TERM=$TERM \
-			-v ${2}:/project:rw \
 			-v /var/run/docker.sock:/var/run/docker.sock \
 			-v ~/.ssh/:/home/dev/.ssh/:ro \
+			-v ${2}:/app/${folder_name}:rw \
+            -w "/app/${folder_name}" \
 			--label "project_path=${2}" \
 			--name ${1}-devenv- \
 			mkenney/devenv

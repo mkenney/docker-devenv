@@ -26,13 +26,13 @@ then
 # Project setup
 ##############################################################################
 
-	cd /project
+	cd $PROJECT_PATH
 	if [ ! -f "/web.tags" ]; then
 		sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript -R && chmod +r /web.tags
 	fi
 
-	sudo groupmod -g $(stat -c '%g' /project) dev > /dev/null
-	sudo usermod -u $(stat -c '%u' /project) dev > /dev/null
+	sudo groupmod -g $(stat -c '%g' $PROJECT_PATH) dev > /dev/null
+	sudo usermod -u $(stat -c '%u' $PROJECT_PATH) dev > /dev/null
 
 ##############################################################################
 # Tmux setup
@@ -47,10 +47,10 @@ then
 
 	# Db Patches
 	tmux new-window        -t $TMUXSESSION:2 -n 'Vim'
-	tmux send-keys         -t $TMUXSESSION:2 "cd /project && clear && vim" C-m
+	tmux send-keys         -t $TMUXSESSION:2 "cd ${PROJECT_PATH} && clear && vim" C-m
 
 	tmux new-window        -t $TMUXSESSION:3 -n 'Shell'
-	tmux send-keys         -t $TMUXSESSION:3 "cd /project && clear" C-m
+	tmux send-keys         -t $TMUXSESSION:3 "cd ${PROJECT_PATH} && clear" C-m
 
 	tmux select-window     -t $TMUXSESSION:3 # set my window toggle order
 	tmux select-window     -t $TMUXSESSION:2

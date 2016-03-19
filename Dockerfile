@@ -143,6 +143,5 @@ RUN apt-get clean && \
 
 COPY container/init-env.sh /
 USER dev
-VOLUME ["/project"]
-WORKDIR /project
+VOLUME ["/app"]
 CMD ["/bin/bash"]
