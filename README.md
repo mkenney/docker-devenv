@@ -2,7 +2,7 @@
     devenv -- Manage mkenney/devenv docker work environment containers
 
 # SYNOPSYS
-    devenv [*-h*] [*-t target*] [*-p path*] COMMAND
+    devenv [-h] [-t target] [-p path] COMMAND
 
 # DESCRIPTION
     The devenv utility is used to manage mkenney/devenv docker containers
