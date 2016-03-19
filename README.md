@@ -1,3 +1,9 @@
+# SOURCE REPOSITORY
+
+* [mkenney/docker-devenv](https://github.com/mkenney/docker-devenv)
+
+The devenv script is available in the bin/ folder
+
 # NAME
     devenv -- Manage mkenney/devenv docker work environment containers
 
