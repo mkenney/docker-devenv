@@ -141,7 +141,8 @@ USER root
 RUN apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
-COPY container/init-env.sh /
+COPY container/init.sh /
+COPY container/attach.sh /
 USER dev
 VOLUME ["/app"]
 CMD ["/bin/bash"]

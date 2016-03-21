@@ -57,5 +57,5 @@ then
 
 	echo "Done."
 
-	tmux attach-session    -t $TMUXSESSION
+	#tmux attach-session    -t $TMUXSESSION
 fi
