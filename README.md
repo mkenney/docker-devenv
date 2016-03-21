@@ -31,7 +31,7 @@ The devenv script is available in the bin/ folder
             name is set to the basename of the project path.
 
 # COMMANDS
-    Available commands $(basename ${0}) can execute
+    Available commands:
 
         attach
             Attach to a running environment specified by the -t option.
