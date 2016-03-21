@@ -5,8 +5,8 @@ MAINTAINER Michael Kenney <mkenney@webbedlam.com>
 ENV HOSTNAME 'devenv' # should get overridden
 ENV DEBIAN_FRONTEND noninteractive
 USER root
-RUN apt-get update && \
-	apt-get install -y apt-utils
+RUN apt-get update
+RUN apt-get install -y apt-utils
 
 ##############################################################################
 # Configuration
