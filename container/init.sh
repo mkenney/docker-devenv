@@ -14,7 +14,7 @@ export PATH=/root/.composer/vendor/bin:$PATH
 ##############################################################################
 
 sudo killall -9 rsyslogd > /dev/null 2>&1
-sudo rm -rf /var/run/rsyslogd.pid > /dev/null 2>&1
+sudo rm -f /var/run/rsyslogd.pid > /dev/null 2>&1
 sudo /usr/sbin/rsyslogd > /dev/null 2>&1
 
 ##############################################################################
