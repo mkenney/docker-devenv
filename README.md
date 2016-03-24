@@ -55,10 +55,10 @@ The devenv script is available in the bin/ folder
         ls
             List currently running environments
 
-        refresh / restart"
-            Stop, remove and re-create the specified running environment"
+        refresh / restart
+            Stop, remove and re-create the specified running environment
 
-            `devenv [-t env_name] refresh`"
+            `devenv [-t env_name] refresh`
 
         rename
             Rename an environment
