@@ -23,7 +23,7 @@ sudo /usr/sbin/rsyslogd  > /dev/null 2>&1
 
 cd $PROJECT_PATH
 if [ ! -f "/web.tags" ]; then
-    sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript,+Perl,+Java -R && chmod +r /web.tags
+    sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript,+Perl,+Java -R && sudo chmod +r /web.tags
 fi
 
 sudo chown oracle:dba /oracle/product/latest/network/admin/tnsnames.ora
