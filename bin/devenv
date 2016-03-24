@@ -373,10 +373,7 @@ if [ "help" == "${_devenv_command}" ] || [ 1 == ${_devenv_help} ]; then
 
 # Attach to a running container
 elif [ "attach" == "${_devenv_command}" ]; then
-    if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ] && [ "" != "${_devenv_target}" ]; then
-        _devenv_error_target_not_running ${_devenv_container_name}
-
-    elif [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+    if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_start_container ${_devenv_container_name} ${_devenv_project_path}
     fi
 

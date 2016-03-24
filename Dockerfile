@@ -7,21 +7,14 @@ ENV HOSTNAME 'devenv'
 ENV DEBIAN_FRONTEND noninteractive
 USER root
 RUN mkdir -p /root/src
-RUN apt-get update
-RUN apt-get install -y apt-utils
+RUN apt-get update && \
+    apt-get install -y apt-utils
 
 ##############################################################################
 # Configurations
 ##############################################################################
 
 ENV PHP_TIMEZONE 'America/Denver'
-
-##############################################################################
-# System logger
-##############################################################################
-
-RUN apt-get install -y rsyslog && \
-    rm -rf /var/run/rsyslogd.pid
 
 ##############################################################################
 # UTF-8 Locale
@@ -31,7 +24,6 @@ RUN apt-get install -y locales && \
     locale-gen C.UTF-8 en_US && \
     dpkg-reconfigure locales && \
     dpkg-reconfigure locales && \
-    locale-gen C.UTF-8 && \
     /usr/sbin/update-locale LANG=C.UTF-8
 
 ENV LANG C.UTF-8
@@ -43,37 +35,49 @@ RUN export LANG=C.UTF-8 && \
     export LC_ALL=C.UTF-8
 
 ##############################################################################
-# Apps
+# Packages
 ##############################################################################
 
 RUN apt-get install -y \
-    git \
-    htop \
-    less \
-    rsync \
-    sudo \
-    tcpdump \
-    telnet \
-    tmux \
-    unzip \
-    wget \
-    libfreetype6-dev \
-    libjpeg62-turbo-dev \
-    libmcrypt-dev \
-    libpng12-dev \
-    libbz2-dev \
-    libaio1
+        curl \
+        exuberant-ctags \
+        git \
+        graphviz \
+        htop \
+        less \
+        libfreetype6-dev \
+        libjpeg62-turbo-dev \
+        libmcrypt-dev \
+        libpng12-dev \
+        libbz2-dev \
+        libaio1 \
+        rsync \
+        rsyslog \
+        sudo \
+        tcpdump \
+        telnet \
+        tmux \
+        unzip \
+        wget \
+        vim && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
+##############################################################################
+# Dependencies
+##############################################################################
+
+# https://sourceforge.net/projects/cloc/
 COPY container/cloc /usr/local/bin/
+
+# Oracle instantclient debs created using `alien`
+COPY container/oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb /root/src/
+COPY container/oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb /root/src/
+COPY container/oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb /root/src/
 
 ##############################################################################
 # Oracle instantclient
 ##############################################################################
-
-# Copy instantclient debs created using `alien`
-COPY container/oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb /root/src/
-COPY container/oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb /root/src/
-COPY container/oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb /root/src/
 
 RUN groupadd dba && \
     useradd oracle -s /bin/bash -m -g dba && \
@@ -99,8 +103,14 @@ RUN cd /root/src && \
 ##############################################################################
 
 # Extensions
-RUN docker-php-ext-configure oci8 --with-oci8=instantclient,/usr/lib/oracle/11.2/client64/lib && \
-    docker-php-ext-install oci8
+RUN curl -L http://pecl.php.net/get/xdebug-2.4.0RC2.tgz > /usr/src/php/ext/xdebug.tgz && \
+    tar -xf /usr/src/php/ext/xdebug.tgz -C /usr/src/php/ext/ && \
+    rm /usr/src/php/ext/xdebug.tgz && \
+    docker-php-ext-configure oci8 --with-oci8=instantclient,/usr/lib/oracle/11.2/client64/lib && \
+    docker-php-ext-install oci8 && \
+    docker-php-ext-install xdebug-2.4.0RC2 && \
+    docker-php-ext-install pcntl && \
+    php -m
 
 # Config
 ENV PHP_INI_DIR '/usr/local/etc/php/conf.d'
@@ -113,37 +123,36 @@ RUN echo "memory_limit=-1"               > $PHP_INI_DIR/memory_limit.ini && \
     echo "error_log=syslog"              > $PHP_INI_DIR/error_log.ini
 
 ##############################################################################
-# Composer
+# composer
 ##############################################################################
 
 ENV COMPOSER_HOME /root/composer
 ENV COMPOSER_VERSION master
-RUN apt-get install -y curl && \
-    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-##############################################################################
-# phpDocumentor
-##############################################################################
-
-RUN apt-get install -y graphviz && \
-    pear channel-discover pear.phpdoc.org && \
-    pear install phpdoc/phpDocumentor
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+    composer config -g secure-http false && \
+    cd ~/composer && \
+    chmod -R g+rw,o+rw .
 
 ##############################################################################
 # phpunit
 ##############################################################################
 
-WORKDIR /tmp
-RUN composer require "phpunit/phpunit:~5.1.0" --prefer-source --no-interaction
-RUN ln -s /tmp/vendor/bin/phpunit /usr/local/bin/phpunit
+WORKDIR /root/src
+RUN wget https://phar.phpunit.de/phpunit.phar && \
+    chmod +x phpunit.phar && \
+    mv phpunit.phar /usr/local/bin/phpunit && \
+    phpunit --version
 
 ##############################################################################
-# Vim
+# phpDocumentor
 ##############################################################################
 
-RUN apt-get install -y \
-    exuberant-ctags \
-    vim
+RUN pear channel-discover pear.phpdoc.org && \
+    pear install phpdoc/phpDocumentor
+
+##############################################################################
+# vim
+##############################################################################
 
 RUN pear install --alldeps php_codesniffer && \
     pear channel-discover pear.phpmd.org && \
@@ -152,7 +161,7 @@ RUN pear install --alldeps php_codesniffer && \
     export PATH=/root/.composer/vendor/bin:$PATH
 
 ##############################################################################
-# Users
+# users
 ##############################################################################
 
 # Add a user
@@ -191,11 +200,10 @@ USER root
 # ~ fin ~
 ##############################################################################
 
-RUN apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
 COPY container/init.sh /
 COPY container/attach.sh /
+
 USER dev
 VOLUME ["/src"]
+WORKDIR /src
 CMD ["/bin/bash"]
