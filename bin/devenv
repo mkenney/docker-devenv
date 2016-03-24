@@ -104,7 +104,8 @@ function _devenv_stop_container {
 # Start the tmux session
 #
 # @param environment name returned by _devenv_list_environments
-function _devenv_start_session {
+function _devenv_init_session {
+    cat /oracle/product/latest/network/admin/tnsnames.ora | docker exec -i cert_db_patchinator-devenv- sudo sh -c 'cat > /oracle/product/latest/network/admin/tnsnames.ora'
     docker exec -ti ${1}-devenv- script /dev/null -c 'sh /init.sh'
 }
 
@@ -128,13 +129,14 @@ function _devenv_start_container {
             -e TERM=$TERM \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v ~/.ssh/:/home/dev/.ssh/:ro \
+            -v ~/.oracle/:/home/dev/.oracle/:ro \
             -v ${2}:/app/${folder_name}:rw \
             -w "/app/${folder_name}" \
             --label "project_path=${2}" \
             --name ${1}-devenv- \
             mkenney/devenv
 
-        _devenv_start_session ${1}
+        _devenv_init_session ${1}
     fi
 }
 

@@ -3,53 +3,34 @@
 echo "Creating new dev session..."
 
 ##############################################################################
-# Dev env
+# env
 ##############################################################################
 
 export TERM=xterm
 export PATH=/root/.composer/vendor/bin:$PATH
 
 ##############################################################################
-# System logger
+# logger
 ##############################################################################
 
-sudo killall -9 rsyslogd > /dev/null
-sudo rm -rf /var/run/rsyslogd.pid  > /dev/null
-sudo /usr/sbin/rsyslogd  > /dev/null
+sudo killall -9 rsyslogd > /dev/null 2>&1
+sudo rm -rf /var/run/rsyslogd.pid  > /dev/null 2>&1
+sudo /usr/sbin/rsyslogd  > /dev/null 2>&1
 
 ##############################################################################
-# Project setup
+# project setup
 ##############################################################################
 
 cd $PROJECT_PATH
 if [ ! -f "/web.tags" ]; then
-    sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript -R && chmod +r /web.tags
+    sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript,+Perl,+Java -R && chmod +r /web.tags
 fi
 
-sudo groupmod -g $(stat -c '%g' $PROJECT_PATH) dev > /dev/null
-sudo usermod -u $(stat -c '%u' $PROJECT_PATH) dev > /dev/null
+sudo chown oracle:dba /oracle/product/latest/network/admin/tnsnames.ora
+sudo chmod 644 /oracle/product/latest/network/admin/tnsnames.ora
 
-##############################################################################
-# Tmux setup
-##############################################################################
-
-TMUXSESSION=tmuxdev
-
-# Create a new tmux session
-tmux new-session    -d -s $TMUXSESSION
-
-# System logs
-tmux rename-window     -t $TMUXSESSION:1 'Logs'
-tmux send-keys         -t $TMUXSESSION:1 "sudo tail -f /var/log/messages" C-m
-
-# Db Patches
-tmux new-window        -t $TMUXSESSION:2 -n 'Vim'
-tmux send-keys         -t $TMUXSESSION:2 "cd ${PROJECT_PATH} && clear && vim" C-m
-
-tmux new-window        -t $TMUXSESSION:3 -n 'Shell'
-tmux send-keys         -t $TMUXSESSION:3 "cd ${PROJECT_PATH} && clear" C-m
-
-tmux select-window     -t $TMUXSESSION:3 # set my window toggle order
-tmux select-window     -t $TMUXSESSION:2
-
-#/bin/bash /attach.sh
+# do these last...
+#sudo echo groupmod -g $(stat -c '%g' $PROJECT_PATH) dev
+sudo groupmod -g $(stat -c '%g' $PROJECT_PATH) dev > /dev/null 2>&1
+sudo chgrp dev ~dev/
+sudo usermod -u $(stat -c '%u' $PROJECT_PATH) dev > /dev/null 2>&1
