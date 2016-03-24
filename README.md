@@ -22,9 +22,9 @@ The devenv script is available in the bin/ folder
             Show this help screen
 
         -p path
-            Specify the project path, this directory is mounted
-            into /project inside the environment. If omitted, the
-            project path is set to the current directory.
+            Specify the project path, this directory is mounted into
+            /src inside the environment. If omitted, the project path
+            is set to the current directory.
 
         -t target
             Specify an environment name. If omitted, the environment

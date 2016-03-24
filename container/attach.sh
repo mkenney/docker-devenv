@@ -30,6 +30,5 @@ then
     tmux select-window     -t $TMUXSESSION:2
 
     echo "Done."
-
     tmux attach-session    -t $TMUXSESSION
 fi

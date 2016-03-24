@@ -110,8 +110,7 @@ RUN echo "memory_limit=-1"               > $PHP_INI_DIR/memory_limit.ini && \
     echo "display_errors=On"             > $PHP_INI_DIR/display_errors.ini && \
     echo "log_errors=On"                 > $PHP_INI_DIR/log_errors.ini && \
     echo "report_memleaks=On"            > $PHP_INI_DIR/report_memleaks.ini && \
-    echo "error_log=syslog"              > $PHP_INI_DIR/error_log.ini && \
-    echo "extension=oci8.so"             > $PHP_INI_DIR/oci8.ini
+    echo "error_log=syslog"              > $PHP_INI_DIR/error_log.ini
 
 ##############################################################################
 # Composer
@@ -163,17 +162,17 @@ RUN groupadd dev && \
     echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     cd ~dev/ && \
     git clone https://github.com/mkenney/terminal_config.git && \
-    rsync -av terminal_config/ ./ && \
+    rsync -a terminal_config/ ./ && \
     chown -R dev:dev . && \
-    rsync -av terminal_config/ ~/ && \
+    rsync -a terminal_config/ ~/ && \
     cd ~/ && \
-    git submodule update --init --recursive && \
-    vim +PluginInstall +qall > /dev/null
+    git submodule update --init --recursive > /dev/null 2>&1 && \
+    vim +PluginInstall +qall > /dev/null 2>&1
 
 USER dev
 RUN cd ~/ && \
-    git submodule update --init --recursive && \
-    vim +PluginInstall +qall > /dev/null && \
+    git submodule update --init --recursive > /dev/null 2>&1 && \
+    vim +PluginInstall +qall > /dev/null 2>&1 && \
     export ORACLE_HOME=/usr/lib/oracle/12.1/client64 && \
     export LD_LIBRARY_PATH="$ORACLE_HOME/lib" && \
     export CFLAGS="-I/usr/include/oracle/$SHORT_VERSION/client64/" && \
@@ -185,8 +184,8 @@ RUN cd ~/ && \
 RUN export LANG=C.UTF-8 && \
     export LANGUAGE=C.UTF-8 && \
     export LC_ALL=C.UTF-8
-USER root
 
+USER root
 
 ##############################################################################
 # ~ fin ~
@@ -198,5 +197,5 @@ RUN apt-get clean && \
 COPY container/init.sh /
 COPY container/attach.sh /
 USER dev
-VOLUME ["/app"]
+VOLUME ["/src"]
 CMD ["/bin/bash"]

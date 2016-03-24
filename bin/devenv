@@ -25,8 +25,8 @@ function _devenv_show_help {
     echo ""
     echo "        -p path"
     echo "            Specify the project path, this directory is mounted"
-    echo "            into /project inside the environment. If omitted, the"
-    echo "            project path is set to the current directory."
+    echo "            into /src inside the environment. If omitted, the project"
+    echo "            path is set to the current directory."
     echo ""
     echo "        -t target"
     echo "            Specify an environment name. If omitted, the environment"
@@ -105,7 +105,7 @@ function _devenv_stop_container {
 #
 # @param environment name returned by _devenv_list_environments
 function _devenv_init_session {
-    cat /oracle/product/latest/network/admin/tnsnames.ora | docker exec -i cert_db_patchinator-devenv- sudo sh -c 'cat > /oracle/product/latest/network/admin/tnsnames.ora'
+    cat /oracle/product/latest/network/admin/tnsnames.ora | docker exec -i ${1}-devenv- sudo sh -c 'cat > /oracle/product/latest/network/admin/tnsnames.ora'
     docker exec -ti ${1}-devenv- script /dev/null -c 'sh /init.sh'
 }
 
@@ -122,16 +122,16 @@ function _devenv_start_container {
         local folder_name=$(basename $2)
         docker run \
             -itd \
-            -h docker \
-            -e HOSTNAME=docker \
-            -e PROJECT_PATH=/app/${folder_name} \
+            -h ${1} \
+            -e HOSTNAME=${1} \
+            -e PROJECT_PATH=/src \
             --add-host docker:127.0.0.1 \
             -e TERM=$TERM \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v ~/.ssh/:/home/dev/.ssh/:ro \
             -v ~/.oracle/:/home/dev/.oracle/:ro \
-            -v ${2}:/app/${folder_name}:rw \
-            -w "/app/${folder_name}" \
+            -v ${2}:/src:rw \
+            -w "/src" \
             --label "project_path=${2}" \
             --name ${1}-devenv- \
             mkenney/devenv
@@ -228,7 +228,7 @@ function _devenv_error_in_tmux {
     echo ""
     echo "This shell is currently running in a Tmux session and attaching to"
     echo "a \`devenv\` environment will launch a new Tmux session. Sessions"
-    echo "should be nested with care, unset $TMUX to force."
+    echo "should be nested with care, unset \$TMUX to force."
     exit 1
 }
 
@@ -380,7 +380,7 @@ elif [ "attach" == "${_devenv_command}" ]; then
         _devenv_start_container ${_devenv_container_name} ${_devenv_project_path}
     fi
 
-    _devenv_attach $_devenv_container_name
+    _devenv_attach ${_devenv_container_name}
 
 
 # Create and start a new container
@@ -412,6 +412,7 @@ elif [ "refresh" == "${_devenv_command}" ] || [ "restart" == "${_devenv_command}
     fi
     _devenv_stop_container ${_devenv_container_name}
     _devenv_start_container ${_devenv_container_name} ${_devenv_project_path}
+    _devenv_attach ${_devenv_container_name}
 
 
 # Rename a current container
