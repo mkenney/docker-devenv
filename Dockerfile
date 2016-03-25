@@ -63,6 +63,8 @@ RUN apt-get install -qqy \
         libpng12-dev \
         libbz2-dev \
         libaio1 \
+        node \
+        npm \
         rsync \
         rsyslog \
         sudo \
@@ -72,6 +74,8 @@ RUN apt-get install -qqy \
         unzip \
         wget \
         vim \
+    && npm install -g gulp-cli \
+    && npm install -g grunt-cli \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -115,6 +119,9 @@ RUN groupadd dba -g 201 -o \
 
 # INI directory
 ENV PHP_INI_DIR '/usr/local/etc/php/conf.d'
+
+# server_env
+ENV server_env dev
 
 # Extensions and ini settings
 RUN curl -L http://pecl.php.net/get/xdebug-2.4.0RC2.tgz > /usr/src/php/ext/xdebug.tgz \
