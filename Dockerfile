@@ -18,8 +18,7 @@ RUN mkdir -p /root/src \
 ENV PATH /root/bin:$PATH
 
 ENV UTF8_LOCALE en_US
-
-ENV PHP_TIMEZONE 'America/Denver'
+ENV TIMEZONE 'America/Denver'
 
 ENV ORACLE_VERSION_LONG 11.2.0.3.0-2
 ENV ORACLE_VERSION_SHORT 11.2
@@ -30,7 +29,7 @@ ENV CFLAGS "-I/usr/include/oracle/${ORACLE_VERSION_SHORT}/client64/"
 ENV NLS_LANG American_America.AL32UTF8
 
 ##############################################################################
-# UTF-8 Locale
+# UTF-8 Locale, timezone
 ##############################################################################
 
 RUN apt-get install -qqy locales \
@@ -39,7 +38,9 @@ RUN apt-get install -qqy locales \
     && /usr/sbin/update-locale LANG=C.UTF-8 LANGUAGE=C.UTF-8 LC_ALL=C.UTF-8 \
     && export LANG=C.UTF-8 \
     && export LANGUAGE=C.UTF-8 \
-    && export LC_ALL=C.UTF-8
+    && export LC_ALL=C.UTF-8 \
+    && echo ${TIMEZONE} > /etc/timezone \
+    && dpkg-reconfigure -f noninteractive tzdata
 
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
@@ -125,7 +126,7 @@ RUN curl -L http://pecl.php.net/get/xdebug-2.4.0RC2.tgz > /usr/src/php/ext/xdebu
     && docker-php-ext-install pcntl \
     && php -m \
     && echo "memory_limit=-1"               > $PHP_INI_DIR/memory_limit.ini \
-    && echo "date.timezone=${PHP_TIMEZONE}" > $PHP_INI_DIR/date_timezone.ini \
+    && echo "date.timezone=${TIMEZONE}"     > $PHP_INI_DIR/date_timezone.ini \
     && echo "error_reporting=E_ALL"         > $PHP_INI_DIR/error_reporting.ini \
     && echo "display_errors=On"             > $PHP_INI_DIR/display_errors.ini \
     && echo "log_errors=On"                 > $PHP_INI_DIR/log_errors.ini \
