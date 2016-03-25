@@ -49,7 +49,7 @@ ENV LC_ALL C.UTF-8
 # Packages
 ##############################################################################
 
-RUN apt-get install -y \
+RUN apt-get install -qqy \
         curl \
         exuberant-ctags \
         git \
