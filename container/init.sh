@@ -31,6 +31,6 @@ sudo chmod 644 /oracle/product/latest/network/admin/tnsnames.ora
 
 # do these last...
 #sudo echo groupmod -g $(stat -c '%g' $PROJECT_PATH) dev
-sudo groupmod -g $(stat -c '%g' $PROJECT_PATH) dev > /dev/null 2>&1
+sudo groupmod -g $(stat -c '%g' $PROJECT_PATH) -o dev > /dev/null 2>&1
 sudo chgrp dev ~dev/
-sudo usermod -u $(stat -c '%u' $PROJECT_PATH) dev > /dev/null 2>&1
+sudo usermod -u $(stat -c '%u' $PROJECT_PATH) -o dev > /dev/null 2>&1

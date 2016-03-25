@@ -5,10 +5,11 @@ MAINTAINER Michael Kenney <mkenney@webbedlam.com>
 
 ENV HOSTNAME 'devenv'
 ENV DEBIAN_FRONTEND noninteractive
+ENV TERM xterm
 USER root
-RUN mkdir -p /root/src
-RUN apt-get update && \
-    apt-get install -y apt-utils
+RUN mkdir -p /root/src && \
+    apt-get update && \
+    apt-get install -qqy apt-utils
 
 ##############################################################################
 # Configurations
@@ -20,19 +21,17 @@ ENV PHP_TIMEZONE 'America/Denver'
 # UTF-8 Locale
 ##############################################################################
 
-RUN apt-get install -y locales && \
+RUN apt-get install -qqy locales && \
     locale-gen C.UTF-8 en_US && \
     dpkg-reconfigure locales && \
-    dpkg-reconfigure locales && \
-    /usr/sbin/update-locale LANG=C.UTF-8
+    /usr/sbin/update-locale LANG=C.UTF-8 LANGUAGE=C.UTF-8 LC_ALL=C.UTF-8 && \
+    export LANG=C.UTF-8 && \
+    export LANGUAGE=C.UTF-8 && \
+    export LC_ALL=C.UTF-8
 
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 ENV LC_ALL C.UTF-8
-
-RUN export LANG=C.UTF-8 && \
-    export LANGUAGE=C.UTF-8 && \
-    export LC_ALL=C.UTF-8
 
 ##############################################################################
 # Packages
@@ -75,15 +74,18 @@ COPY container/oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb /root/src/
 COPY container/oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb /root/src/
 COPY container/oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb /root/src/
 
+# devenv scripts
+COPY container/init.sh /
+COPY container/attach.sh /
+
 ##############################################################################
 # Oracle instantclient
 ##############################################################################
 
-RUN groupadd dba && \
-    useradd oracle -s /bin/bash -m -g dba && \
-    echo "oracle:password" | chpasswd
-
-RUN cd /root/src && \
+RUN groupadd dba -g 201 -o && \
+    useradd oracle -u 102 -o -s /bin/bash -m -g dba && \
+    echo "oracle:password" | chpasswd && \
+    cd /root/src && \
     dpkg -i oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb && \
     dpkg -i oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb && \
     dpkg -i oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb && \
@@ -96,13 +98,19 @@ RUN cd /root/src && \
     echo 'export NLS_LANG=American_America.AL32UTF8' >> /root/.bashrc && \
     mkdir -p /oracle/product && \
     ln -s "$ORACLE_HOME" /oracle/product/latest && \
-    mkdir -p /oracle/product/latest/network/admin
+    mkdir -p /oracle/product/latest/network/admin && \
+    rm /root/src/oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb && \
+    rm /root/src/oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb && \
+    rm /root/src/oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb
 
 ##############################################################################
 # PHP
 ##############################################################################
 
-# Extensions
+# INI directory
+ENV PHP_INI_DIR '/usr/local/etc/php/conf.d'
+
+# Extensions and ini settings
 RUN curl -L http://pecl.php.net/get/xdebug-2.4.0RC2.tgz > /usr/src/php/ext/xdebug.tgz && \
     tar -xf /usr/src/php/ext/xdebug.tgz -C /usr/src/php/ext/ && \
     rm /usr/src/php/ext/xdebug.tgz && \
@@ -110,11 +118,8 @@ RUN curl -L http://pecl.php.net/get/xdebug-2.4.0RC2.tgz > /usr/src/php/ext/xdebu
     docker-php-ext-install oci8 && \
     docker-php-ext-install xdebug-2.4.0RC2 && \
     docker-php-ext-install pcntl && \
-    php -m
-
-# Config
-ENV PHP_INI_DIR '/usr/local/etc/php/conf.d'
-RUN echo "memory_limit=-1"               > $PHP_INI_DIR/memory_limit.ini && \
+    php -m && \
+    echo "memory_limit=-1"               > $PHP_INI_DIR/memory_limit.ini && \
     echo "date.timezone=${PHP_TIMEZONE}" > $PHP_INI_DIR/date_timezone.ini && \
     echo "error_reporting=E_ALL"         > $PHP_INI_DIR/error_reporting.ini && \
     echo "display_errors=On"             > $PHP_INI_DIR/display_errors.ini && \
@@ -164,7 +169,7 @@ RUN pear install --alldeps php_codesniffer && \
 # users
 ##############################################################################
 
-# Add a user
+# Add a user and configure both accounts
 RUN groupadd dev && \
     useradd dev -s /bin/bash -m -g dev -G root && \
     echo "dev:password" | chpasswd && \
@@ -172,38 +177,37 @@ RUN groupadd dev && \
     cd ~dev/ && \
     git clone https://github.com/mkenney/terminal_config.git && \
     rsync -a terminal_config/ ./ && \
-    chown -R dev:dev . && \
     rsync -a terminal_config/ ~/ && \
+    rm -rf terminal_config && \
+    git submodule update --init --recursive  && \
+    chown -R dev:dev . && \
+    echo 'export ORACLE_HOME=/oracle/product/latest' >> ./.bashrc && \
+    echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ORACLE_HOME/lib' >> ./.bashrc && \
+    echo 'export TNS_ADMIN=/usr/share/httpd/.oracle/network/admin' >> ./.bashrc && \
+    echo 'export NLS_LANG=American_America.AL32UTF8' >> ./.bashrc && \
+    echo 'export PATH=/root/.composer/vendor/bin:$PATH' >> ./.bashrc && \
+    echo 'export LANG="C.UTF-8"' >> ./.bashrc && \
+    echo 'export LANGUAGE="C.UTF-8"' >> ./.bashrc && \
+    echo 'export LC_ALL="C.UTF-8"' >> ./.bashrc && \
     cd ~/ && \
-    git submodule update --init --recursive > /dev/null 2>&1 && \
-    vim +PluginInstall +qall > /dev/null 2>&1
-
-USER dev
-RUN cd ~/ && \
-    git submodule update --init --recursive > /dev/null 2>&1 && \
-    vim +PluginInstall +qall > /dev/null 2>&1 && \
-    export ORACLE_HOME=/usr/lib/oracle/12.1/client64 && \
-    export LD_LIBRARY_PATH="$ORACLE_HOME/lib" && \
-    export CFLAGS="-I/usr/include/oracle/$SHORT_VERSION/client64/" && \
-    echo 'export ORACLE_HOME=/oracle/product/latest' >> ~/.bashrc && \
-    echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ORACLE_HOME/lib' >> ~/.bashrc && \
-    echo 'export TNS_ADMIN=/usr/share/httpd/.oracle/network/admin' >> ~/.bashrc && \
-    echo 'export NLS_LANG=American_America.AL32UTF8' >> ~/.bashrc
-
-RUN export LANG=C.UTF-8 && \
-    export LANGUAGE=C.UTF-8 && \
-    export LC_ALL=C.UTF-8
-
-USER root
+    git submodule update --init --recursive && \
+    vim +PluginInstall +qall > /dev/null && \
+    echo 'export ORACLE_HOME=/oracle/product/latest' >> ./.bashrc && \
+    echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ORACLE_HOME/lib' >> ./.bashrc && \
+    echo 'export TNS_ADMIN=/usr/share/httpd/.oracle/network/admin' >> ./.bashrc && \
+    echo 'export NLS_LANG=American_America.AL32UTF8' >> ./.bashrc && \
+    echo 'export PATH=/root/.composer/vendor/bin:$PATH' >> ./.bashrc && \
+    echo 'export LANG="C.UTF-8"' >> ./.bashrc && \
+    echo 'export LANGUAGE="C.UTF-8"' >> ./.bashrc && \
+    echo 'export LC_ALL="C.UTF-8"' >> ./.bashrc
 
 ##############################################################################
 # ~ fin ~
 ##############################################################################
 
-COPY container/init.sh /
-COPY container/attach.sh /
-
 USER dev
+# Don't forget to configure vim. do this here as the dev user
+RUN cd ~/ && vim +PluginInstall +qall > /dev/null
 VOLUME ["/src"]
 WORKDIR /src
 CMD ["/bin/bash"]
