@@ -5,7 +5,7 @@
 # container names for tab-completion
 function _devenv_autocomplete {
     local cur prev opts _docker_container_names name _devenv_commands
-    _devenv_commands="attach create help kill ls refresh restart reload rename self-update start stop"
+    _devenv_commands="--help --target= --path= attach init help kill ls refresh restart reload rename self-update start stop"
     COMPREPLY=()
 
     _docker_container_names=""
