@@ -63,8 +63,6 @@ RUN apt-get install -qqy \
         libpng12-dev \
         libbz2-dev \
         libaio1 \
-        node \
-        npm \
         rsync \
         rsyslog \
         ruby \
@@ -75,6 +73,8 @@ RUN apt-get install -qqy \
         unzip \
         wget \
         vim-nox \
+    && curl -sL https://deb.nodesource.com/setup_0.12 | bash - > /dev/null \
+    && apt-get install -qqy nodejs \
     && npm install -g gulp-cli \
     && npm install -g grunt-cli \
     && apt-get clean \
