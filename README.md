@@ -16,8 +16,7 @@ script is available in the bash/ folder
     to create a consistent bash-based shell environment.
 
 # OPTIONS
-    Command modifiers. Options are parsed using the `getops` utility,
-    so all options must come before any command arguments
+    Command modifiers
 
         -h
             Show this help screen
