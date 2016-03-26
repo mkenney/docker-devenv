@@ -24,7 +24,7 @@ ENV ORACLE_VERSION_LONG 11.2.0.3.0-2
 ENV ORACLE_VERSION_SHORT 11.2
 ENV ORACLE_HOME /usr/lib/oracle/${ORACLE_VERSION_SHORT}/client64
 ENV LD_LIBRARY_PATH ${ORACLE_HOME}/lib
-ENV TNS_ADMIN ~/.oracle/network/admin
+ENV TNS_ADMIN /home/dev/.oracle/network/admin
 ENV CFLAGS "-I/usr/include/oracle/${ORACLE_VERSION_SHORT}/client64/"
 ENV NLS_LANG American_America.AL32UTF8
 
@@ -193,15 +193,15 @@ RUN groupadd dev \
     && rsync -a terminal_config/ ~/ \
     && rm -rf terminal_config \
     && git submodule update --init --recursive  \
-    && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"         | tee -a ./.bashrc ~/.bashrc ~oracle/.bashrc \
-    && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)" | tee -a ./.bashrc ~/.bashrc ~oracle/.bashrc \
-    && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"             | tee -a ./.bashrc ~/.bashrc ~oracle/.bashrc \
-    && echo "export CFLAGS=$(echo $CFLAGS)"                   | tee -a ./.bashrc ~/.bashrc ~oracle/.bashrc \
-    && echo "export NLS_LANG=$(echo $NLS_LANG)"               | tee -a ./.bashrc ~/.bashrc ~oracle/.bashrc \
-    && echo "export LANG=$(echo $LANG)"                       | tee -a ./.bashrc ~/.bashrc ~oracle/.bashrc \
-    && echo "export LANGUAGE=$(echo $LANGUAGE)"               | tee -a ./.bashrc ~/.bashrc ~oracle/.bashrc \
-    && echo "export LC_ALL=$(echo $LC_ALL)"                   | tee -a ./.bashrc ~/.bashrc ~oracle/.bashrc \
-    && echo "export PATH=$(echo $PATH)"                       | tee -a ./.bashrc ~/.bashrc ~oracle/.bashrc \
+    && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
+    && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
+    && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
+    && echo "export CFLAGS=$(echo $CFLAGS)"                    | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
+    && echo "export NLS_LANG=$(echo $NLS_LANG)"                | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
+    && echo "export LANG=$(echo $LANG)"                        | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
+    && echo "export LANGUAGE=$(echo $LANGUAGE)"                | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
+    && echo "export LC_ALL=$(echo $LC_ALL)"                    | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
+    && echo "export PATH=$(echo $PATH)"                        | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
     && chown -R dev:dev . \
     && cd ~/ \
     && git submodule update --init --recursive \
@@ -212,7 +212,7 @@ RUN groupadd dev \
 ##############################################################################
 
 USER dev
-# Don't forget to configure vim. do this here as the dev user
+# Don't forget to configure vim for the dev user. do this here
 RUN cd ~/ && vim +PluginInstall +qall > /dev/null 2>&1
 VOLUME ["/src"]
 WORKDIR /src

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+CONTAINER_SUFFIX=-devenv-
+
 ##############################################################################
 # Define all functions
 ##############################################################################
@@ -92,9 +94,9 @@ function _devenv_show_help {
 function _devenv_stop_container {
     if [ "true" == "$(_devenv_is_running ${1})" ]; then
         echo "Stopping '$1'..."
-        docker stop ${1}-devenv- > /dev/null
+        docker stop ${1}${CONTAINER_SUFFIX} > /dev/null
         echo "Removing '$1'..."
-        docker rm ${1}-devenv- > /dev/null
+        docker rm ${1}${CONTAINER_SUFFIX} > /dev/null
     else
         echo "Container '$1' is not running"
     fi
@@ -105,8 +107,8 @@ function _devenv_stop_container {
 #
 # @param environment name returned by _devenv_list_environments
 function _devenv_init_session {
-    cat /oracle/product/latest/network/admin/tnsnames.ora | docker exec -i ${1}-devenv- sudo sh -c 'cat > /oracle/product/latest/network/admin/tnsnames.ora'
-    docker exec -ti ${1}-devenv- script /dev/null -c 'sh /init.sh'
+    cat /oracle/product/latest/network/admin/tnsnames.ora | docker exec -i ${1}${CONTAINER_SUFFIX} sudo sh -c 'cat > /oracle/product/latest/network/admin/tnsnames.ora'
+    docker exec -ti ${1}${CONTAINER_SUFFIX} script /dev/null -c 'sh /init.sh'
 }
 
 # Start a dev container
@@ -133,7 +135,7 @@ function _devenv_start_container {
             -v ${2}:/src:rw \
             -w "/src" \
             --label "project_path=${2}" \
-            --name ${1}-devenv- \
+            --name ${1}${CONTAINER_SUFFIX} \
             mkenney/devenv
 
         _devenv_init_session ${1}
@@ -143,7 +145,7 @@ function _devenv_start_container {
 function _devenv_get_path_from_container {
     local container_name project_path
     container_name=${1}
-    project_path=$(docker inspect -f "{{json .Config.Labels.project_path }}" ${container_name}-devenv-)
+    project_path=$(docker inspect -f "{{json .Config.Labels.project_path }}" ${container_name}${CONTAINER_SUFFIX})
     project_path=${project_path/\"/}
     echo ${project_path%\"}
 }
@@ -155,14 +157,14 @@ function _devenv_attach {
     if [ -n "$TMUX" ]; then
         _devenv_error_in_tmux
     fi
-    docker exec -ti ${1}-devenv- script /dev/null -c 'sh /attach.sh'
+    docker exec -ti ${1}${CONTAINER_SUFFIX} script /dev/null -c 'sh /attach.sh'
 }
 
 # Rename a dev environment
 #
 # @param environment name returned by _devenv_list_environments
 function _devenv_rename_container {
-    docker rename ${1}-devenv- ${2}-devenv-
+    docker rename ${1}${CONTAINER_SUFFIX} ${2}${CONTAINER_SUFFIX}
 }
 
 # Pull the latest image
@@ -177,7 +179,7 @@ function _devenv_self_update {
 # @param environment name returned by _devenv_list_environments
 function _devenv_is_running {
     running='true'
-    container_name="${1}-devenv-"
+    container_name="${1}${CONTAINER_SUFFIX}"
     # Container state
     running=$(docker inspect --format="{{ .State.Running }}" ${container_name} 2> /dev/null)
     if [ $? -eq 1 ]; then
@@ -207,7 +209,7 @@ function _devenv_list_environments {
     if [ "" != "$(docker ps -a -f "status=exited" | grep '\-devenv\-$')" ]; then
         for a in $(docker inspect --format='{{.Name}}' $(docker ps -aq -f "status=exited" --no-trunc) | grep '\-devenv\-$'); do
             name=${a:1:${#a}-1}
-            echo " stopped: ${name%-devenv-}"
+            echo " stopped: ${name%$CONTAINER_SUFFIX}"
         done
     fi
 
@@ -216,7 +218,7 @@ function _devenv_list_environments {
     if [ "" != "$(docker ps | grep '\-devenv\-$')" ]; then
         for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep '\-devenv\-$'); do
             name=${a:1:${#a}-1}
-            echo " running: ${name%-devenv-}"
+            echo " running: ${name%$CONTAINER_SUFFIX}"
         done
     fi
 
