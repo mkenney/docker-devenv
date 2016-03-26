@@ -67,13 +67,14 @@ RUN apt-get install -qqy \
         npm \
         rsync \
         rsyslog \
+        ruby \
         sudo \
         tcpdump \
         telnet \
         tmux \
         unzip \
         wget \
-        vim \
+        vim-nox \
     && npm install -g gulp-cli \
     && npm install -g grunt-cli \
     && apt-get clean \
