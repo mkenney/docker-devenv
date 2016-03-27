@@ -62,7 +62,9 @@ function _devenv_show_help {
          -s, --sustain
              Used when attaching to an environment. If specified, allow the
              environent to continue running after detaching from the session,
-             otherwise the environment container will be paused automatically
+             otherwise the environment container will be paused automatically.
+             This is useful executing a long-running script to come back to or
+             starting a daemon.
 
          -p PATH, --path=PATH
              Specify the project path, this directory is mounted into /src
@@ -115,7 +117,7 @@ function _devenv_show_help {
                  $(basename ${0}) ls java*
                  $(basename ${0}) ls *-php-v5.?
 
-         refresh TARGET, reload TARGET, restart TARGET
+         restart TARGET
              Kill, re-create and attach to the specified running environment
 
              EXAMPLES
@@ -521,21 +523,7 @@ while :; do
         #
         # Restart a running container
         #
-        refresh)
-            _devenv_command='restart'
-            if [ "" == "$_devenv_target" ]; then
-                _devenv_target=$2
-                shift
-            fi
-            ;;
-        reload)
-            _devenv_command='restart'
-            if [ "" == "$_devenv_target" ]; then
-                _devenv_target=$2
-                shift
-            fi
-            ;;
-        restart)
+        refresh|reload|restart)
             _devenv_command='restart'
             if [ "" == "$_devenv_target" ]; then
                 _devenv_target=$2

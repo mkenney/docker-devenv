@@ -28,7 +28,9 @@ script is available in the bash/ folder
          -s, --sustain
              Used when attaching to an environment. If specified, allow the
              environent to continue running after detaching from the session,
-             otherwise the environment container will be paused automatically
+             otherwise the environment container will be paused automatically.
+             This is useful executing a long-running script to come back to or
+             starting a daemon.
 
          -p PATH, --path=PATH
              Specify the project path, this directory is mounted into /src
@@ -81,7 +83,7 @@ script is available in the bash/ folder
                  $(basename ${0}) ls java*
                  $(basename ${0}) ls *-php-v5.?
 
-         refresh TARGET, reload TARGET, restart TARGET
+         restart TARGET
              Kill, re-create and attach to the specified running environment
 
              EXAMPLES
