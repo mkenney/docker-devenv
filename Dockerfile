@@ -177,7 +177,7 @@ RUN pear channel-discover pear.phpdoc.org \
     && pear install phpdoc/phpDocumentor
 
 ##############################################################################
-# vim
+# PHP tools
 ##############################################################################
 
 RUN pear install --alldeps php_codesniffer \
