@@ -1,7 +1,8 @@
 #!/bin/bash
 
 COMMAND=$(basename ${0})
-CONTAINER_SUFFIX=-devenv-
+CONTAINER_SUFFIX=.devenv
+CONTAINER_IMAGE='mkenney/devenv'
 
 ##############################################################################
 # Define all functions
@@ -9,149 +10,152 @@ CONTAINER_SUFFIX=-devenv-
 
 # Show the help screen
 function _devenv_show_usage {
-    echo " Usage: $(basename ${0}) [options] [commands]"
-    echo "    Options:"
-    echo "        -h, -?                        Show usage"
-    echo "        --help, help                  Show extended help screen"
-    echo "        -c, --continue                Continue running the environment after"
-    echo "                                      detaching"
-    echo "        -p PATH, --path=PATH          Specify the project path"
-    echo "        -t TARGET, --target=TARGET    Specify an environment by name"
-    echo ""
-    echo "    Commands:"
-    echo "        attach                        Attach to a running environment"
-    echo "        init                          Create a new environment"
-    echo "        kill                          Stop a running environment and clean up"
-    echo "        ls                            List available environments"
-    echo "        refresh, reload, restart      Kill and re-initialize an environment"
-    echo "        rename TARGET NEW_NAME        Rename an environment"
-    echo "        self-update                   Update to the latest docker image"
-    echo "        start                         Start a paused environment"
-    echo "        stop                          Pause a running environment"
-    echo ""
-    echo " Michael Kenney <mkenney@webbedlam.com>"
-    echo ""
+    echo "
+ Usage: $(basename ${0}) [options] [commands]
+
+ Options:
+        -h, -?                      Show usage
+        --help, help                Show extended help
+        -s, --sustain               Continue running the container after detaching
+        -p PATH, --path=PATH        Specify the project path
+        -t TARGET, --target=TARGET  Specify a target environment name
+
+    Commands:
+        attach [TARGET]             Attach to a running environment
+        init [TARGET] [PATH]        Create a new environment
+        kill TARGET                 Stop a running environment and clean up
+        ls [PATTERN]                List available environments
+        restart TARGET              Kill and re-initialize an environment
+        rename TARGET NEW_NAME      Rename an environment
+        self-update                 Update to the latest docker image
+        start [TARGET]              Start a paused environment
+        stop [TARGET]               Pause a running environment
+
+ Michael Kenney <mkenney@webbedlam.com>
+"
     exit 1
 }
 
 # Show the help screen
 function _devenv_show_help {
-    echo " NAME"
-    echo "     $(basename ${0}) -- Manage mkenney/devenv docker work environment containers"
-    echo ""
-    echo " SYNOPSYS"
-    echo "     $(basename ${0}) [-t TARGET] [-p PATH] [-c] [command]"
-    echo ""
-    echo " DESCRIPTION"
-    echo "     The $(basename ${0}) utility is used to manage mkenney/devenv docker containers"
-    echo "     to create a consistent bash-based shell environment."
-    echo ""
-    echo " OPTIONS"
-    echo "     Command modifiers. Most commands take their own arguments. The init command"
-    echo "     however requires any path or target name specifications be pased using the"
-    echo "     options below"
-    echo ""
-    echo "         -h, -?"
-    echo "             Show the command usage screen"
-    echo ""
-    echo "         --help, help"
-    echo "             Show this extended help screen"
-    echo ""
-    echo "         -c, --continue"
-    echo "             Used when attaching to an environment. If specified, allow the"
-    echo "             environent to continue running after detaching from the session,"
-    echo "             otherwise the environment container will be paused automatically"
-    echo ""
-    echo "         -p PATH, --path=PATH"
-    echo "             Specify the project path, this directory is mounted into /src"
-    echo "             inside the environment. If omitted, the project path is set to"
-    echo "             the current directory."
-    echo ""
-    echo "         -t TARGET, --target=TARGET"
-    echo "             Specify an environment name. If omitted, the environment name"
-    echo "             is set to the basename of the project path."
-    echo ""
-    echo " COMMANDS"
-    echo "     Available commands $(basename ${0}) can execute"
-    echo ""
-    echo "         attach [TARGET]"
-    echo "             Attach to a running environment specified by the optional [TARGET]"
-    echo "             argument. If omitted, TARGET value defaults to the basename of the"
-    echo "             project path or the name of the current directory if none is"
-    echo "             specified. This is the default command."
-    echo ""
-    echo "             EXAMPLES"
-    echo "                 $(basename ${0}) attach [TARGET]"
-    echo "                 $(basename ${0}) -t TARGET attach"
-    echo "                 $(basename ${0}) -p PATH attach"
-    echo ""
-    echo "         init [TARGET] [PATH]"
-    echo "             Create and start a new environment, optionally naming it and specifying"
-    echo "             the project path. The PATH defaults to the current directory and the"
-    echo "             TARGET defaults to the basename of the project path."
-    echo ""
-    echo "             EXAMPLES"
-    echo "                 $(basename ${0}) create [TARGET] [PATH]"
-    echo "                 $(basename ${0}) -p PATH create [TARGET]"
-    echo "                 $(basename ${0}) -t TARGET create [PATH]"
-    echo "                 $(basename ${0}) -t TARGET -p PATH create"
-    echo ""
-    echo "         kill"
-    echo "             Stop a running environment and clean up"
-    echo ""
-    echo "             EXAMPLES"
-    echo "                 $(basename ${0}) kill TARGET"
-    echo "                 $(basename ${0}) -t TARGET kill"
-    echo "                 $(basename ${0}) -p PATH kill"
-    echo ""
-    echo "         ls [pattern]"
-    echo "             List currently running environments, optionally filtering results with"
-    echo "             a glob pattern"
-    echo ""
-    echo "             EXAMPLES"
-    echo "                 $(basename ${0}) ls"
-    echo "                 $(basename ${0}) ls java*"
-    echo "                 $(basename ${0}) ls *-php-v5.?"
-    echo ""
-    echo "         refresh TARGET, reload TARGET, restart TARGET"
-    echo "             Kill, re-create and attach to the specified running environment"
-    echo ""
-    echo "             EXAMPLES"
-    echo "                 $(basename ${0}) restart TARGET"
-    echo "                 $(basename ${0}) -t TARGET restart"
-    echo "                 $(basename ${0}) -p PATH restart"
-    echo ""
-    echo "         rename TARGET NEW_NAME"
-    echo "             Rename a running or stopped environment"
-    echo ""
-    echo "             EXAMPLES"
-    echo "                 $(basename ${0}) rename TARGET NEW_NAME"
-    echo "                 $(basename ${0}) -t TARGET rename NEW_NAME"
-    echo ""
-    echo "         self-update"
-    echo "             Update to the latest mkenney/devenv docker image"
-    echo ""
-    echo "             EXAMPLES"
-    echo "                 $(basename ${0}) self-update"
-    echo ""
-    echo "         start TARGET"
-    echo "             Start a suspended environment"
-    echo ""
-    echo "             EXAMPLES"
-    echo "                 $(basename ${0}) start TARGET"
-    echo ""
-    echo "         stop TARGET"
-    echo "             Suspend a running environment"
-    echo ""
-    echo "             EXAMPLES"
-    echo "                 $(basename ${0}) stop TARGET"
-    echo ""
-    echo " TODO"
-    echo "     Improve error handling and messages"
-    echo ""
-    echo " AUTHORS"
-    echo "     Michael Kenney <mkenney@webbedlam.com>"
-    echo ""
+    echo "
+ NAME
+     $(basename ${0}) -- Manage ${CONTAINER_IMAGE} docker work environment containers
+
+ SYNOPSYS
+     $(basename ${0}) [-t TARGET] [-p PATH] [-c] [command]
+
+ DESCRIPTION
+     The $(basename ${0}) utility is used to manage ${CONTAINER_IMAGE} docker containers
+     to create a consistent bash-based shell environment.
+
+ OPTIONS
+     Command modifiers and alternate data inputs. Most commands take their own
+     arguments.
+
+         -h, -?
+             Show the command usage screen
+
+         --help, help
+             Show this extended help screen
+
+         -s, --sustain
+             Used when attaching to an environment. If specified, allow the
+             environent to continue running after detaching from the session,
+             otherwise the environment container will be paused automatically
+
+         -p PATH, --path=PATH
+             Specify the project path, this directory is mounted into /src
+             inside the environment. If omitted, the project path is set to
+             the current directory.
+
+         -t TARGET, --target=TARGET
+             Specify an environment name. If omitted, the environment name
+             is set to the basename of the project path.
+
+ COMMANDS
+     Available commands $(basename ${0}) can execute
+
+         attach [TARGET]
+             Attach to a running environment specified by the optional [TARGET]
+             argument. If omitted, TARGET value defaults to the basename of the
+             project path or the name of the current directory if none is
+             specified. This is the default command.
+
+             EXAMPLES
+                 $(basename ${0}) attach [TARGET]
+                 $(basename ${0}) -t TARGET attach
+                 $(basename ${0}) -p PATH attach
+
+         init [TARGET] [PATH]
+             Create and start a new environment, optionally naming it and specifying
+             the project path. The PATH defaults to the current directory and the
+             TARGET defaults to the basename of the project path.
+
+             EXAMPLES
+                 $(basename ${0}) create [TARGET] [PATH]
+                 $(basename ${0}) -p PATH create [TARGET]
+                 $(basename ${0}) -t TARGET create [PATH]
+                 $(basename ${0}) -t TARGET -p PATH create
+
+         kill
+             Stop a running environment and clean up
+
+             EXAMPLES
+                 $(basename ${0}) kill TARGET
+                 $(basename ${0}) -t TARGET kill
+                 $(basename ${0}) -p PATH kill
+
+         ls [pattern]
+             List currently running environments, optionally filtering results with
+             a glob pattern
+
+             EXAMPLES
+                 $(basename ${0}) ls
+                 $(basename ${0}) ls java*
+                 $(basename ${0}) ls *-php-v5.?
+
+         refresh TARGET, reload TARGET, restart TARGET
+             Kill, re-create and attach to the specified running environment
+
+             EXAMPLES
+                 $(basename ${0}) restart TARGET
+                 $(basename ${0}) -t TARGET restart
+                 $(basename ${0}) -p PATH restart
+
+         rename TARGET NEW_NAME
+             Rename a running or stopped environment
+
+             EXAMPLES
+                 $(basename ${0}) rename TARGET NEW_NAME
+                 $(basename ${0}) -t TARGET rename NEW_NAME
+
+         self-update
+             Update to the latest ${CONTAINER_IMAGE} docker image
+
+             EXAMPLES
+                 $(basename ${0}) self-update
+
+         start TARGET
+             Start a suspended environment
+
+             EXAMPLES
+                 $(basename ${0}) start TARGET
+
+         stop TARGET
+             Suspend a running environment
+
+             EXAMPLES
+                 $(basename ${0}) stop TARGET
+
+ TODO
+     - Improve error handling and messages
+     - Search containers by PATH label to find the
+       TARGET value for a PATH
+
+ AUTHORS
+     Michael Kenney <mkenney@webbedlam.com>
+" | less
     exit 1
 }
 
@@ -232,7 +236,7 @@ function _devenv_create_container {
             -w "/src" \
             --label "project_path=${2}" \
             --name ${1}${CONTAINER_SUFFIX} \
-            mkenney/devenv
+           ${CONTAINER_IMAGE} 
 
         _devenv_init_session ${1}
     fi
@@ -267,7 +271,7 @@ function _devenv_rename_container {
 #
 # @todo This should update this script also
 function _devenv_self_update {
-    docker pull mkenney/devenv
+    docker pull $CONTAINER_IMAGE
 }
 
 # Check to see if a named environment is running
@@ -314,8 +318,8 @@ function _devenv_is_paused {
 function _devenv_list_environments {
 
     # Stopped environments
-    if [ "" != "$(docker ps -a -f "status=exited" | grep '\-devenv\-$')" ]; then
-        for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep '\-devenv\-$' | grep ); do
+    if [ "" != "$(docker ps -a -f "status=exited" | grep -e "$CONTAINER_SUFFIX\$")" ]; then
+        for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep -e "$CONTAINER_SUFFIX\$"); do
             name=${a:1:${#a}-1}
             name=${name%$CONTAINER_SUFFIX}
             if [ "" == "${1}" ] || [[ "$name" == $1 ]]; then
@@ -326,8 +330,8 @@ function _devenv_list_environments {
 
     # Running environments
     local name
-    if [ "" != "$(docker ps | grep '\-devenv\-$')" ]; then
-        for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep '\-devenv\-$'); do
+    if [ "" != "$(docker ps | grep -e "$CONTAINER_SUFFIX\$")" ]; then
+        for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep -e "$CONTAINER_SUFFIX\$"); do
             name=${a:1:${#a}-1}
             name=${name%$CONTAINER_SUFFIX}
             if [ "" == "${1}" ] || [[ "$name" == $1 ]]; then
@@ -371,8 +375,8 @@ function _devenv_error_nopath {
 # Display error message
 function _devenv_error_target_not_running {
     echo ""
-    echo "The specified enviroment '${1}' is not running, try starting it with"
-    echo "'devenv start [-t environment_name]'"
+    echo "The specified enviroment '${1}' does not exist, try creating it with"
+    echo "'devenv init ${1} [PATH]'"
     exit 1
 }
 
@@ -421,7 +425,7 @@ function _devenv_error_not_a_directory {
 
 _devenv_path=""
 _devenv_target=""
-_devenv_continue="false"
+_devenv_sustain="false"
 
 while :; do
     case $1 in
@@ -437,8 +441,8 @@ while :; do
         #
         # continue running when detaching, otherwise pause
         #
-        -c|--continue)
-            _devenv_continue="true"
+        -s|--sustain)
+            _devenv_sustain="true"
             ;;
         #
         # project path
@@ -627,13 +631,13 @@ fi
 # Attach to a running container
 if [ "attach" == "${_devenv_command}" ]; then
     if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
-        _devenv_create_container ${_devenv_container_name} ${_devenv_project_path}
+        _devenv_error_target_not_running $_devenv_container_name
     fi
     if [ "true" == "$(_devenv_is_paused ${_devenv_container_name})" ]; then
         _devenv_unpause_container ${_devenv_container_name}
     fi
     _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_continue}" ]; then
+    if [ "true" != "${_devenv_sustain}" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 
@@ -666,7 +670,7 @@ elif [ "refresh" == "${_devenv_command}" ] || [ "restart" == "${_devenv_command}
     _devenv_kill_container ${_devenv_container_name}
     _devenv_create_container ${_devenv_container_name} ${_devenv_project_path}
     _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_continue}" ]; then
+    if [ "true" != "${_devenv_sustain}" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 
@@ -692,7 +696,7 @@ elif [ "self-update" == "${_devenv_command}" ]; then
 elif [ "start" == "${_devenv_command}" ]; then
     _devenv_unpause_container ${_devenv_container_name}
     _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_continue}" ]; then
+    if [ "true" != "${_devenv_sustain}" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 

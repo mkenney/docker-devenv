@@ -6,97 +6,118 @@ The devenv script is available in the bin/ folder and an auto-completion
 script is available in the bash/ folder
 
 # NAME
-    devenv -- Manage mkenney/devenv docker work environment containers
+     $(basename ${0}) -- Manage ${CONTAINER_IMAGE} docker work environment containers
 
 # SYNOPSYS
-    devenv [-t TARGET] [-p PATH] [command]
+     $(basename ${0}) [-t TARGET] [-p PATH] [-c] [command]
 
 # DESCRIPTION
-    The devenv utility is used to manage mkenney/devenv docker containers
-    to create a consistent bash-based shell environment.
+     The $(basename ${0}) utility is used to manage ${CONTAINER_IMAGE} docker containers
+     to create a consistent bash-based shell environment.
 
 # OPTIONS
-    Command modifiers. Most commands take their own arguments. The `init` command
-    however requires any path or target name specifications be pased using the
-    options below
+     Command modifiers and alternate data inputs. Most commands take their own
+     arguments.
 
-        -h, -?
-            Show the command usage screen
+         -h, -?
+             Show the command usage screen
 
-        --help, help
-            Show this extended help screen
+         --help, help
+             Show this extended help screen
 
-        -p PATH, --path=PATH
-            Specify the project path, this directory is mounted into
-            /src inside the environment. If omitted, the project path is
-            set to the current directory.
+         -s, --sustain
+             Used when attaching to an environment. If specified, allow the
+             environent to continue running after detaching from the session,
+             otherwise the environment container will be paused automatically
 
-        -t TARGET, --target=TARGET
-            Specify an environment name. If omitted, the environment
-            name is set to the basename of the project path.
+         -p PATH, --path=PATH
+             Specify the project path, this directory is mounted into /src
+             inside the environment. If omitted, the project path is set to
+             the current directory.
+
+         -t TARGET, --target=TARGET
+             Specify an environment name. If omitted, the environment name
+             is set to the basename of the project path.
 
 # COMMANDS
-    Available commands devenv can execute
+     Available commands $(basename ${0}) can execute
 
-        attach [TARGET]
-            Attach to a running environment specified by the optional [TARGET]
-            argument. If omitted, TARGET value defaults to the basename of the
-            project path or the name of the current directory if none is specified.
-            This is the default command.
+         attach [TARGET]
+             Attach to a running environment specified by the optional [TARGET]
+             argument. If omitted, TARGET value defaults to the basename of the
+             project path or the name of the current directory if none is
+             specified. This is the default command.
 
-            `devenv attach [TARGET]`
-            `devenv -t TARGET attach`
-            `devenv -p PATH attach`
+             EXAMPLES
+                 $(basename ${0}) attach [TARGET]
+                 $(basename ${0}) -t TARGET attach
+                 $(basename ${0}) -p PATH attach
 
-        init [TARGET] [PATH]
-            Create and start a new environment, optionally naming it and specifying
-            the project path. The PATH defaults to the current directory and the
-            TARGET defaults to the basename of the project path.
+         init [TARGET] [PATH]
+             Create and start a new environment, optionally naming it and specifying
+             the project path. The PATH defaults to the current directory and the
+             TARGET defaults to the basename of the project path.
 
-            `devenv create [TARGET] [PATH]`
-            `devenv -p PATH create [TARGET]`
-            `devenv -t TARGET create [PATH]`
-            `devenv -t TARGET -p PATH create`
+             EXAMPLES
+                 $(basename ${0}) create [TARGET] [PATH]
+                 $(basename ${0}) -p PATH create [TARGET]
+                 $(basename ${0}) -t TARGET create [PATH]
+                 $(basename ${0}) -t TARGET -p PATH create
 
-        kill
-            Stop a running environment and clean up
+         kill
+             Stop a running environment and clean up
 
-            `devenv kill TARGET`
-            `devenv -t TARGET kill`
-            `devenv -p PATH kill`
+             EXAMPLES
+                 $(basename ${0}) kill TARGET
+                 $(basename ${0}) -t TARGET kill
+                 $(basename ${0}) -p PATH kill
 
-        ls [pattern]
-            List currently running environments
+         ls [pattern]
+             List currently running environments, optionally filtering results with
+             a glob pattern
 
-        refresh TARGET, reload TARGET, restart TARGET
-            Kill and re-create the specified running environment
+             EXAMPLES
+                 $(basename ${0}) ls
+                 $(basename ${0}) ls java*
+                 $(basename ${0}) ls *-php-v5.?
 
-            `devenv restart TARGET`
-            `devenv -t TARGET restart`
-            `devenv -p PATH restart`
+         refresh TARGET, reload TARGET, restart TARGET
+             Kill, re-create and attach to the specified running environment
 
-        rename TARGET NEW_NAME
-            Rename a running or stopped environment
+             EXAMPLES
+                 $(basename ${0}) restart TARGET
+                 $(basename ${0}) -t TARGET restart
+                 $(basename ${0}) -p PATH restart
 
-            `devenv rename TARGET NEW_NAME`
-            `devenv -t TARGET rename NEW_NAME`
+         rename TARGET NEW_NAME
+             Rename a running or stopped environment
 
-        self-update
-            Update to the latest mkenney/devenv docker image
+             EXAMPLES
+                 $(basename ${0}) rename TARGET NEW_NAME
+                 $(basename ${0}) -t TARGET rename NEW_NAME
 
-        start TARGET
-            Start a suspended environment
+         self-update
+             Update to the latest ${CONTAINER_IMAGE} docker image
 
-            `devenv start my_project`
+             EXAMPLES
+                 $(basename ${0}) self-update
 
-        stop TARGET
-            Suspend a running environment
+         start TARGET
+             Start a suspended environment
 
-            `devenv stop my_project`
+             EXAMPLES
+                 $(basename ${0}) start TARGET
+
+         stop TARGET
+             Suspend a running environment
+
+             EXAMPLES
+                 $(basename ${0}) stop TARGET
 
 # TODO
-    Improve error handling and messages
+     - Improve error handling and messages
+     - Search containers by PATH label to find the
+       TARGET value for a PATH
 
 # AUTHORS
-    Michael Kenney <mkenney@webbedlam.com>
-
+     Michael Kenney <mkenney@webbedlam.com>

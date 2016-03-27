@@ -1,6 +1,8 @@
 #!/bin/bash
 # Source this file
 
+CONTAINER_SUFFIX=.devenv
+
 # Return the list of standard and custom commands as well as current
 # container names for tab-completion
 function _devenv_autocomplete {
@@ -10,10 +12,11 @@ function _devenv_autocomplete {
 
     _docker_container_names=""
     # Add all current container names to the auto-complete command list
-    if [ "" != "$(docker ps -a | grep '\-devenv\-$')" ]; then
-        for a in $(docker inspect --format='{{.Name}}' $(docker ps -aq --no-trunc) | grep '\-devenv\-$'); do
+    if [ "" != "$(docker ps -a | grep -e "$CONTAINER_SUFFIX\$")" ]; then
+        for a in $(docker inspect --format='{{.Name}}' $(docker ps -aq --no-trunc) | grep -e "$CONTAINER_SUFFIX\$"); do
             name=${a:1:${#a}-1}
-            _docker_container_names="$_docker_container_names ${name%-devenv-}"
+            name=${name%$CONTAINER_SUFFIX}
+            _docker_container_names="$_docker_container_names ${name}"
         done
     fi
 
