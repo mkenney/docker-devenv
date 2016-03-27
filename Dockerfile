@@ -8,8 +8,10 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 USER root
 RUN mkdir -p /root/src \
-    && apt-get update \
-    && apt-get install -qqy apt-utils
+    && apt-get -qq update \
+    && apt-get install -qqy apt-utils \
+    && apt-get -qq upgrade \
+    && apt-get -qq dist-upgrade
 
 ##############################################################################
 # Configurations
@@ -73,12 +75,16 @@ RUN apt-get install -qqy \
         unzip \
         wget \
         vim-nox \
-    && curl -sL https://deb.nodesource.com/setup_0.12 | bash - > /dev/null \
-    && apt-get install -qqy nodejs \
-    && npm install -g gulp-cli \
+    && curl -sL https://deb.nodesource.com/setup_5.x | bash - > /dev/null \
+    && apt-get install -qqy \
+        nodejs \
+        build-essential \
+    && npm install -g npm \
+    && npm install -g bower \
     && npm install -g grunt-cli \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && npm install -g gulp-cli \
+    && npm install -g yo \
+    && npm install -g generator-webapp
 
 ##############################################################################
 # Dependencies
@@ -110,9 +116,9 @@ RUN groupadd dba -g 201 -o \
     && mkdir -p /oracle/product \
     && ln -s $ORACLE_HOME /oracle/product/latest \
     && mkdir -p /oracle/product/latest/network/admin \
-    && rm /root/src/oracle-instantclient${ORACLE_VERSION_SHORT}-basic_${ORACLE_VERSION_LONG}_amd64.deb \
-    && rm /root/src/oracle-instantclient${ORACLE_VERSION_SHORT}-devel_${ORACLE_VERSION_LONG}_amd64.deb \
-    && rm /root/src/oracle-instantclient${ORACLE_VERSION_SHORT}-sqlplus_${ORACLE_VERSION_LONG}_amd64.deb
+    && rm -f /root/src/oracle-instantclient${ORACLE_VERSION_SHORT}-basic_${ORACLE_VERSION_LONG}_amd64.deb \
+    && rm -f /root/src/oracle-instantclient${ORACLE_VERSION_SHORT}-devel_${ORACLE_VERSION_LONG}_amd64.deb \
+    && rm -f /root/src/oracle-instantclient${ORACLE_VERSION_SHORT}-sqlplus_${ORACLE_VERSION_LONG}_amd64.deb
 
 ##############################################################################
 # PHP
@@ -211,6 +217,9 @@ RUN groupadd dev \
 ##############################################################################
 # ~ fin ~
 ##############################################################################
+
+RUN apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 USER dev
 # Don't forget to configure vim for the dev user. do this here
