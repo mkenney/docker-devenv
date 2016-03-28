@@ -98,10 +98,6 @@ COPY container/oracle-instantclient${ORACLE_VERSION_SHORT}-basic_${ORACLE_VERSIO
 COPY container/oracle-instantclient${ORACLE_VERSION_SHORT}-devel_${ORACLE_VERSION_LONG}_amd64.deb /root/src/
 COPY container/oracle-instantclient${ORACLE_VERSION_SHORT}-sqlplus_${ORACLE_VERSION_LONG}_amd64.deb /root/src/
 
-# devenv scripts
-COPY container/init.sh /
-COPY container/attach.sh /
-
 ##############################################################################
 # Oracle instantclient
 ##############################################################################
@@ -194,24 +190,27 @@ RUN groupadd dev \
     && useradd dev -s /bin/bash -m -g dev -G root \
     && echo "dev:password" | chpasswd \
     && echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
-    && cd ~dev/ \
+    && cd /root/src \
     && git clone https://github.com/mkenney/terminal_config.git \
-    && rsync -a terminal_config/ ./ \
-    && rsync -a terminal_config/ ~/ \
-    && rm -rf terminal_config \
-    && git submodule update --init --recursive  \
-    && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
-    && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
-    && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
-    && echo "export CFLAGS=$(echo $CFLAGS)"                    | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
-    && echo "export NLS_LANG=$(echo $NLS_LANG)"                | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
-    && echo "export LANG=$(echo $LANG)"                        | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
-    && echo "export LANGUAGE=$(echo $LANGUAGE)"                | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
-    && echo "export LC_ALL=$(echo $LC_ALL)"                    | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
-    && echo "export PATH=$(echo $PATH)"                        | tee -a ./.bash_profile ~/.bash_profile ~oracle/.bash_profile \
-    && chown -R dev:dev . \
-    && cd ~/ \
+    && cd /root/src/terminal_config/ \
     && git submodule update --init --recursive \
+    && cd /root/src \
+    && rsync -a terminal_config/ ~/ \
+    && rsync -a terminal_config/ ~dev/ \
+    && rsync -a terminal_config/ ~oracle/ \
+    && rm -rf terminal_config \
+    && echo "set tags=/web.tags"                               | tee -a ~/.vimrc        ~dev/.vimrc        ~oracle/.vimrc        \
+    && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
+    && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
+    && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
+    && echo "export CFLAGS=$(echo $CFLAGS)"                    | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
+    && echo "export NLS_LANG=$(echo $NLS_LANG)"                | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
+    && echo "export LANG=$(echo $LANG)"                        | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
+    && echo "export LANGUAGE=$(echo $LANGUAGE)"                | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
+    && echo "export LC_ALL=$(echo $LC_ALL)"                    | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
+    && echo "export PATH=$(echo $PATH)"                        | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
+    && chown -R dev:dev ~dev/. \
+    && cd /root/ \
     && vim +PluginInstall +qall > /dev/null 2>&1
 
 ##############################################################################
@@ -220,6 +219,10 @@ RUN groupadd dev \
 
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+# devenv support scripts
+COPY container/init.sh /
+COPY container/attach.sh /
 
 USER dev
 # Don't forget to configure vim for the dev user. do this here
