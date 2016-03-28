@@ -199,7 +199,7 @@ RUN groupadd dev \
     && rsync -a terminal_config/ ~dev/ \
     && rsync -a terminal_config/ ~oracle/ \
     && rm -rf terminal_config \
-    && echo "set tags=/web.tags"                               | tee -a ~/.vimrc        ~dev/.vimrc        ~oracle/.vimrc        \
+    && echo "set tags=/src/tags"                               | tee -a ~/.vimrc        ~dev/.vimrc        ~oracle/.vimrc        \
     && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
     && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \

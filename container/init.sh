@@ -23,7 +23,7 @@ sudo /usr/sbin/rsyslogd > /dev/null 2>&1
 
 cd $PROJECT_PATH
 if [ ! -f "/web.tags" ]; then
-    sudo ctags-exuberant -f /web.tags --exclude='.git' --exclude='node_modules' --languages=+PHP,+JavaScript,+Perl,+Java -R /src && sudo chmod +r /src/web.tags
+    ctags-exuberant --exclude='.git' --exclude='node_modules' --languages=+PHP,+JavaScript,+Perl,+Java,+Python -R /src
 fi
 
 ##############################################################################
