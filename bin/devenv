@@ -16,7 +16,7 @@ function _devenv_show_usage {
  Options:
         -h, -?                      Show usage
         --help, help                Show extended help
-        -s, --sustain               Continue running the container after detaching
+        -d, --daemonize             Continue running the container after detaching
         -p PATH, --path=PATH        Specify the project path
         -t TARGET, --target=TARGET  Specify a target environment name
 
@@ -59,7 +59,7 @@ function _devenv_show_help {
          --help, help
              Show this extended help screen
 
-         -s, --sustain
+         -d, --daemonize
              Used when attaching to an environment. If specified, allow the
              environent to continue running after detaching from the session,
              otherwise the environment container will be paused automatically.
@@ -427,7 +427,7 @@ function _devenv_error_not_a_directory {
 
 _devenv_path=""
 _devenv_target=""
-_devenv_sustain="false"
+_devenv_daemonize="false"
 
 while :; do
     case $1 in
@@ -443,8 +443,8 @@ while :; do
         #
         # continue running when detaching, otherwise pause
         #
-        -s|--sustain)
-            _devenv_sustain="true"
+        -d|--daemonize)
+            _devenv_daemonize="true"
             ;;
         #
         # project path
@@ -625,7 +625,7 @@ if [ "attach" == "${_devenv_command}" ]; then
         _devenv_unpause_container ${_devenv_container_name}
     fi
     _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_sustain}" ]; then
+    if [ "true" != "${_devenv_daemonize}" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 
@@ -658,7 +658,7 @@ elif [ "refresh" == "${_devenv_command}" ] || [ "restart" == "${_devenv_command}
     _devenv_kill_container ${_devenv_container_name}
     _devenv_create_container ${_devenv_container_name} ${_devenv_project_path}
     _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_sustain}" ]; then
+    if [ "true" != "${_devenv_daemonize}" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 
@@ -684,7 +684,7 @@ elif [ "self-update" == "${_devenv_command}" ]; then
 elif [ "start" == "${_devenv_command}" ]; then
     _devenv_unpause_container ${_devenv_container_name}
     _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_sustain}" ]; then
+    if [ "true" != "${_devenv_daemonize}" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 

@@ -25,7 +25,7 @@ script is available in the bash/ folder
          --help, help
              Show this extended help screen
 
-         -s, --sustain
+         -d, --daemonize
              Used when attaching to an environment. If specified, allow the
              environent to continue running after detaching from the session,
              otherwise the environment container will be paused automatically.

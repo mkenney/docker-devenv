@@ -26,11 +26,14 @@ if [ ! -f "/web.tags" ]; then
     sudo ctags-exuberant -f /web.tags --languages=+PHP,+JavaScript,+Perl,+Java -R && sudo chmod +r /web.tags
 fi
 
+##############################################################################
+# import tnsnames
+##############################################################################
+
 sudo chown oracle:dba /oracle/product/latest/network/admin/tnsnames.ora
 sudo chmod 644 /oracle/product/latest/network/admin/tnsnames.ora
 
-# do these last...
-#sudo echo groupmod -g $(stat -c '%g' $PROJECT_PATH) dev
+# do these last, in this order...
 sudo groupmod -g $(stat -c '%g' $PROJECT_PATH) -o dev > /dev/null 2>&1
 sudo chgrp dev ~dev/
 sudo usermod -u $(stat -c '%u' $PROJECT_PATH) -o dev > /dev/null 2>&1
