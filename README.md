@@ -6,13 +6,13 @@ The devenv script is available in the bin/ folder and an auto-completion
 script is available in the bash/ folder
 
 # NAME
-     $(basename ${0}) -- Manage ${CONTAINER_IMAGE} docker work environment containers
+     devenv -- Manage ${CONTAINER_IMAGE} docker work environment containers
 
 # SYNOPSYS
-     $(basename ${0}) [-t TARGET] [-p PATH] [-c] [command]
+     devenv [-t TARGET] [-p PATH] [-c] [command]
 
 # DESCRIPTION
-     The $(basename ${0}) utility is used to manage ${CONTAINER_IMAGE} docker containers
+     The devenv utility is used to manage ${CONTAINER_IMAGE} docker containers
      to create a consistent bash-based shell environment.
 
 # OPTIONS
@@ -42,7 +42,7 @@ script is available in the bash/ folder
              is set to the basename of the project path.
 
 # COMMANDS
-     Available commands $(basename ${0}) can execute
+     Available commands devenv can execute
 
          attach [TARGET]
              Attach to a running environment specified by the optional [TARGET]
@@ -51,9 +51,9 @@ script is available in the bash/ folder
              specified. This is the default command.
 
              EXAMPLES
-                 $(basename ${0}) attach [TARGET]
-                 $(basename ${0}) -t TARGET attach
-                 $(basename ${0}) -p PATH attach
+                 devenv attach [TARGET]
+                 devenv -t TARGET attach
+                 devenv -p PATH attach
 
          init [TARGET] [PATH]
              Create and start a new environment, optionally naming it and specifying
@@ -61,60 +61,60 @@ script is available in the bash/ folder
              TARGET defaults to the basename of the project path.
 
              EXAMPLES
-                 $(basename ${0}) create [TARGET] [PATH]
-                 $(basename ${0}) -p PATH create [TARGET]
-                 $(basename ${0}) -t TARGET create [PATH]
-                 $(basename ${0}) -t TARGET -p PATH create
+                 devenv create [TARGET] [PATH]
+                 devenv -p PATH create [TARGET]
+                 devenv -t TARGET create [PATH]
+                 devenv -t TARGET -p PATH create
 
          kill
              Stop a running environment and clean up
 
              EXAMPLES
-                 $(basename ${0}) kill TARGET
-                 $(basename ${0}) -t TARGET kill
-                 $(basename ${0}) -p PATH kill
+                 devenv kill TARGET
+                 devenv -t TARGET kill
+                 devenv -p PATH kill
 
          ls [pattern]
              List currently running environments, optionally filtering results with
              a glob pattern
 
              EXAMPLES
-                 $(basename ${0}) ls
-                 $(basename ${0}) ls java*
-                 $(basename ${0}) ls *-php-v5.?
+                 devenv ls
+                 devenv ls java*
+                 devenv ls *-php-v5.?
 
          restart TARGET
              Kill, re-create and attach to the specified running environment
 
              EXAMPLES
-                 $(basename ${0}) restart TARGET
-                 $(basename ${0}) -t TARGET restart
-                 $(basename ${0}) -p PATH restart
+                 devenv restart TARGET
+                 devenv -t TARGET restart
+                 devenv -p PATH restart
 
          rename TARGET NEW_NAME
              Rename a running or stopped environment
 
              EXAMPLES
-                 $(basename ${0}) rename TARGET NEW_NAME
-                 $(basename ${0}) -t TARGET rename NEW_NAME
+                 devenv rename TARGET NEW_NAME
+                 devenv -t TARGET rename NEW_NAME
 
          self-update
              Update to the latest ${CONTAINER_IMAGE} docker image
 
              EXAMPLES
-                 $(basename ${0}) self-update
+                 devenv self-update
 
          start TARGET
              Start a suspended environment
 
              EXAMPLES
-                 $(basename ${0}) start TARGET
+                 devenv start TARGET
 
          stop TARGET
              Suspend a running environment
 
              EXAMPLES
-                 $(basename ${0}) stop TARGET
+                 devenv stop TARGET
 
 # TODO
      - Improve error handling and messages
