@@ -83,6 +83,12 @@ script is available in the bash/ folder
                  devenv ls java*
                  devenv ls *-php-v5.?
 
+         pause TARGET
+             Pause a running environment
+
+             EXAMPLES
+                 devenv pause TARGET
+
          restart TARGET
              Kill, re-create and attach to the specified running environment
 
@@ -109,12 +115,6 @@ script is available in the bash/ folder
 
              EXAMPLES
                  devenv unpause TARGET
-
-         pause TARGET
-             Pause a running environment
-
-             EXAMPLES
-                 devenv pause TARGET
 
 # TODO
      - Improve error handling and messages
