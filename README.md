@@ -6,13 +6,13 @@ The devenv script is available in the bin/ folder and an auto-completion
 script is available in the bash/ folder
 
 # NAME
-     devenv -- Manage ${CONTAINER_IMAGE} docker work environment containers
+     devenv -- Manage mkenney/devenv docker work environment containers
 
 # SYNOPSYS
      devenv [-t TARGET] [-p PATH] [-c] [command]
 
 # DESCRIPTION
-     The devenv utility is used to manage ${CONTAINER_IMAGE} docker containers
+     The devenv utility is used to manage mkenney/devenv docker containers
      to create a consistent bash-based shell environment.
 
 # OPTIONS
@@ -99,7 +99,7 @@ script is available in the bash/ folder
                  devenv -t TARGET rename NEW_NAME
 
          self-update
-             Update to the latest ${CONTAINER_IMAGE} docker image
+             Update to the latest mkenney/devenv docker image
 
              EXAMPLES
                  devenv self-update
