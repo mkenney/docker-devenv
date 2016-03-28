@@ -104,17 +104,17 @@ script is available in the bash/ folder
              EXAMPLES
                  devenv self-update
 
-         start TARGET
-             Start a suspended environment
+         unpause TARGET
+             Start a paused environment
 
              EXAMPLES
-                 devenv start TARGET
+                 devenv unpause TARGET
 
-         stop TARGET
-             Suspend a running environment
+         pause TARGET
+             Pause a running environment
 
              EXAMPLES
-                 devenv stop TARGET
+                 devenv pause TARGET
 
 # TODO
      - Improve error handling and messages

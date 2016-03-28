@@ -25,11 +25,11 @@ function _devenv_show_usage {
         init [TARGET] [PATH]        Create a new environment
         kill TARGET                 Stop a running environment and clean up
         ls [PATTERN]                List available environments
+        pause [TARGET]              Pause a running environment
         restart TARGET              Kill and re-initialize an environment
         rename TARGET NEW_NAME      Rename an environment
         self-update                 Update to the latest docker image
-        start [TARGET]              Start a paused environment
-        stop [TARGET]               Pause a running environment
+        unpause [TARGET]            Start a paused environment
 
  Michael Kenney <mkenney@webbedlam.com>
 "
@@ -117,6 +117,12 @@ function _devenv_show_help {
                  $(basename ${0}) ls java*
                  $(basename ${0}) ls *-php-v5.?
 
+         pause TARGET
+             Pause a running environment
+
+             EXAMPLES
+                 $(basename ${0}) pause TARGET
+
          restart TARGET
              Kill, re-create and attach to the specified running environment
 
@@ -138,17 +144,11 @@ function _devenv_show_help {
              EXAMPLES
                  $(basename ${0}) self-update
 
-         start TARGET
-             Start a suspended environment
+         unpause TARGET
+             Start a paused environment
 
              EXAMPLES
-                 $(basename ${0}) start TARGET
-
-         stop TARGET
-             Suspend a running environment
-
-             EXAMPLES
-                 $(basename ${0}) stop TARGET
+                 $(basename ${0}) unpause TARGET
 
  TODO
      - Improve error handling and messages
@@ -304,7 +304,7 @@ function _devenv_is_running {
     echo ${running}
 }
 
-# Check to see if a named environment is running
+# Check to see if a named environment is paused
 #
 # @param environment name returned by _devenv_list_environments
 function _devenv_is_paused {
@@ -549,15 +549,15 @@ while :; do
         self-update)
             _devenv_command=$1
            ;;
-        start)
-            _devenv_command=$1
+        start|unpause)
+            _devenv_command='start'
             if [ "" == "$_devenv_target" ]; then
                 _devenv_target=$2
                 shift
             fi
             ;;
-        stop)
-            _devenv_command=$1
+        stop|pause)
+            _devenv_command='stop'
             if [ "" == "$_devenv_target" ]; then
                 _devenv_target=$2
                 shift
