@@ -208,6 +208,7 @@ RUN groupadd dev \
     && echo "export LANG=$(echo $LANG)"                        | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
     && echo "export LANGUAGE=$(echo $LANGUAGE)"                | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
     && echo "export LC_ALL=$(echo $LC_ALL)"                    | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
+    && echo "export TERM=xterm"                                | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
     && echo "export PATH=$(echo $PATH)"                        | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
     && chown -R dev:dev ~dev/. \
     && cd /root/ \
