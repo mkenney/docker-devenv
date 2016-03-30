@@ -188,7 +188,7 @@ function _devenv_kill_container {
     running='false'
 }
 
-# Stop a dev container
+# Pause a dev container
 #
 # @param environment name returned by _devenv_list_environments
 function _devenv_pause_container {
@@ -201,7 +201,7 @@ function _devenv_pause_container {
     running='false'
 }
 
-# Start a dev container
+# Unpause a dev container
 #
 # @param environment name returned by _devenv_list_environments
 function _devenv_unpause_container {
@@ -246,13 +246,13 @@ function _devenv_create_container {
             --label project_path=${2} \
             --name ${1}${CONTAINER_SUFFIX}
         ";
+
         # tmux config path
         if [ "" != "$3" ]; then
             docker_run_args="$docker_run_args -v ${3}:/home/dev/.tmux.conf:ro"
         fi
 
         echo "Starting dev container '${1}' at ${2}..."
-        echo "docker run $docker_run_args ${CONTAINER_IMAGE}"
         docker run $docker_run_args ${CONTAINER_IMAGE} 
 
         _devenv_init_session ${1}
