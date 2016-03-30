@@ -159,8 +159,6 @@ function _devenv_show_help {
 
  TODO
      - Improve error handling and messages
-     - Search containers by PATH label to find the
-       TARGET value for a PATH
 
  AUTHORS
      Michael Kenney <mkenney@webbedlam.com>
@@ -332,6 +330,12 @@ function _devenv_is_paused {
 # List current environments
 function _devenv_list_environments {
 
+    quiet='false'
+    if [ "-q" == "$1" ]; then
+        quiet='true'
+        shift
+    fi
+
     # Stopped environments
     if [ "" != "$(docker ps -a -f "status=exited" | grep -e "$CONTAINER_SUFFIX\$")" ]; then
         for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep -e "$CONTAINER_SUFFIX\$"); do
@@ -339,7 +343,11 @@ function _devenv_list_environments {
             name=${name%$CONTAINER_SUFFIX}
             path=$(_devenv_get_path_from_container $name)
             if [ "" == "${1}" ] || [[ "$name" == $1 ]]; then
-                echo " stopped: ${name} @ ${path}"
+                if [ "true" == "$quiet" ]; then
+                    echo $name
+                else
+                    echo " stopped: ${name} @ ${path}"
+                fi
             fi
         done
     fi
@@ -353,15 +361,33 @@ function _devenv_list_environments {
             path=$(_devenv_get_path_from_container $name)
             if [ "" == "${1}" ] || [[ "$name" == $1 ]]; then
                 if [ "true" == "$(_devenv_is_paused ${name%$CONTAINER_SUFFIX})" ]; then
-                    echo " paused:  ${name} @ ${path}"
+                    if [ "true" == "$quiet" ]; then
+                        echo $name
+                    else
+                        echo " paused:  ${name} @ ${path}"
+                    fi
                 else
-                    echo " running: ${name} @ ${path}"
+                    if [ "true" == "$quiet" ]; then
+                        echo $name
+                    else
+                        echo " running: ${name} @ ${path}"
+                    fi
                 fi
             fi
         done
     fi
 
     exit 0
+}
+
+function _devenv_get_target_from_path {
+    for name in $(_devenv_list_environments -q); do
+        path=$(_devenv_get_path_from_container $name)
+        if [ "$path" == "$1" ]; then
+            echo $name;
+            exit 0;
+        fi
+    done
 }
 
 #
@@ -621,10 +647,16 @@ if [ ! -d "$_devenv_path" ]; then
 fi
 _devenv_project_path=$(realpath "${_devenv_path}")
 
-# Setup the container name, default to the basename of the project path
+# Setup the container name. If the project path is associated with a current
+# container, use that container's name, otherwise default to the basename of
+# the project path
 if [ "" == "${_devenv_target}" ]; then
-    _devenv_container_name=$(basename $_devenv_project_path)
-
+    _tmp=$(_devenv_get_target_from_path $_devenv_project_path);
+    if [ "" != "$_tmp" ]; then
+        _devenv_container_name=$_tmp
+    else
+        _devenv_container_name=$(basename $_devenv_project_path)
+    fi
 else
     _devenv_container_name=${_devenv_target}
 
