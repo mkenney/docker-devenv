@@ -24,11 +24,10 @@ are mounted into the home directory and if a `tnsnames.ora` file exists
 on the host at `/oracle/product/latest/network/admin/tnsnames.ora` it will
 be copied to the same location inside the container. This should be enough
 to automate connecting to oracle (sqlplus is installed in the container).
-If the connection fails, make sure the path to the wallet files take a
-look at `~/.oracle/network/admin/sqlnet.ora` and make sure the path to the
-wallet directory doesn't contain your username from the host machine.
-`$HOME/.oracle/network/wallet` will work for both the container and the
-host.
+If the connection fails, make sure the path to the wallet files is correct.
+Take a look at `~/.oracle/network/admin/sqlnet.ora` and make sure the path
+doesn't contain your username from the host machine. `(DIRECTORY = $HOME/.oracle/network/wallet)`
+will work for both the container and the host.
 
 ## Installed apt-get packages
 
