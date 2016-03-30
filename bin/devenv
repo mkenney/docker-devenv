@@ -289,7 +289,7 @@ function _devenv_rename_container {
 # @todo This should update this script also
 function _devenv_self_update {
     wget -nv -O $COMMAND_PATH https://raw.githubusercontent.com/mkenney/docker-devenv/master/bin/devenv
-    #docker pull $CONTAINER_IMAGE
+    docker pull $CONTAINER_IMAGE
 }
 
 # Check to see if a named environment is running
