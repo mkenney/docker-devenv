@@ -1,6 +1,7 @@
 #!/bin/bash
 
 COMMAND=$(basename ${0})
+COMMAND_PATH=$0
 CONTAINER_SUFFIX=.devenv
 CONTAINER_IMAGE='mkenney/devenv'
 
@@ -87,9 +88,10 @@ function _devenv_show_help {
 
          attach [TARGET]
              Attach to a running environment specified by the optional [TARGET]
-             argument. If omitted, TARGET value defaults to the basename of the
-             project path or the name of the current directory if none is
-             specified. This is the default command.
+             argument. If omitted, runing environments are searched to see if
+             they are attached to the specified PATH (which defaults to the current
+             directory). If none are found then TARGET is set to the basename of
+             the PATH value. This is the default command.
 
              EXAMPLES
                  $(basename ${0}) attach [TARGET]
@@ -102,13 +104,13 @@ function _devenv_show_help {
              TARGET defaults to the basename of the project path.
 
              EXAMPLES
-                 $(basename ${0}) create [TARGET] [PATH]
-                 $(basename ${0}) -p PATH create [TARGET]
-                 $(basename ${0}) -t TARGET create [PATH]
-                 $(basename ${0}) -t TARGET -p PATH create
+                 $(basename ${0}) init [TARGET] [PATH]
+                 $(basename ${0}) -p PATH init [TARGET]
+                 $(basename ${0}) -t TARGET init [PATH]
+                 $(basename ${0}) -t TARGET -p PATH init 
 
          kill
-             Stop a running environment and clean up
+             Stop a running environment and clean up.
 
              EXAMPLES
                  $(basename ${0}) kill TARGET
@@ -117,12 +119,14 @@ function _devenv_show_help {
 
          ls [pattern]
              List currently running environments, optionally filtering results with
-             a glob pattern
+             a glob pattern. If pattern is '-q' (quiet) only environment names are
+             returned.
 
              EXAMPLES
                  $(basename ${0}) ls
                  $(basename ${0}) ls java*
                  $(basename ${0}) ls *-php-v5.?
+                 $(basename ${0}) ls -q
 
          pause TARGET
              Pause a running environment
@@ -131,7 +135,7 @@ function _devenv_show_help {
                  $(basename ${0}) pause TARGET
 
          restart TARGET
-             Kill, re-create and attach to the specified running environment
+             Kill and re-create the specified running environment
 
              EXAMPLES
                  $(basename ${0}) restart TARGET
@@ -284,7 +288,8 @@ function _devenv_rename_container {
 #
 # @todo This should update this script also
 function _devenv_self_update {
-    docker pull $CONTAINER_IMAGE
+    wget -nv -O $COMMAND_PATH https://raw.githubusercontent.com/mkenney/docker-devenv/master/bin/devenv
+    #docker pull $CONTAINER_IMAGE
 }
 
 # Check to see if a named environment is running
@@ -723,10 +728,6 @@ elif [ "refresh" == "${_devenv_command}" ] || [ "restart" == "${_devenv_command}
     fi
     _devenv_kill_container ${_devenv_container_name}
     _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path}
-    _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_daemonize}" ]; then
-        _devenv_pause_container ${_devenv_container_name}
-    fi
 
 
 # Rename a current container

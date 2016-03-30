@@ -51,9 +51,10 @@ script is available in the bash/ folder
 
          attach [TARGET]
              Attach to a running environment specified by the optional [TARGET]
-             argument. If omitted, TARGET value defaults to the basename of the
-             project path or the name of the current directory if none is
-             specified. This is the default command.
+             argument. If omitted, runing environments are searched to see if
+             they are attached to the specified PATH (which defaults to the current
+             directory). If none are found then TARGET is set to the basename of
+             the PATH value. This is the default command.
 
              EXAMPLES
                  devenv attach [TARGET]
@@ -81,12 +82,14 @@ script is available in the bash/ folder
 
          ls [pattern]
              List currently running environments, optionally filtering results with
-             a glob pattern
+             a glob pattern. If pattern is '-q' (quiet) only environment names are
+             returned.
 
              EXAMPLES
                  devenv ls
                  devenv ls java*
                  devenv ls *-php-v5.?
+                 devenv ls -q
 
          pause TARGET
              Pause a running environment
