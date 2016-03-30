@@ -19,6 +19,8 @@ function _devenv_show_usage {
         -d, --daemonize             Continue running the container after detaching
         -p PATH, --path=PATH        Specify the project path
         -t TARGET, --target=TARGET  Specify a target environment name
+        --tmux, --tmux=PATH         Specify a tmux configuration file. If path is
+                                    omitted then $HOME/.tmux.conf is assumed
 
     Commands:
         attach [TARGET]             Attach to a running environment
@@ -74,6 +76,11 @@ function _devenv_show_help {
          -t TARGET, --target=TARGET
              Specify an environment name. If omitted, the environment name
              is set to the basename of the project path.
+
+         --tmux, --tmux=PATH
+             Specify a tmux configuration file. If PATH is omitted then
+             $HOME/.tmux.conf will be assumed. If the --tmux option is omitted
+             then the .tmux.conf file from the docker image will be used.
 
  COMMANDS
      Available commands $(basename ${0}) can execute
@@ -222,9 +229,7 @@ function _devenv_create_container {
         echo "Container '${1}' is already running"
     else
 
-        echo "Starting dev container '${1}' at ${2}..."
-        local folder_name=$(basename $2)
-        docker run \
+        docker_run_args="
             -itd \
             -h ${1} \
             -e HOSTNAME=${1} \
@@ -235,10 +240,18 @@ function _devenv_create_container {
             -v ~/.ssh/:/home/dev/.ssh/:ro \
             -v ~/.oracle/:/home/dev/.oracle/:ro \
             -v ${2}:/src:rw \
-            -w "/src" \
-            --label "project_path=${2}" \
-            --name ${1}${CONTAINER_SUFFIX} \
-           ${CONTAINER_IMAGE} 
+            -w /src \
+            --label project_path=${2} \
+            --name ${1}${CONTAINER_SUFFIX}
+        ";
+        # tmux config path
+        if [ "" != "$3" ]; then
+            docker_run_args="$docker_run_args -v ${3}:/home/dev/.tmux.conf:ro"
+        fi
+
+        echo "Starting dev container '${1}' at ${2}..."
+        echo "docker run $docker_run_args ${CONTAINER_IMAGE}"
+        docker run $docker_run_args ${CONTAINER_IMAGE} 
 
         _devenv_init_session ${1}
     fi
@@ -324,8 +337,9 @@ function _devenv_list_environments {
         for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep -e "$CONTAINER_SUFFIX\$"); do
             name=${a:1:${#a}-1}
             name=${name%$CONTAINER_SUFFIX}
+            path=$(_devenv_get_path_from_container $name)
             if [ "" == "${1}" ] || [[ "$name" == $1 ]]; then
-                echo " stopped: ${name}"
+                echo " stopped: ${name} @ ${path}"
             fi
         done
     fi
@@ -336,11 +350,12 @@ function _devenv_list_environments {
         for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep -e "$CONTAINER_SUFFIX\$"); do
             name=${a:1:${#a}-1}
             name=${name%$CONTAINER_SUFFIX}
+            path=$(_devenv_get_path_from_container $name)
             if [ "" == "${1}" ] || [[ "$name" == $1 ]]; then
                 if [ "true" == "$(_devenv_is_paused ${name%$CONTAINER_SUFFIX})" ]; then
-                    echo " paused:  ${name}"
+                    echo " paused:  ${name} @ ${path}"
                 else
-                    echo " running: ${name}"
+                    echo " running: ${name} @ ${path}"
                 fi
             fi
         done
@@ -421,6 +436,13 @@ function _devenv_error_not_a_directory {
     exit 1
 }
 
+# Display error message
+function _devenv_error_not_a_directory {
+    echo ""
+    echo "The file '$HOME/.tmux.conf' does not exist"
+    exit 1
+}
+
 ##############################################################################
 # Parse command options
 ##############################################################################
@@ -480,7 +502,19 @@ while :; do
         --target|--target=)
             _devenv_show_help
             ;;
-
+        #
+        # tmux.conf path
+        #
+        --tmux=?*)
+            _tmux_conf_path=${1#*=}
+            ;;
+        --tmux)
+            if [ -f "$HOME/.tmux.conf" ]; then
+                _tmux_conf_path="$HOME/.tmux.conf"
+            else
+                _devenv_error_tmux_conf_not_found
+            fi
+            ;;
         #
         # Attach to a running container
         #
@@ -494,7 +528,7 @@ while :; do
         #
         # Initialize a new container
         #
-        init)
+        create|init)
             _devenv_command=$1
             if [ "" == "$_devenv_target" ]; then
                 _devenv_target=$2
@@ -637,7 +671,7 @@ elif [ "init" == "${_devenv_command}" ]; then
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
     fi
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path}
 
 
 # Kill a running container
@@ -656,7 +690,7 @@ elif [ "refresh" == "${_devenv_command}" ] || [ "restart" == "${_devenv_command}
         _devenv_error_target_not_running ${_devenv_container_name}
     fi
     _devenv_kill_container ${_devenv_container_name}
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path}
     _devenv_attach ${_devenv_container_name}
     if [ "true" != "${_devenv_daemonize}" ]; then
         _devenv_pause_container ${_devenv_container_name}
