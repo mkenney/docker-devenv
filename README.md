@@ -41,6 +41,11 @@ script is available in the bash/ folder
              Specify an environment name. If omitted, the environment name
              is set to the basename of the project path.
 
+         --tmux, --tmux=PATH
+             Specify a tmux configuration file. If PATH is omitted then
+             $HOME/.tmux.conf will be assumed. If the --tmux option is omitted
+             then the .tmux.conf file from the docker image will be used.
+
 # COMMANDS
      Available commands devenv can execute
 
@@ -118,8 +123,6 @@ script is available in the bash/ folder
 
 # TODO
      - Improve error handling and messages
-     - Search containers by PATH label to find the
-       TARGET value for a PATH
 
 # AUTHORS
      Michael Kenney <mkenney@webbedlam.com>
