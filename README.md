@@ -3,7 +3,19 @@
 * [mkenney/docker-devenv](https://github.com/mkenney/docker-devenv)
 
 The devenv script is available in the bin/ folder and an auto-completion
-script is available in the bash/ folder
+script is available in the bash/ folder.
+
+## Installed apt-get packages
+
+* curl exuberant-ctags git graphviz htop less libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng12-dev libbz2-dev libaio1 python python-dev python3 python3-dev rsync rsyslog ruby sudo tcpdump telnet tmux unzip wget vim-nox
+
+## Installed node packages
+
+* nodejs build-essential npm bower grunt-cli gulp-cli yo generator-webapp
+
+## PHP and supporting packages
+
+* oracleinstantclient+oci8 composer phpunit phpdocumentor phpcodesniffer phpmd
 
 # NAME
      devenv -- Manage mkenney/devenv docker work environment containers
@@ -98,7 +110,7 @@ script is available in the bash/ folder
                  devenv pause TARGET
 
          restart TARGET
-             Kill, re-create and attach to the specified running environment
+             Kill and re-create the specified running environment
 
              EXAMPLES
                  devenv restart TARGET
