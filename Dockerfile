@@ -89,8 +89,6 @@ RUN apt-get install -qqy \
     && npm install -g gulp-cli \
     && npm install -g yo \
     && npm install -g generator-webapp \
-    && killall -9 rsyslogd > /dev/null 2>&1 \
-    && rm -f /var/run/rsyslogd.pid > /dev/null 2>&1 \
     && /usr/sbin/rsyslogd > /dev/null 2>&1
 
 ##############################################################################
