@@ -65,6 +65,10 @@ RUN apt-get install -qqy \
         libpng12-dev \
         libbz2-dev \
         libaio1 \
+        python \
+        python-dev \
+        python3 \
+        python3-dev \
         rsync \
         rsyslog \
         ruby \
@@ -84,7 +88,10 @@ RUN apt-get install -qqy \
     && npm install -g grunt-cli \
     && npm install -g gulp-cli \
     && npm install -g yo \
-    && npm install -g generator-webapp
+    && npm install -g generator-webapp \
+    && killall -9 rsyslogd > /dev/null 2>&1 \
+    && rm -f /var/run/rsyslogd.pid > /dev/null 2>&1 \
+    && /usr/sbin/rsyslogd > /dev/null 2>&1
 
 ##############################################################################
 # Dependencies
