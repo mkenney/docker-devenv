@@ -9,11 +9,11 @@ script is available in the bash/ folder.
 
 * [mkenney/devenv](https://hub.docker.com/r/mkenney/devenv/)
 
-Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian/jessie).
+Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie).
 The default bash environment is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf)
 and, when using the  `devenv` cli, initializes and attaches to a tmux
-session when you connect to the container. My `.tmux.conf` remaps the activation
-shortcut to `Ctrl-\` so you can override that with `--tmux=PATH`.
+session when you connect to the container. My `.tmux.conf` remaps the
+activation shortcut to `Ctrl-\` so you can override that with `--tmux=PATH`.
 
 The default user is modified when the container is initialized so it is
 the owner of the project directory on the host and belongs to the same
@@ -29,7 +29,7 @@ Take a look at `~/.oracle/network/admin/sqlnet.ora` and make sure the path
 doesn't contain your username from the host machine. `(DIRECTORY = $HOME/.oracle/network/wallet)`
 will work for both the container and the host.
 
-## Installed apt-get packages
+## Installed apt packages
 
 * curl exuberant-ctags git graphviz htop less libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng12-dev libbz2-dev libaio1 python python-dev python3 python3-dev rsync rsyslog ruby sudo tcpdump telnet tmux unzip wget vim-nox
 
@@ -37,9 +37,13 @@ will work for both the container and the host.
 
 * nodejs:v5 build-essential npm:v3.8 bower:v1.7 grunt-cli:v1.1 gulp-cli:v1.2 yo:v1.7 generator-webapp
 
-## PHP 5.6 and supporting packages
+## PHP 5.6 packages
 
-* oracleinstantclient:v11.2 oci8 composer phpunit phpdocumentor phpcodesniffer phpmd xdebug pcntl
+* oci8 composer phpunit phpdocumentor phpcodesniffer phpmd xdebug pcntl
+
+## Oracle packages
+
+* instantclient:v11.2 basic devel sqlplus
 
 # NAME
      devenv -- Manage mkenney/devenv docker work environment containers
@@ -49,7 +53,8 @@ will work for both the container and the host.
 
 # DESCRIPTION
      The devenv utility is used to manage mkenney/devenv docker containers
-     to create a consistent bash-based shell environment.
+     to create a consistent bash-based shell environment. To detach from
+     an instance, simply detach from the `tmux` session (`:detach`)
 
 # OPTIONS
      Command modifiers and alternate data inputs. Most commands take their own
