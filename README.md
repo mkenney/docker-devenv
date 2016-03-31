@@ -117,7 +117,7 @@ will work for both the container and the host.
                  devenv -t TARGET create [PATH]
                  devenv -t TARGET -p PATH create
 
-         kill
+         kill [TARGET]
              Stop a running instance and clean up.
 
              EXAMPLES
@@ -136,13 +136,15 @@ will work for both the container and the host.
                  devenv ls *-php-v5.?
                  devenv ls -q
 
-         pause TARGET
+         pause [TARGET]
              Pause a running instance.
 
              EXAMPLES
                  devenv pause TARGET
+                 devenv -t TARGET pause
+                 devenv -p PATH pause
 
-         restart TARGET
+         restart [TARGET]
              Kill and re-create the specified running instance.
 
              EXAMPLES
@@ -150,24 +152,28 @@ will work for both the container and the host.
                  devenv -t TARGET restart
                  devenv -p PATH restart
 
-         rename TARGET NEW_NAME
-             Rename a running or stopped instance.
+         rename [TARGET] NEW_NAME
+             Rename a running or stopped instance. 'rename' does not accept a PATH
+             argument.
 
              EXAMPLES
                  devenv rename TARGET NEW_NAME
                  devenv -t TARGET rename NEW_NAME
 
          self-update
-             Update to the latest mkenney/devenv docker image and control script.
+             Update to the latest 'mkenney/devenv' docker image and 'devenv' control
+             script.
 
              EXAMPLES
                  devenv self-update
 
-         unpause TARGET
+         unpause [TARGET]
              Start a paused instance.
 
              EXAMPLES
                  devenv unpause TARGET
+                 devenv -t TARGET unpause
+                 devenv -p PATH unpause
 
 # TODO
      - Improve error handling and messages

@@ -50,7 +50,8 @@ function _devenv_show_help {
 
  DESCRIPTION
      The $(basename ${0}) utility is used to manage ${CONTAINER_IMAGE} docker containers
-     to create a consistent bash-based shell environment.
+     to create a consistent bash-based shell environment. To detach from
+     an instance, simply detach from the 'tmux' session (':detach')
 
  OPTIONS
      Command modifiers and alternate data inputs. Most commands take their own
@@ -115,7 +116,7 @@ function _devenv_show_help {
                  $(basename ${0}) -t TARGET create [PATH]
                  $(basename ${0}) -t TARGET -p PATH create
 
-         kill
+         kill [TARGET]
              Stop a running instance and clean up.
 
              EXAMPLES
@@ -134,13 +135,15 @@ function _devenv_show_help {
                  $(basename ${0}) ls *-php-v5.?
                  $(basename ${0}) ls -q
 
-         pause TARGET
+         pause [TARGET]
              Pause a running instance.
 
              EXAMPLES
                  $(basename ${0}) pause TARGET
+                 $(basename ${0}) -t TARGET pause
+                 $(basename ${0}) -p PATH pause
 
-         restart TARGET
+         restart [TARGET]
              Kill and re-create the specified running instance.
 
              EXAMPLES
@@ -148,24 +151,28 @@ function _devenv_show_help {
                  $(basename ${0}) -t TARGET restart
                  $(basename ${0}) -p PATH restart
 
-         rename TARGET NEW_NAME
-             Rename a running or stopped instance.
+         rename [TARGET] NEW_NAME
+             Rename a running or stopped instance. 'rename' does not accept a PATH
+             argument.
 
              EXAMPLES
                  $(basename ${0}) rename TARGET NEW_NAME
                  $(basename ${0}) -t TARGET rename NEW_NAME
 
          self-update
-             Update to the latest mkenney/$(basename ${0}) docker image and control script.
+             Update to the latest 'mkenney/devenv' docker image and '$(basename ${0})' control
+             script.
 
              EXAMPLES
                  $(basename ${0}) self-update
 
-         unpause TARGET
+         unpause [TARGET]
              Start a paused instance.
 
              EXAMPLES
                  $(basename ${0}) unpause TARGET
+                 $(basename ${0}) -t TARGET unpause
+                 $(basename ${0}) -p PATH unpause
 
  TODO
      - Improve error handling and messages
@@ -230,8 +237,10 @@ function _devenv_init_session {
 
 # Start a dev container
 #
-# @param environment name returned by _devenv_list_environments
-# @param path
+# $1 TARGET
+# $2 PATH
+# $3 .tmux.conf path
+#
 function _devenv_create_container {
     if [ "true" == "$(_devenv_is_running ${1})" ]; then
         echo "Container '${1}' is already running"
@@ -255,11 +264,12 @@ function _devenv_create_container {
 
         # tmux config path
         if [ "" != "$3" ]; then
-            docker_run_args="$docker_run_args -v ${3}:/home/dev/.tmux.conf:ro"
+            docker_run_args="$docker_run_args -v $(realpath $3):/home/dev/.tmux.conf:ro"
         fi
 
         echo "Starting dev container '${1}' at ${2}..."
-        docker run $docker_run_args ${CONTAINER_IMAGE} 
+        echo "docker run $docker_run_args ${CONTAINER_IMAGE}"
+        docker run $docker_run_args ${CONTAINER_IMAGE}
 
         _devenv_init_session ${1}
     fi
@@ -614,7 +624,7 @@ while :; do
                 _devenv_secondary_command=$2
                 shift
             else
-                _devenv_show_help
+                _devenv_show_usage
             fi
             ;;
         self-update)
