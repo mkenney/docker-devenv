@@ -9,25 +9,29 @@ script is available in the bash/ folder.
 
 * [mkenney/devenv](https://hub.docker.com/r/mkenney/devenv/)
 
-Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie).
-The default bash environment is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf)
-and, when using the  `devenv` cli, initializes and attaches to a tmux
-session when you connect to the container. My `.tmux.conf` remaps the
-activation shortcut to `Ctrl-\` so you can override that with `--tmux=PATH`.
+Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment
+is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf) and, when using the  `devenv`
+cli, initializes and attaches to a tmux session when you connect to
+the container. The included `.tmux.conf` remaps the prefix key to
+`Ctrl-\` so you can override that with `--tmux` when initializing
+a new instance.
 
-The default user is modified when the container is initialized so it is
-the owner of the project directory on the host and belongs to the same
-group so new files will be created with the same uid/gid on the host.
+The default user is modified when the container is initialized so it
+becomes the owner of the project directory on the host and belongs
+to the same group so new files will be created with the same uid/gid
+on the host.
 
-By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.com/cd/B19306_01/network.102/b14266/cnctslsh.htm#g1033548))
-are mounted into the home directory and if a `tnsnames.ora` file exists
-on the host at `/oracle/product/latest/network/admin/tnsnames.ora` it will
-be copied to the same location inside the container. This should be enough
-to automate connecting to oracle (sqlplus is installed in the container).
-If the connection fails, make sure the path to the wallet files is correct.
-Take a look at `~/.oracle/network/admin/sqlnet.ora` and make sure the path
-doesn't contain your username from the host machine. `(DIRECTORY = $HOME/.oracle/network/wallet)`
-will work for both the container and the host.
+By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.com/cd/B19306_01/network.102/b14266/cnctslsh.htm#g1033548)) are mounted
+into the home directory and if a `tnsnames.ora` file exists on the
+host at `/oracle/product/latest/network/admin/tnsnames.ora` it will
+be copied to the same location inside the container. This should be
+enough to automate connecting to oracle (sqlplus is installed in the
+container). If the connection fails, make sure the path to the
+wallet files is correct. Take a look at
+`~/.oracle/network/admin/sqlnet.ora` and make sure the path doesn't
+contain your username from the host machine.
+`(DIRECTORY = $HOME/.oracle/network/wallet)` should work for both
+the container and the host in most environments.
 
 ## Installed apt packages
 
@@ -52,13 +56,13 @@ will work for both the container and the host.
      devenv [-t TARGET] [-p PATH] [-c] [command]
 
 # DESCRIPTION
-     The devenv utility is used to manage mkenney/devenv docker containers
-     to create a consistent bash-based shell environment. To detach from
-     an instance, simply detach from the `tmux` session (`:detach`)
+     The devenv utility is used to manage mkenney/devenv docker containers to
+     create a consistent bash-based shell environment. To detach from an
+     instance, simply detach from the 'tmux' session (':detach')
 
 # OPTIONS
-     Command modifiers and alternate data inputs. Most commands take their own
-     arguments.
+     Command modifiers and alternate data inputs. Most commands take their
+     own arguments.
 
          -h, -?
              Show the command usage screen
@@ -87,21 +91,21 @@ will work for both the container and the host.
 
          --tmux, --tmux=PATH
              Specify a tmux configuration file. If PATH is omitted then
-             $HOME/.tmux.conf will be assumed. If the --tmux option is omitted
-             then the .tmux.conf file from the docker image will be used.
+             $HOME/.tmux.conf will be assumed. If the --tmux option
+             is omitted then the .tmux.conf file from the docker image will
+             be used.
 
 # COMMANDS
-     Available commands devenv can execute. TARGET refers to the name of the
-     instance you are managing and PATH refers to the mounted working directory.
-     If PATH is omitted, it defaults to the current directory.
+     Available commands devenv can execute. TARGET refers to the name of
+     the instance you are managing and PATH refers to the mounted working
+     directory. If PATH is omitted, it defaults to the current directory.
 
-     If TARGET is omitted, current instances are searched to see if any are attached
-     to the specified PATH, and if so, TARGET is set to the instance name. If not,
-     TARGET defaults to the basename of the PATH value.
+     If TARGET is omitted, current instances are searched to see if any are
+     attached to the specified PATH, and if so, TARGET is set to the instance
+     name. If not, TARGET defaults to the basename of the PATH value.
 
          attach [TARGET]
-             Attach to a current instance specified by the optional [TARGET]
-             argument.
+             Attach to an instance specified by the [TARGET] argument.
 
              EXAMPLES
                  devenv attach [TARGET]
@@ -109,7 +113,7 @@ will work for both the container and the host.
                  devenv -p PATH attach
 
          init [TARGET] [PATH]
-             Create and start a new instance.
+             Create a new instance.
 
              EXAMPLES
                  devenv create [TARGET] [PATH]
@@ -126,9 +130,9 @@ will work for both the container and the host.
                  devenv -p PATH kill
 
          ls [pattern]
-             List currently running instances, optionally filtering results with
-             a glob pattern. If pattern is '-q' (quiet) only instance names are
-             returned.
+             List currently running instances, optionally filtering results
+             with a glob pattern. If pattern is '-q' (quiet) only instance
+             names are returned.
 
              EXAMPLES
                  devenv ls
@@ -153,16 +157,16 @@ will work for both the container and the host.
                  devenv -p PATH restart
 
          rename [TARGET] NEW_NAME
-             Rename a running or stopped instance. 'rename' does not accept a PATH
-             argument.
+             Rename a running or stopped instance. 'rename' does not accept a
+             PATH argument.
 
              EXAMPLES
                  devenv rename TARGET NEW_NAME
                  devenv -t TARGET rename NEW_NAME
 
          self-update
-             Update to the latest 'mkenney/devenv' docker image and 'devenv' control
-             script.
+             Update to the latest 'mkenney/devenv' docker image and 'devenv'
+             control script.
 
              EXAMPLES
                  devenv self-update

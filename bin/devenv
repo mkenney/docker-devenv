@@ -12,25 +12,27 @@ CONTAINER_IMAGE='mkenney/devenv'
 # Show the help screen
 function _devenv_show_usage {
     echo "
- Usage: $(basename ${0}) [options] [commands]
+ Usage: ${COMMAND} [options] [commands]
 
- Options:
+    Options:
         -h, -?                      Show usage
         --help, help                Show extended help
-        -d, --daemonize             Continue running the container after detaching
+        -d, --daemonize             Continue running the container after
+                                    detaching
         -p PATH, --path=PATH        Specify the project path
         -t TARGET, --target=TARGET  Specify a target environment name
-        --tmux, --tmux=PATH         Specify a tmux configuration file. If path is
-                                    omitted then $HOME/.tmux.conf is assumed
+        --tmux, --tmux=PATH         Specify a tmux configuration file. If 
+                                    path is omitted then $HOME/.tmux.conf
+                                    is assumed
 
     Commands:
         attach [TARGET]             Attach to a running environment
         init [TARGET] [PATH]        Create a new environment
-        kill TARGET                 Stop a running environment and clean up
+        kill [TARGET]               Stop a running environment and clean up
         ls [PATTERN]                List available environments
         pause [TARGET]              Pause a running environment
-        restart TARGET              Kill and re-initialize an environment
-        rename TARGET NEW_NAME      Rename an environment
+        restart [TARGET]            Kill and re-initialize an environment
+        rename [TARGET] NEW_NAME    Rename an environment
         self-update                 Update to the latest docker image
         unpause [TARGET]            Start a paused environment
 
@@ -43,19 +45,19 @@ function _devenv_show_usage {
 function _devenv_show_help {
     echo "
  NAME
-     $(basename ${0}) -- Manage ${CONTAINER_IMAGE} docker work environment containers
+     ${COMMAND} -- Manage ${CONTAINER_IMAGE} docker work environment containers
 
  SYNOPSYS
-     $(basename ${0}) [-t TARGET] [-p PATH] [-c] [command]
+     ${COMMAND} [-t TARGET] [-p PATH] [-c] [command]
 
  DESCRIPTION
-     The $(basename ${0}) utility is used to manage ${CONTAINER_IMAGE} docker containers
-     to create a consistent bash-based shell environment. To detach from
-     an instance, simply detach from the 'tmux' session (':detach')
+     The ${COMMAND} utility is used to manage ${CONTAINER_IMAGE} docker containers to
+     create a consistent bash-based shell environment. To detach from an
+     instance, simply detach from the 'tmux' session (':detach')
 
  OPTIONS
-     Command modifiers and alternate data inputs. Most commands take their own
-     arguments.
+     Command modifiers and alternate data inputs. Most commands take their
+     own arguments.
 
          -h, -?
              Show the command usage screen
@@ -84,95 +86,93 @@ function _devenv_show_help {
 
          --tmux, --tmux=PATH
              Specify a tmux configuration file. If PATH is omitted then
-             $HOME/.tmux.conf will be assumed. If the --tmux option is omitted
-             then the .tmux.conf file from the docker image will be used.
+             $HOME/.tmux.conf will be assumed. If the --tmux option
+             is omitted then the .tmux.conf file from the docker image will
+             be used.
 
  COMMANDS
-     Available commands $(basename ${0}) can execute
-     
-     Available commands $(basename ${0}) can execute. TARGET refers to the name of the
-     instance you are managing and PATH refers to the mounted working directory.
-     If PATH is omitted, it defaults to the current directory.
+     Available commands ${COMMAND} can execute. TARGET refers to the name of
+     the instance you are managing and PATH refers to the mounted working
+     directory. If PATH is omitted, it defaults to the current directory.
 
-     If TARGET is omitted, current instances are searched to see if any are attached
-     to the specified PATH, and if so, TARGET is set to the instance name. If not,
-     TARGET defaults to the basename of the PATH value.
+     If TARGET is omitted, current instances are searched to see if any are
+     attached to the specified PATH, and if so, TARGET is set to the instance
+     name. If not, TARGET defaults to the basename of the PATH value.
 
          attach [TARGET]
-             Attach to a current instance specified by the optional [TARGET]
-             argument.
+             Attach to an instance specified by the [TARGET] argument.
 
              EXAMPLES
-                 $(basename ${0}) attach [TARGET]
-                 $(basename ${0}) -t TARGET attach
-                 $(basename ${0}) -p PATH attach
+                 ${COMMAND} attach [TARGET]
+                 ${COMMAND} -t TARGET attach
+                 ${COMMAND} -p PATH attach
 
          init [TARGET] [PATH]
-             Create and start a new instance.
+             Create a new instance.
 
              EXAMPLES
-                 $(basename ${0}) create [TARGET] [PATH]
-                 $(basename ${0}) -p PATH create [TARGET]
-                 $(basename ${0}) -t TARGET create [PATH]
-                 $(basename ${0}) -t TARGET -p PATH create
+                 ${COMMAND} create [TARGET] [PATH]
+                 ${COMMAND} -p PATH create [TARGET]
+                 ${COMMAND} -t TARGET create [PATH]
+                 ${COMMAND} -t TARGET -p PATH create
 
          kill [TARGET]
              Stop a running instance and clean up.
 
              EXAMPLES
-                 $(basename ${0}) kill TARGET
-                 $(basename ${0}) -t TARGET kill
-                 $(basename ${0}) -p PATH kill
+                 ${COMMAND} kill TARGET
+                 ${COMMAND} -t TARGET kill
+                 ${COMMAND} -p PATH kill
 
          ls [pattern]
-             List currently running instances, optionally filtering results with
-             a glob pattern. If pattern is '-q' (quiet) only instance names are
-             returned.
+             List currently running instances, optionally filtering results
+             with a glob pattern. If pattern is '-q' (quiet) only instance
+             names are returned.
 
              EXAMPLES
-                 $(basename ${0}) ls
-                 $(basename ${0}) ls java*
-                 $(basename ${0}) ls *-php-v5.?
-                 $(basename ${0}) ls -q
+                 ${COMMAND} ls
+                 ${COMMAND} ls java*
+                 ${COMMAND} ls *-php-v5.?
+                 ${COMMAND} ls -q
 
          pause [TARGET]
              Pause a running instance.
 
              EXAMPLES
-                 $(basename ${0}) pause TARGET
-                 $(basename ${0}) -t TARGET pause
-                 $(basename ${0}) -p PATH pause
+                 ${COMMAND} pause TARGET
+                 ${COMMAND} -t TARGET pause
+                 ${COMMAND} -p PATH pause
 
          restart [TARGET]
              Kill and re-create the specified running instance.
 
              EXAMPLES
-                 $(basename ${0}) restart TARGET
-                 $(basename ${0}) -t TARGET restart
-                 $(basename ${0}) -p PATH restart
+                 ${COMMAND} restart TARGET
+                 ${COMMAND} -t TARGET restart
+                 ${COMMAND} -p PATH restart
 
          rename [TARGET] NEW_NAME
-             Rename a running or stopped instance. 'rename' does not accept a PATH
-             argument.
+             Rename a running or stopped instance. 'rename' does not accept a
+             PATH argument.
 
              EXAMPLES
-                 $(basename ${0}) rename TARGET NEW_NAME
-                 $(basename ${0}) -t TARGET rename NEW_NAME
+                 ${COMMAND} rename TARGET NEW_NAME
+                 ${COMMAND} -t TARGET rename NEW_NAME
 
          self-update
-             Update to the latest 'mkenney/devenv' docker image and '$(basename ${0})' control
-             script.
+             Update to the latest 'mkenney/devenv' docker image and '${COMMAND}'
+             control script.
 
              EXAMPLES
-                 $(basename ${0}) self-update
+                 ${COMMAND} self-update
 
          unpause [TARGET]
              Start a paused instance.
 
              EXAMPLES
-                 $(basename ${0}) unpause TARGET
-                 $(basename ${0}) -t TARGET unpause
-                 $(basename ${0}) -p PATH unpause
+                 ${COMMAND} unpause TARGET
+                 ${COMMAND} -t TARGET unpause
+                 ${COMMAND} -p PATH unpause
 
  TODO
      - Improve error handling and messages
