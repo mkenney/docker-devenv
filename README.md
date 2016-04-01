@@ -30,11 +30,18 @@ contain your username from the host machine.
 `(DIRECTORY = $HOME/.oracle/network/wallet)` should work for both the
 container and the host in most environments.
 
-## Installed apt packages
+## Powerline
 
-* curl exuberant-ctags git graphviz htop less libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng12-dev libbz2-dev libaio1 python python-dev python3 python3-dev rsync rsyslog ruby sudo tcpdump telnet tmux unzip wget vim-nox
+Powerline is installed and enabled in the default tmux and vim configurations,
+you can easily override it with your own configuration files by passing the
+`--tmux` or `--vimrc` options when starting a new instance with the `init` or
+`restart` commands.
 
-## Installed node packages
+## Common packages
+
+* curl dialog exuberant-ctags fonts-powerline git graphviz htop less libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng12-dev libbz2-dev libaio1 locate man powerline python python-dev python3 python3-dev python-pip python-powerline python-powerline-doc rsync rsyslog ruby sudo tcpdump telnet tmux unzip wget vim-nox vim-addon-manager x11-xserver-utils
+
+## Node packages
 
 * nodejs:v5 build-essential npm:v3.8 bower:v1.7 grunt-cli:v1.1 gulp-cli:v1.2 yo:v1.7 generator-webapp
 
@@ -50,7 +57,7 @@ container and the host in most environments.
      devenv -- Manage mkenney/devenv docker work environment containers
 
 # SYNOPSYS
-     devenv [-t TARGET] [-p PATH] [-c] [command]
+     devenv [-t TARGET] [-p PATH] [-d] [command]
 
 # DESCRIPTION
      The devenv utility is used to manage mkenney/devenv docker containers to
@@ -91,6 +98,14 @@ container and the host in most environments.
              $HOME/.tmux.conf will be assumed. If the --tmux option
              is omitted then the .tmux.conf file from the docker image will
              be used.
+
+         --vimrc, --vimrc=PATH
+             Specify a vim configuration file. If PATH is omitted then
+             $HOME/.vimrc will be assumed. If the --vimrc option is
+             omitted then the .vimrc file from the docker image will be used.
+
+             In addition, this script will attempt to mount a .vim/ folder
+             from the same location as the .vimrc file.
 
 # COMMANDS
      Available commands devenv can execute. TARGET refers to the name of

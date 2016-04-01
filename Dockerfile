@@ -54,7 +54,9 @@ ENV LC_ALL C.UTF-8
 
 RUN apt-get install -qqy \
         curl \
+        dialog \
         exuberant-ctags \
+        fonts-powerline \
         git \
         graphviz \
         htop \
@@ -65,10 +67,16 @@ RUN apt-get install -qqy \
         libpng12-dev \
         libbz2-dev \
         libaio1 \
+        locate \
+        man \
+        powerline \
         python \
         python-dev \
         python3 \
         python3-dev \
+        python-pip \
+        python-powerline \
+        python-powerline-doc \
         rsync \
         rsyslog \
         ruby \
@@ -79,6 +87,9 @@ RUN apt-get install -qqy \
         unzip \
         wget \
         vim-nox \
+        vim-addon-manager \
+        x11-xserver-utils \
+    && updatedb \
     && curl -sL https://deb.nodesource.com/setup_5.x | bash - > /dev/null \
     && apt-get install -qqy \
         nodejs \
@@ -88,20 +99,20 @@ RUN apt-get install -qqy \
     && npm install -g grunt-cli \
     && npm install -g gulp-cli \
     && npm install -g yo \
-    && npm install -g generator-webapp \
-    && /usr/sbin/rsyslogd > /dev/null 2>&1
+    && npm install -g generator-webapp
 
 ##############################################################################
 # Dependencies
 ##############################################################################
 
-# https://sourceforge.net/projects/cloc/
-COPY container/cloc /usr/local/bin/
+COPY container /container
 
+# https://sourceforge.net/projects/cloc/
 # Oracle instantclient debs created using `alien`
-COPY container/oracle-instantclient${ORACLE_VERSION_SHORT}-basic_${ORACLE_VERSION_LONG}_amd64.deb /root/src/
-COPY container/oracle-instantclient${ORACLE_VERSION_SHORT}-devel_${ORACLE_VERSION_LONG}_amd64.deb /root/src/
-COPY container/oracle-instantclient${ORACLE_VERSION_SHORT}-sqlplus_${ORACLE_VERSION_LONG}_amd64.deb /root/src/
+RUN cp /container/cloc /usr/local/bin/ \
+    && cp /container/oracle-instantclient${ORACLE_VERSION_SHORT}-basic_${ORACLE_VERSION_LONG}_amd64.deb /root/src/ \
+    && cp /container/oracle-instantclient${ORACLE_VERSION_SHORT}-devel_${ORACLE_VERSION_LONG}_amd64.deb /root/src/ \
+    && cp /container/oracle-instantclient${ORACLE_VERSION_SHORT}-sqlplus_${ORACLE_VERSION_LONG}_amd64.deb /root/src/
 
 ##############################################################################
 # Oracle instantclient
@@ -190,49 +201,52 @@ RUN pear install --alldeps php_codesniffer \
 # users
 ##############################################################################
 
-# Add a user and configure both accounts
+# Configure root account
+RUN cd /root/src \
+    && git clone https://github.com/mkenney/terminal_config.git \
+    && cd /root/src/terminal_config/ \
+    && git submodule update --init --recursive \
+    && rsync -a /root/src/terminal_config/ /root/ \
+    && cd /root/ \
+    && rm -rf /root/src/terminal_config/ \
+    && echo "set tags=/src/tags"                               >> /root/.vimrc        \
+    && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          >> /root/.bash_profile \
+    && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  >> /root/.bash_profile \
+    && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              >> /root/.bash_profile \
+    && echo "export CFLAGS=$(echo $CFLAGS)"                    >> /root/.bash_profile \
+    && echo "export NLS_LANG=$(echo $NLS_LANG)"                >> /root/.bash_profile \
+    && echo "export LANG=$(echo $LANG)"                        >> /root/.bash_profile \
+    && echo "export LANGUAGE=$(echo $LANGUAGE)"                >> /root/.bash_profile \
+    && echo "export LC_ALL=$(echo $LC_ALL)"                    >> /root/.bash_profile \
+    && echo "export TERM=xterm"                                >> /root/.bash_profile \
+    && echo "export PATH=$(echo $PATH)"                        >> /root/.bash_profile \
+    && rsync -a /container/.config/ /root/.config/ \
+    && cp /container/.vimrc /root/.vimrc \
+    && cp /container/.tmux.conf /root/.tmux.conf
+
+# Add a dev user and configure all accounts
 RUN groupadd dev \
     && useradd dev -s /bin/bash -m -g dev -G root \
     && echo "dev:password" | chpasswd \
     && echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
-    && cd /root/src \
-    && git clone https://github.com/mkenney/terminal_config.git \
-    && cd /root/src/terminal_config/ \
-    && git submodule update --init --recursive \
-    && cd /root/src \
-    && rsync -a terminal_config/ ~/ \
-    && rsync -a terminal_config/ ~dev/ \
-    && rsync -a terminal_config/ ~oracle/ \
-    && rm -rf terminal_config \
-    && echo "set tags=/src/tags"                               | tee -a ~/.vimrc        ~dev/.vimrc        ~oracle/.vimrc        \
-    && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
-    && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
-    && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
-    && echo "export CFLAGS=$(echo $CFLAGS)"                    | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
-    && echo "export NLS_LANG=$(echo $NLS_LANG)"                | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
-    && echo "export LANG=$(echo $LANG)"                        | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
-    && echo "export LANGUAGE=$(echo $LANGUAGE)"                | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
-    && echo "export LC_ALL=$(echo $LC_ALL)"                    | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
-    && echo "export TERM=xterm"                                | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
-    && echo "export PATH=$(echo $PATH)"                        | tee -a ~/.bash_profile ~dev/.bash_profile ~oracle/.bash_profile \
-    && chown -R dev:dev ~dev/. \
-    && cd /root/ \
-    && vim +PluginInstall +qall > /dev/null 2>&1
+    && vim +PluginInstall +qall > /dev/null 2>&1 \
+    && rsync -a /root/ /home/dev/ \
+    && rsync -a /root/ /home/oracle/ \
+    && chown -R dev:dev /home/dev/ \
+    && chown -R oracle:dba /home/oracle/
 
 ##############################################################################
 # ~ fin ~
 ##############################################################################
 
-RUN apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
+# cleanup apt cache
 # devenv support scripts
-COPY container/init.sh /
-COPY container/attach.sh /
+RUN apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && cp /container/init.sh / \
+    && cp /container/attach.sh /
 
 USER dev
-# Don't forget to configure vim for the dev user. do this here
-RUN cd ~/ && vim +PluginInstall +qall > /dev/null 2>&1
 VOLUME ["/src"]
 WORKDIR /src
 CMD ["/bin/bash"]

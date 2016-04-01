@@ -22,8 +22,11 @@ function _devenv_show_usage {
         -p PATH, --path=PATH        Specify the project path
         -t TARGET, --target=TARGET  Specify a target environment name
         --tmux, --tmux=PATH         Specify a tmux configuration file. If 
-                                    path is omitted then $HOME/.tmux.conf
-                                    is assumed
+                                    path is omitted from this option then 
+                                    $HOME/.tmux.conf is assumed
+        --vimrc, --vimrc=PATH       Specify a vim configuration file. If 
+                                    path is omitted from this option then 
+                                    $HOME/.vimrc is assumed
 
     Commands:
         attach [TARGET]             Attach to a running environment
@@ -48,7 +51,7 @@ function _devenv_show_help {
      ${COMMAND} -- Manage ${CONTAINER_IMAGE} docker work environment containers
 
  SYNOPSYS
-     ${COMMAND} [-t TARGET] [-p PATH] [-c] [command]
+     ${COMMAND} [-t TARGET] [-p PATH] [-d] [command]
 
  DESCRIPTION
      The ${COMMAND} utility is used to manage ${CONTAINER_IMAGE} docker containers to
@@ -89,6 +92,14 @@ function _devenv_show_help {
              $HOME/.tmux.conf will be assumed. If the --tmux option
              is omitted then the .tmux.conf file from the docker image will
              be used.
+
+         --vimrc, --vimrc=PATH
+             Specify a vim configuration file. If PATH is omitted then
+             $HOME/.vimrc will be assumed. If the --vimrc option is 
+             omitted then the .vimrc file from the docker image will be used.
+             
+             In addition, this script will attempt to mount a .vim/ folder
+             from the same location as the .vimrc file.
 
  COMMANDS
      Available commands ${COMMAND} can execute. TARGET refers to the name of
@@ -254,17 +265,22 @@ function _devenv_create_container {
             --add-host docker:127.0.0.1 \
             -e TERM=$TERM \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -v ~/.ssh/:/home/dev/.ssh/:ro \
-            -v ~/.oracle/:/home/dev/.oracle/:ro \
+            -v $HOME/.ssh/:/home/dev/.ssh/:ro \
+            -v $HOME/.oracle/:/home/dev/.oracle/:ro \
             -v ${2}:/src:rw \
             -w /src \
             --label project_path=${2} \
             --name ${1}${CONTAINER_SUFFIX}
         ";
-
+        
         # tmux config path
-        if [ "" != "$3" ]; then
+        if [ -f "$3" ]; then
             docker_run_args="$docker_run_args -v $(realpath $3):/home/dev/.tmux.conf:ro"
+        fi
+        # vimrc config path
+        if [ -f "$4" ]; then
+            docker_run_args="$docker_run_args -v $(realpath $4):/home/dev/$(basename $4):ro"
+            docker_run_args="$docker_run_args -v $(dirname $(realpath $4))/.vim/:/home/dev/.vim/:ro"
         fi
 
         echo "Starting dev container '${1}' at ${2}..."
@@ -483,10 +499,11 @@ function _devenv_error_not_a_directory {
     exit 1
 }
 
-# Display error message
-function _devenv_error_not_a_directory {
-    echo ""
-    echo "The file '$HOME/.tmux.conf' does not exist"
+#
+function _devenv_error_file_not_found {
+    echo "
+The file '$1' does not exist
+"
     exit 1
 }
 
@@ -550,16 +567,37 @@ while :; do
             _devenv_show_help
             ;;
         #
-        # tmux.conf path
+        # .tmux.conf path
         #
         --tmux=?*)
-            _tmux_conf_path=${1#*=}
+            if [ -f ${1#*=} ]; then
+                _tmux_conf_path=$(realpath ${1#*=})
+            else
+                _devenv_error_file_not_found ${1#*=}
+            fi
             ;;
         --tmux)
             if [ -f "$HOME/.tmux.conf" ]; then
-                _tmux_conf_path="$HOME/.tmux.conf"
+                _tmux_conf_path=$HOME
             else
-                _devenv_error_tmux_conf_not_found
+                _devenv_error_file_not_found "$HOME/.tmux.conf"
+            fi
+            ;;
+        #
+        # .vimrc path
+        #
+        --vimrc=?*)
+            if [ -f ${1#*=} ]; then
+                _vimrc_conf_path=$(realpath ${1#*=})
+            else
+                _devenv_error_file_not_found ${1#*=}
+            fi
+            ;;
+        --vimrc)
+            if [ -f "$HOME/.vimrc" ]; then
+                _vimrc_conf_path=$HOME
+            else
+                _devenv_error_file_not_found "$HOME/.vimrc"
             fi
             ;;
         #
@@ -699,6 +737,14 @@ if [ "" == "${_devenv_command}" ]; then
     _devenv_command='attach'
 fi
 
+# Conf path arguments
+if [ "" == "${_tmux_conf_path}" ]; then
+    _tmux_conf_path='-'
+fi
+if [ "" == "${_vimrc_conf_path}" ]; then
+    _vimrc_conf_path='-'
+fi
+
 ##############################################################################
 # Execute
 ##############################################################################
@@ -724,7 +770,7 @@ elif [ "init" == "${_devenv_command}" ]; then
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
     fi
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path}
 
 
 # Kill a running container
@@ -743,7 +789,7 @@ elif [ "refresh" == "${_devenv_command}" ] || [ "restart" == "${_devenv_command}
         _devenv_error_target_not_running ${_devenv_container_name}
     fi
     _devenv_kill_container ${_devenv_container_name}
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path}
 
 
 # Rename a current container
