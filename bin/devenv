@@ -265,8 +265,8 @@ function _devenv_create_container {
             --add-host docker:127.0.0.1 \
             -e TERM=$TERM \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -v $HOME/.ssh/:/home/dev/.ssh/:ro \
-            -v $HOME/.oracle/:/home/dev/.oracle/:ro \
+            -v ${HOME}/.ssh/:/home/dev/.ssh/:ro \
+            -v ${HOME}/.oracle/:/home/dev/.oracle/:ro \
             -v ${2}:/src:rw \
             -w /src \
             --label project_path=${2} \
