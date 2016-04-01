@@ -176,7 +176,7 @@ ENV PATH /root/.composer/vendor/bin:$PATH
 ##############################################################################
 
 RUN cd /root/src \
-    && wget https://phar.phpunit.de/phpunit.phar \
+    && wget https://phar.phpunit.de/phpunit-5.2.9.phar \
     && chmod +x phpunit.phar \
     && mv phpunit.phar /usr/local/bin/phpunit \
     && phpunit --version
