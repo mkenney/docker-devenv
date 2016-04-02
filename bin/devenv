@@ -284,7 +284,6 @@ function _devenv_create_container {
         fi
 
         echo "Starting dev container '${1}' at ${2}..."
-        echo "docker run $docker_run_args ${CONTAINER_IMAGE}"
         docker run $docker_run_args ${CONTAINER_IMAGE}
 
         _devenv_init_session ${1}
