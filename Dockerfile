@@ -220,7 +220,7 @@ RUN cd /root/src \
     && echo "export LC_ALL=$(echo $LC_ALL)"                    >> /root/.bash_profile \
     && echo "export TERM=xterm"                                >> /root/.bash_profile \
     && echo "export PATH=$(echo $PATH)"                        >> /root/.bash_profile \
-    && rsync -a /container/.config/ /root/.config/ \
+    && rsync -ac /container/powerline/ /usr/share/powerline/ \
     && cp /container/.vimrc /root/.vimrc \
     && cp /container/.tmux.conf /root/.tmux.conf
 
@@ -244,7 +244,8 @@ RUN groupadd dev \
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && cp /container/init.sh / \
-    && cp /container/attach.sh /
+    && cp /container/attach.sh / \
+    && rm -rf /container
 
 USER dev
 VOLUME ["/src"]
