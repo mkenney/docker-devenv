@@ -75,9 +75,9 @@ you can easily override it with your own configuration files by passing the
              Show this extended help screen
 
          -d, --daemonize
-             Used when attaching to an instance. If specified, allow the
-             instance to continue running after detaching from the session,
-             otherwise the container will be paused automatically.
+             Used when initializing or restarting an instance. If specified,
+             allow the instance to continue running after detaching from the
+             session, otherwise the container will be paused automatically.
 
              This is useful executing a long-running script to come back to
              or starting a daemon. If you forget to daemonize an instance,
