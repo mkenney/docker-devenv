@@ -69,9 +69,9 @@ function _devenv_show_help {
              Show this extended help screen
 
          -d, --daemonize
-             Used when attaching to an instance. If specified, allow the
-             instance to continue running after detaching from the session,
-             otherwise the container will be paused automatically.
+             Used when initializing or restarting an instance. If specified,
+             allow the instance to continue running after detaching from the
+             session, otherwise the container will be paused automatically.
 
              This is useful executing a long-running script to come back to
              or starting a daemon. If you forget to daemonize an instance,
@@ -282,11 +282,18 @@ function _devenv_create_container {
             docker_run_args="$docker_run_args -v $(realpath $4):/home/dev/$(basename $4):ro"
             docker_run_args="$docker_run_args -v $(dirname $(realpath $4))/.vim/:/home/dev/.vim/:ro"
         fi
-
+        # daemonize
+        if [ "true" == "$5" ]; then
+            docker_run_args="$docker_run_args --label daemonize=${5}"
+        fi
+        
         echo "Starting dev container '${1}' at ${2}..."
         docker run $docker_run_args ${CONTAINER_IMAGE}
 
         _devenv_init_session ${1}
+        if [ "true" != "$5" ]; then
+            _devenv_pause_container ${1}
+        fi
     fi
 }
 
@@ -296,6 +303,14 @@ function _devenv_get_path_from_container {
     project_path=$(docker inspect -f "{{json .Config.Labels.project_path }}" ${container_name}${CONTAINER_SUFFIX})
     project_path=${project_path/\"/}
     echo ${project_path%\"}
+}
+
+function _devenv_is_daemonized {
+    local container_name daemonize
+    container_name=${1}
+    daemonize=$(docker inspect -f "{{json .Config.Labels.daemonize }}" ${container_name}${CONTAINER_SUFFIX})
+    daemonize=${daemonize/\"/}
+    echo ${daemonize%\"}
 }
 
 # Attach to a dev environment
@@ -743,6 +758,9 @@ fi
 if [ "" == "${_vimrc_conf_path}" ]; then
     _vimrc_conf_path='-'
 fi
+if [ "" == "${_devenv_daemonize}" ]; then
+    _devenv_daemonize='-'
+fi
 
 ##############################################################################
 # Execute
@@ -757,7 +775,7 @@ if [ "attach" == "${_devenv_command}" ]; then
         _devenv_unpause_container ${_devenv_container_name}
     fi
     _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_daemonize}" ]; then
+    if [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 
@@ -769,7 +787,7 @@ elif [ "init" == "${_devenv_command}" ]; then
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
     fi
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize}
 
 
 # Kill a running container
@@ -783,12 +801,16 @@ elif [ "ls" == "${_devenv_command}" ]; then
 
 
 # Refresh the specified container
-elif [ "refresh" == "${_devenv_command}" ] || [ "restart" == "${_devenv_command}" ]; then
+elif [ "restart" == "${_devenv_command}" ]; then
     if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_not_running ${_devenv_container_name}
     fi
+    daemonize=$(_devenv_is_daemonized $_devenv_container_name)
+    if [ "true" == "$(_devenv_is_daemonized $_devenv_container_name)" ] || [ "true" == "$_devenv_daemonize" ]; then
+        daemonize='true'
+    fi
     _devenv_kill_container ${_devenv_container_name}
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} $daemonize
 
 
 # Rename a current container
@@ -812,7 +834,7 @@ elif [ "self-update" == "${_devenv_command}" ]; then
 elif [ "start" == "${_devenv_command}" ]; then
     _devenv_unpause_container ${_devenv_container_name}
     _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_daemonize}" ]; then
+    if [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 
