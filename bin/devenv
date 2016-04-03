@@ -17,6 +17,8 @@ function _devenv_show_usage {
     Options:
         -h, -?                      Show usage
         --help, help                Show extended help
+        --ctags-exclude             Specify files or directories to exclude
+                                    when compiling the tags file.
         -d, --daemonize             Continue running the container after
                                     detaching
         -p PATH, --path=PATH        Specify the project path
@@ -68,6 +70,12 @@ function _devenv_show_help {
          --help, help
              Show this extended help screen
 
+         --ctags-exclude
+             Used to specify files or directories that should be excluded when
+             compiling the tags file. The value can be either a comma-
+             separated list of glob patterns or this option can be specified
+             multiple times.
+
          -d, --daemonize
              Used when initializing or restarting an instance. If specified,
              allow the instance to continue running after detaching from the
@@ -95,9 +103,9 @@ function _devenv_show_help {
 
          --vimrc, --vimrc=PATH
              Specify a vim configuration file. If PATH is omitted then
-             $HOME/.vimrc will be assumed. If the --vimrc option is 
+             $HOME/.vimrc will be assumed. If the --vimrc option is
              omitted then the .vimrc file from the docker image will be used.
-             
+
              In addition, this script will attempt to mount a .vim/ folder
              from the same location as the .vimrc file.
 
@@ -251,48 +259,65 @@ function _devenv_init_session {
 # $1 TARGET
 # $2 PATH
 # $3 .tmux.conf path
+# $4 .vimrc path
+# $5 Daemonize flag
+# $6 ctags excludes, comma-separated string
 #
 function _devenv_create_container {
-    if [ "true" == "$(_devenv_is_running ${1})" ]; then
-        echo "Container '${1}' is already running"
+
+    local _target=$1
+    local _path=$2
+    local _tmux_conf=$3
+    local _vimrc=$4
+    local _daemonize=$5
+    local _ctags_excludes=$6
+
+    if [ "true" == "$(_devenv_is_running ${_target})" ]; then
+        echo "Container '${_target}' is already running"
     else
 
         docker_run_args="
             -itd \
-            -h ${1} \
-            -e HOSTNAME=${1} \
+            -h ${_target} \
+            -e HOSTNAME=${_target} \
             -e PROJECT_PATH=/src \
             --add-host docker:127.0.0.1 \
             -e TERM=$TERM \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v ${HOME}/.ssh/:/home/dev/.ssh/:ro \
             -v ${HOME}/.oracle/:/home/dev/.oracle/:ro \
-            -v ${2}:/src:rw \
+            -v ${_path}:/src:rw \
             -w /src \
-            --label project_path=${2} \
-            --name ${1}${CONTAINER_SUFFIX}
+            --label project_path=${_path} \
+            --name ${_target}${CONTAINER_SUFFIX}
         ";
-        
+
         # tmux config path
-        if [ -f "$3" ]; then
-            docker_run_args="$docker_run_args -v $(realpath $3):/home/dev/.tmux.conf:ro"
+        if [ -f "$_tmux_conf" ]; then
+            docker_run_args="$docker_run_args -v $(realpath $_tmux_conf):/home/dev/.tmux.conf:ro"
         fi
         # vimrc config path
-        if [ -f "$4" ]; then
-            docker_run_args="$docker_run_args -v $(realpath $4):/home/dev/$(basename $4):ro"
-            docker_run_args="$docker_run_args -v $(dirname $(realpath $4))/.vim/:/home/dev/.vim/:ro"
+        if [ -f "$_vimrc" ]; then
+            docker_run_args="$docker_run_args -v $(realpath $_vimrc):/home/dev/$(basename $_vimrc):ro"
+            docker_run_args="$docker_run_args -v $(dirname $(realpath $_vimrc))/.vim/:/home/dev/.vim/:ro"
         fi
         # daemonize
-        if [ "true" == "$5" ]; then
-            docker_run_args="$docker_run_args --label daemonize=${5}"
+        if [ "true" == "$_daemonize" ]; then
+            docker_run_args="$docker_run_args --label daemonize=${_daemonize}"
         fi
-        
-        echo "Starting dev container '${1}' at ${2}..."
+        # ctags excludes
+        if [ "" != "$_ctags_excludes" ]; then
+            docker_run_args="$docker_run_args -e CTAGS_EXCLUDES=$_ctags_excludes"
+        fi
+
+        echo "Starting dev container '${_target}' at ${_path}..."
         docker run $docker_run_args ${CONTAINER_IMAGE}
 
-        _devenv_init_session ${1}
-        if [ "true" != "$5" ]; then
-            _devenv_pause_container ${1}
+        _devenv_init_session ${_target}
+        if [ "true" != "$_daemonize" ]; then
+            _devenv_pause_container ${_target}
+        else
+            echo "Running '$_target' as a daemon"
         fi
     fi
 }
@@ -528,6 +553,8 @@ The file '$1' does not exist
 _devenv_path=""
 _devenv_target=""
 _devenv_daemonize="false"
+_devenv_ctags_excludes=()
+
 
 while :; do
     case $1 in
@@ -539,6 +566,13 @@ while :; do
             ;;
         --help|help)
             _devenv_show_help
+            ;;
+        #
+        # Add an exclude pattern to the ctags build
+        # see `man ctags-exuberant`
+        #
+        --ctags-exclude=?*)
+            _devenv_ctags_excludes+=("${1#*=}")
             ;;
         #
         # continue running when detaching, otherwise pause
@@ -751,7 +785,7 @@ if [ "" == "${_devenv_command}" ]; then
     _devenv_command='attach'
 fi
 
-# Conf path arguments
+# Conf path argument defaults
 if [ "" == "${_tmux_conf_path}" ]; then
     _tmux_conf_path='-'
 fi
@@ -761,6 +795,9 @@ fi
 if [ "" == "${_devenv_daemonize}" ]; then
     _devenv_daemonize='-'
 fi
+
+_devenv_ctags_excludes=${_devenv_ctags_excludes[@]}
+_devenv_ctags_excludes=$(echo $_devenv_ctags_excludes | sed "s/ /,/g")
 
 ##############################################################################
 # Execute
@@ -787,7 +824,7 @@ elif [ "init" == "${_devenv_command}" ]; then
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
     fi
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]}
 
 
 # Kill a running container
@@ -810,7 +847,7 @@ elif [ "restart" == "${_devenv_command}" ]; then
         daemonize='true'
     fi
     _devenv_kill_container ${_devenv_container_name}
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} $daemonize
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]}
 
 
 # Rename a current container

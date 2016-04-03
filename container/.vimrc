@@ -250,6 +250,7 @@ highlight CursorLineNr ctermfg=255
 let &t_SI .= "\<Esc>[3 q"
 let &t_EI .= "\<Esc>[3 q"
 
+" syntax colors
 hi Comment		term=bold cterm=NONE ctermfg=DarkGrey ctermbg=NONE gui=NONE guifg=#80a0ff guibg=NONE
 hi Constant		term=underline cterm=NONE ctermfg=Magenta ctermbg=NONE gui=NONE guifg=#ffa0a0 guibg=NONE
 hi Special		term=bold cterm=NONE ctermfg=LightRed ctermbg=NONE gui=NONE guifg=Orange guibg=NONE

@@ -87,6 +87,12 @@ setting.
          --help, help
              Show this extended help screen
 
+         --ctags-exclude
+             Used to specify files or directories that should be excluded when
+             compiling the tags file. The value can be either a comma-
+             separated list of glob patterns or this option can be specified
+             multiple times.
+
          -d, --daemonize
              Used when initializing or restarting an instance. If specified,
              allow the instance to continue running after detaching from the

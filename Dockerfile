@@ -209,7 +209,7 @@ RUN cd /root/src \
     && rsync -a /root/src/terminal_config/ /root/ \
     && cd /root/ \
     && rm -rf /root/src/terminal_config/ \
-    && echo "set tags=/src/tags"                               >> /root/.vimrc        \
+    && echo "set tags=/src/tags.devenv"                        >> /root/.vimrc        \
     && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          >> /root/.bash_profile \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  >> /root/.bash_profile \
     && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              >> /root/.bash_profile \
