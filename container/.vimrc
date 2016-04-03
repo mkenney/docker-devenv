@@ -1,7 +1,7 @@
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Vundle configuration
+" Vundle configuration - keep this first
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 set nocompatible
@@ -14,29 +14,12 @@ call vundle#begin()
 " let Vundle manage Vundle, required
 Plugin 'VundleVim/Vundle.vim'
 
-" The following are examples of different formats supported.
-" Keep Plugin commands between vundle#begin/end.
-" plugin on GitHub repo
-"Plugin 'tpope/vim-fugitive'
-" plugin from http://vim-scripts.org/vim/scripts.html
-"Plugin 'L9'
-" Git plugin not hosted on GitHub
-"Plugin 'git://git.wincent.com/command-t.git'
-" git repos on your local machine (i.e. when working on your own plugin)
-"Plugin 'file:///home/gmarik/path/to/plugin'
-" The sparkup vim script is in a subdirectory of this repo called vim.
-" Pass the path to set the runtimepath properly.
-"Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
-" Install L9 and avoid a Naming conflict if you've already installed a
-" different version somewhere else.
-"Plugin 'ascenator/L9', {'name': 'newL9'}
-
 "Bundle 'joonty/vim-phpqa'
 
 "Bundle 'joonty/vim-phpunitqf'
 
-"Bundle 'scrooloose/syntastic'
-"let g:syntastic_php_checkers = ['php', 'phpcs']
+Bundle 'scrooloose/syntastic'
+let g:syntastic_php_checkers = ['php', 'phpcs']
 
 Bundle 'scrooloose/nerdtree'
 let NERDTreeShowHidden=1
@@ -62,9 +45,7 @@ autocmd VimEnter * call StartUp()
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 filetype plugin indent on    " required
-" To ignore plugin indent changes, instead use:
-"filetype plugin on
-"
+
 " Brief help
 " :PluginList       - lists configured plugins
 " :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
@@ -78,6 +59,7 @@ filetype plugin indent on    " required
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " terminal settings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
 set nocp
 set t_ut=
 set t_Co=256
@@ -154,7 +136,7 @@ inoremap <expr> <C-n> pumvisible() ? '<C-n>' :
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" coding
+" editing
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 " line wrapping
@@ -250,8 +232,8 @@ set background=dark
 highlight MatchParen ctermbg=darkblue guibg=blue
 
 " cursor color
-"hi cursor cterm=NONE ctermbg=019
-"set cursor
+hi cursor cterm=NONE ctermbg=019
+set cursor
 " cursor line color
 hi cursorline cterm=NONE ctermbg=052
 set cursorline
@@ -264,7 +246,6 @@ hi Visual  ctermbg=236 ctermfg=white cterm=none
 " line number color
 highlight LineNr ctermfg=008
 highlight CursorLineNr ctermfg=255
-
 " make the cursor an underscore
 let &t_SI .= "\<Esc>[3 q"
 let &t_EI .= "\<Esc>[3 q"
@@ -299,7 +280,6 @@ let g:rainbow_active = 1
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 set laststatus=2
-" repository_root = /usr/local/lib/python2.7/dist-packages
 set rtp+=/usr/share/powerline/bindings/vim
 python from powerline.vim import setup as powerline_setup
 python powerline_setup()
