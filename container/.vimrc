@@ -232,8 +232,8 @@ set background=dark
 highlight MatchParen ctermbg=darkblue guibg=blue
 
 " cursor color
-hi cursor cterm=NONE ctermbg=019
-set cursor
+"hi cursor cterm=NONE ctermbg=019
+"set cursor
 " cursor line color
 hi cursorline cterm=NONE ctermbg=052
 set cursorline
