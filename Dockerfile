@@ -240,7 +240,8 @@ RUN groupadd dev \
 ##############################################################################
 
 # cleanup apt cache
-# devenv support scripts
+# add devenv support scripts
+# remove repo resources
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && cp /container/init.sh / \

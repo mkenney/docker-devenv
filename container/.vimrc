@@ -11,9 +11,6 @@ filetype off
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
 
-" alternatively, pass a path where Vundle should install plugins
-"call vundle#begin('~/some/path/here')
-
 " let Vundle manage Vundle, required
 Plugin 'VundleVim/Vundle.vim'
 
@@ -34,15 +31,17 @@ Plugin 'VundleVim/Vundle.vim'
 " different version somewhere else.
 "Plugin 'ascenator/L9', {'name': 'newL9'}
 
-Bundle 'joonty/vim-phpqa'
+"Bundle 'joonty/vim-phpqa'
 
 "Bundle 'joonty/vim-phpunitqf'
 
-Bundle 'scrooloose/syntastic'
-let g:syntastic_php_checkers = ['php', 'phpcs']
+"Bundle 'scrooloose/syntastic'
+"let g:syntastic_php_checkers = ['php', 'phpcs']
 
 Bundle 'scrooloose/nerdtree'
 let NERDTreeShowHidden=1
+let NERDTreeIgnore = ['\.sw?$']
+noremap gn :NERDTree<Cr>
 function! StartUp()
     if 0 == argc()
         NERDTree
@@ -50,15 +49,15 @@ function! StartUp()
 endfunction
 autocmd VimEnter * call StartUp()
 
-Bundle 'ervandew/supertab'
-let g:SuperTabDefaultCompletionType = ""
+"Bundle 'ervandew/supertab'
+"let g:SuperTabDefaultCompletionType = ""
 
 " Mess detector config
 "let g:phpqa_messdetector_ruleset = "/path/to/phpmd.xml"
 
 " CodeSniffer rules
 "let g:phpqa_codesniffer_args = "--standard=Zend"
-let g:phpqa_codesniffer_args = "--standard=~/.phpcs_rules.xml"
+"let g:phpqa_codesniffer_args = "--standard=~/.phpcs_rules.xml"
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -85,7 +84,21 @@ set t_Co=256
 "set t_AB=^[[48;5;%dm
 "set t_AF=^[[38;5;%dm
 set mouse=a
-
+set noerrorbells
+set ttyfast
+set shell=bash
+" move screen with cursor when not using arrow keys
+noremap j j<c-e>
+noremap k k<c-y>
+" previous / next buffers
+map <C-j> :bprev<CR>
+map <C-k> :bnext<CR>
+set hidden
+" ignore caps for some commands
+:command WQ wq
+:command Wq wq
+:command W w
+:command Q q
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " sessions
@@ -149,15 +162,34 @@ set wrap
 set linebreak
 set textwidth=0
 set wrapmargin=0
+" Move vertically correctly across wrapped lines
+inoremap <Down> <C-o>gj
+inoremap <Up> <C-o>gk
+" keep at least 5 offsets around the cursor
+set scrolloff=5
+set sidescrolloff=5
+" show tabs and trailing whitespace
+set list
+set listchars=tab:>·,trail:·
+" leave cursor position alone
+set nostartofline
+" backspace over newlines
+set backspace=2
 
 " set working directory to current file
 " http://vim.wikia.com/wiki/Set_working_directory_to_the_current_file
 autocmd BufEnter * if expand("%:p:h") !~ '^/tmp' | lcd %:p:h | endif
 
 " indentation
+set autoindent
+set smartindent
 set expandtab
 set shiftwidth=4
 set softtabstop=4
+set tabstop=4
+set shiftround
+set copyindent
+set preserveindent
 filetype plugin indent on
 
 "syntax hilighting
@@ -180,6 +212,12 @@ set encoding=utf8
 
 " show line numbers
 set nu
+
+" don't create swp files
+set nobackup
+
+" type 'ii' to switch from insert to command mode
+imap ii <C-[>
 
 " when reopening a file, tell vim to restore the cursor to the saved position
 augroup JumpCursorOnEdit
@@ -208,6 +246,29 @@ augroup JumpCursorOnEdit
 augroup END
 
 " syntax highlighting
+set background=dark
+highlight MatchParen ctermbg=darkblue guibg=blue
+
+" cursor color
+"hi cursor cterm=NONE ctermbg=019
+"set cursor
+" cursor line color
+hi cursorline cterm=NONE ctermbg=052
+set cursorline
+" cursor column color
+hi cursorcolumn cterm=NONE ctermbg=017
+set cursorcolumn
+nnoremap <Leader>c :set cursorline! cursorcolumn!<CR>
+" visual selection color
+hi Visual  ctermbg=236 ctermfg=white cterm=none
+" line number color
+highlight LineNr ctermfg=008
+highlight CursorLineNr ctermfg=255
+
+" make the cursor an underscore
+let &t_SI .= "\<Esc>[3 q"
+let &t_EI .= "\<Esc>[3 q"
+
 hi Comment		term=bold cterm=NONE ctermfg=DarkGrey ctermbg=NONE gui=NONE guifg=#80a0ff guibg=NONE
 hi Constant		term=underline cterm=NONE ctermfg=Magenta ctermbg=NONE gui=NONE guifg=#ffa0a0 guibg=NONE
 hi Special		term=bold cterm=NONE ctermfg=LightRed ctermbg=NONE gui=NONE guifg=Orange guibg=NONE
