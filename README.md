@@ -5,7 +5,15 @@
 The devenv script is available in the bin/ folder and an auto-completion
 script is available in the bash/ folder.
 
-# DOCKER IMAGE
+# ABOUT
+
+This started as a way for me to easily move my dev environment around. The
+goal is to have a fully scripted development environment build that contains
+common tools I need to do my daily work (mainly PHP, Javascript, Perl, Bash,
+Python, etc.) and a control script that allows me to treat container instances
+as individual projects.
+
+## Docker image
 
 * [mkenney/devenv](https://hub.docker.com/r/mkenney/devenv/)
 
@@ -30,26 +38,26 @@ contain your username from the host machine.
 `(DIRECTORY = $HOME/.oracle/network/wallet)` should work for both the
 container and the host in most environments.
 
-## Powerline
+### Powerline
 
 Powerline is installed and enabled in the default tmux and vim configurations,
 you can easily override it with your own configuration files by passing the
 `--tmux` or `--vimrc` options when starting a new instance with the `init` or
 `restart` commands.
 
-## Common packages
+### Common packages
 
 * curl dialog exuberant-ctags fonts-powerline git graphviz htop less libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng12-dev libbz2-dev libaio1 locate man powerline python python-dev python3 python3-dev python-pip python-powerline python-powerline-doc rsync rsyslog ruby sudo tcpdump telnet tmux unzip wget vim-nox vim-addon-manager x11-xserver-utils
 
-## Node packages
+### Node packages
 
 * nodejs:v5 build-essential npm:v3.8 bower:v1.7 grunt-cli:v1.1 gulp-cli:v1.2 yo:v1.7 generator-webapp
 
-## PHP 5.6 packages
+### PHP 5.6 packages
 
 * oci8 composer phpunit phpdocumentor phpcodesniffer phpmd xdebug pcntl
 
-## Oracle packages
+### Oracle packages
 
 * instantclient:v11.2 basic devel sqlplus
 
