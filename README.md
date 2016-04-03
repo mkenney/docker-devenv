@@ -46,7 +46,7 @@ you can easily override it with your own configuration files by passing the
 `restart` commands.
 
 You may want to install and use a compatible font in your terminal. I use
-(iTerm 2)[https://www.iterm2.com/] with the ("Liberation Mono Powerline")[https://github.com/powerline/fonts/tree/master/LiberationMono] font. If you're using iTerm, you
+[iTerm 2](https://www.iterm2.com/) with the ["Liberation Mono Powerline"](https://github.com/powerline/fonts/tree/master/LiberationMono) font. If you're using iTerm, you
 should also uncheck the "Treat ambiguous-width characters as double width"
 setting.
 
