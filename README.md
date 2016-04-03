@@ -45,6 +45,11 @@ you can easily override it with your own configuration files by passing the
 `--tmux` or `--vimrc` options when starting a new instance with the `init` or
 `restart` commands.
 
+You may want to install and use a compatible font in your terminal. I use
+(iTerm 2)[https://www.iterm2.com/] with the ("Liberation Mono Powerline")[https://github.com/powerline/fonts/tree/master/LiberationMono] font. If you're using iTerm, you
+should also uncheck the "Treat ambiguous-width characters as double width"
+setting.
+
 ### Common packages
 
 * curl dialog exuberant-ctags fonts-powerline git graphviz htop less libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng12-dev libbz2-dev libaio1 locate man powerline python python-dev python3 python3-dev python-pip python-powerline python-powerline-doc rsync rsyslog ruby sudo tcpdump telnet tmux unzip wget vim-nox vim-addon-manager x11-xserver-utils
