@@ -60,6 +60,17 @@ filetype plugin indent on    " required
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Powerline configuration
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+set laststatus=2
+set rtp+=/usr/share/powerline/bindings/vim
+python from powerline.vim import setup as powerline_setup
+python powerline_setup()
+python del powerline_setup
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " terminal settings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -277,17 +288,6 @@ highlight DiffText   cterm=bold ctermfg=10 ctermbg=88 gui=none guifg=bg guibg=Re
 
 " rainbow parens
 let g:rainbow_active = 1
-
-
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Powerline configuration
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-set laststatus=2
-set rtp+=/usr/share/powerline/bindings/vim
-python from powerline.vim import setup as powerline_setup
-python powerline_setup()
-python del powerline_setup
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
