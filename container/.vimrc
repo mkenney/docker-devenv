@@ -245,6 +245,8 @@ augroup END
 set background=dark
 highlight MatchParen ctermbg=darkblue guibg=blue
 
+set colorcolumn=78
+hi ColorColumn ctermbg=017
 " cursor color
 "hi cursor cterm=NONE ctermbg=019
 "set cursor
@@ -252,8 +254,8 @@ highlight MatchParen ctermbg=darkblue guibg=blue
 hi cursorline cterm=NONE ctermbg=052
 set cursorline
 " cursor column color
-hi cursorcolumn cterm=NONE ctermbg=017
-set cursorcolumn
+"hi cursorcolumn cterm=NONE ctermbg=017
+"set cursorcolumn
 nnoremap <Leader>c :set cursorline! cursorcolumn!<CR>
 " visual selection color
 hi Visual  ctermbg=236 ctermfg=white cterm=none

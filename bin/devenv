@@ -25,6 +25,9 @@ function _devenv_show_usage {
         -t TARGET, --target=TARGET  Specify a target environment name
         --tmux, --tmux=PATH         Specify a tmux configuration file. If 
                                     path is omitted from this option then 
+        --tmux-prefix=PREFIX        Use the default tmux configuration file
+                                    but specify you're preferred prefix key.
+                                    The default key is 'C-\\'
                                     $HOME/.tmux.conf is assumed
         --vimrc, --vimrc=PATH       Specify a vim configuration file. If 
                                     path is omitted from this option then 
@@ -53,7 +56,7 @@ function _devenv_show_help {
      ${COMMAND} -- Manage ${CONTAINER_IMAGE} docker work environment containers
 
  SYNOPSYS
-     ${COMMAND} [-t TARGET] [-p PATH] [-d] [command]
+     ${COMMAND} [-t TARGET] [-p PATH] [-d] [command] [command-args]
 
  DESCRIPTION
      The ${COMMAND} utility is used to manage ${CONTAINER_IMAGE} docker containers to
@@ -101,6 +104,13 @@ function _devenv_show_help {
              $HOME/.tmux.conf will be assumed. If the --tmux option
              is omitted then the .tmux.conf file from the docker image will
              be used.
+
+         --tmux-prefix=PREFIX
+             The default prefix key has been set to C-\\ (control+backslash)
+             to keep it from interfering with the default vim 'PageUp'
+             binding. You can specify your preferred prefix binding when
+             initializing an instance with this option. For example, to
+             restore the default tmux prefix binding, use '--tmux-prefix=C-b'.
 
          --vimrc, --vimrc=PATH
              Specify a vim configuration file. If PATH is omitted then
@@ -263,6 +273,7 @@ function _devenv_init_session {
 # $4 .vimrc path
 # $5 Daemonize flag
 # $6 ctags excludes, comma-separated string
+# $7 Custom tmux prefix string, i.e. 'C-b'
 #
 function _devenv_create_container {
 
@@ -272,6 +283,7 @@ function _devenv_create_container {
     local _vimrc=$4
     local _daemonize=$5
     local _ctags_excludes=$6
+    local _tmux_prefix=$7
 
     if [ "true" == "$(_devenv_is_running ${_target})" ]; then
         echo "Container '${_target}' is already running"
@@ -307,11 +319,16 @@ function _devenv_create_container {
             docker_run_args="$docker_run_args --label daemonize=${_daemonize}"
         fi
         # ctags excludes
-        if [ "" != "$_ctags_excludes" ]; then
+        if [ "-" != "$_ctags_excludes" ]; then
             docker_run_args="$docker_run_args -e CTAGS_EXCLUDES=$_ctags_excludes"
+        fi
+        # custom tmux prefix key
+        if [ "-" != "$_tmux_prefix" ]; then
+            docker_run_args="$docker_run_args -e TMUX_PREFIX=$_tmux_prefix"
         fi
 
         echo "Starting dev container '${_target}' at ${_path}..."
+
         docker run $docker_run_args ${CONTAINER_IMAGE}
 
         _devenv_init_session ${_target}
@@ -555,7 +572,7 @@ _devenv_path=""
 _devenv_target=""
 _devenv_daemonize="false"
 _devenv_ctags_excludes=()
-
+_devenv_tmux_prefix='-'
 
 while :; do
     case $1 in
@@ -631,6 +648,12 @@ while :; do
             else
                 _devenv_error_file_not_found "$HOME/.tmux.conf"
             fi
+            ;;
+        #
+        # secondary tmux prefix key binding
+        #
+        --tmux-prefix=?*)
+            _devenv_tmux_prefix=${1#*=}
             ;;
         #
         # .vimrc path
@@ -799,6 +822,13 @@ fi
 
 _devenv_ctags_excludes=${_devenv_ctags_excludes[@]}
 _devenv_ctags_excludes=$(echo $_devenv_ctags_excludes | sed "s/ /,/g")
+if [ "" == "$_devenv_ctags_excludes" ]; then
+    _devenv_ctags_excludes='-'
+fi
+
+if [ "" == "$_devenv_tmux_prefix" ]; then
+    _devenv_tmux_prefix='-'
+fi
 
 ##############################################################################
 # Execute
@@ -825,7 +855,8 @@ elif [ "init" == "${_devenv_command}" ]; then
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
     fi
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]}
+    echo "_devenv_create_container ${_devenv_container_name}; ${_devenv_project_path}; ${_tmux_conf_path}; ${_vimrc_conf_path}; ${_devenv_daemonize}; ${_devenv_ctags_excludes[@]}; ${_devenv_tmux_prefix}"
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix}
 
 
 # Kill a running container
@@ -848,7 +879,7 @@ elif [ "restart" == "${_devenv_command}" ]; then
         daemonize='true'
     fi
     _devenv_kill_container ${_devenv_container_name}
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix}
 
 
 # Rename a current container

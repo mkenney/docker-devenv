@@ -11,7 +11,7 @@ This started as a way for me to easily move my dev environment around. The
 goal is to have a fully scripted development environment build that contains
 common tools I need to do my daily work (mainly PHP, Javascript, Perl, Bash,
 Python, etc.) and a control script that allows me to treat container instances
-as individual projects.
+as individual projects. Essentially, a VIM-based IDE.
 
 ## Docker image
 
@@ -20,7 +20,10 @@ as individual projects.
 Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment
 is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf) and, when using the  `devenv`
 cli, initializes and attaches to a tmux session when you connect to the
-container.
+container. Because this aims to be a `vim`-based IDE, the default
+command-prefix key has been remapped to 'C-\'. You can specify a secondary
+prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file
+using the `--tmux` option.
 
 The default user is modified when the container is initialized so it becomes
 the owner of the project directory on the host and belongs to the same group
@@ -116,6 +119,13 @@ setting.
              $HOME/.tmux.conf will be assumed. If the --tmux option
              is omitted then the .tmux.conf file from the docker image will
              be used.
+
+         --tmux-prefix=PREFIX
+             The default prefix key has been set to C-\ to keep it from
+             interfering with the default vim 'PageUp' binding. You can
+             specify your preferred prefix binding when initializing an
+             instance with this option. For example, to restore the default
+             tmux prefix binding, use '--tmux-prefix=C-b'.
 
          --vimrc, --vimrc=PATH
              Specify a vim configuration file. If PATH is omitted then
