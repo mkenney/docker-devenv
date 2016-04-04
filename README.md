@@ -20,8 +20,7 @@ as individual projects.
 Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment
 is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf) and, when using the  `devenv`
 cli, initializes and attaches to a tmux session when you connect to the
-container. The included `.tmux.conf` remaps the prefix key to `Ctrl-\` so you
-can override that with `--tmux` when initializing a new instance.
+container.
 
 The default user is modified when the container is initialized so it becomes
 the owner of the project directory on the host and belongs to the same group
