@@ -121,11 +121,12 @@ setting.
              be used.
 
          --tmux-prefix=PREFIX
-             The default prefix key has been set to C-\ to keep it from
-             interfering with the default vim 'PageUp' binding. You can
-             specify your preferred prefix binding when initializing an
-             instance with this option. For example, to restore the default
-             tmux prefix binding, use '--tmux-prefix=C-b'.
+             The default prefix key has been set to C-\ (control+backslash)
+             to keep it from interfering with the default vim 'PageUp'
+             binding. You can specify your preferred prefix binding when
+             initializing an instance with this option. For example, to
+             restore the default tmux prefix binding, use '--tmux-prefix=C-b'
+             when initializing a new instance.
 
          --vimrc, --vimrc=PATH
              Specify a vim configuration file. If PATH is omitted then
@@ -136,19 +137,29 @@ setting.
              from the same location as the .vimrc file.
 
 # COMMANDS
-     Available commands devenv can execute. TARGET refers to the name of
-     the instance you are managing and PATH refers to the mounted working
-     directory. If PATH is omitted, it defaults to the current directory.
+     Available commands 'devenv' can execute. Most commands accept the
+     optional TARGET or PATH arguments. TARGET refers to the name of the
+     instance you are manipulating and PATH refers to the working directory
+     that gets mounted into the /src directory in the instance.
 
-     If TARGET is omitted, current instances are searched to see if any are
-     attached to the specified PATH, and if so, TARGET is set to the instance
-     name. If not, TARGET defaults to the basename of the PATH value.
+     If PATH is omitted, it defaults to the current directory. If TARGET is,
+     omitted, current instances are searched to see if any are attached to
+     PATH, and if so, TARGET is set to that instance name. If not, TARGET
+     defaults to the basename of the PATH value.
+
+     If TARGET is specified but PATH is omitted, the reverse behavior happens
+     and current instances are searced for one named TARGET. If one is found,
+     PATH is set to the path the TARGET instance is attached to, otherwise the
+     default again becomes the current directory.
+
+     Both TARGET and PATH can be specified using the option arguments --target
+     and --path respectively.
 
          attach [TARGET]
              Attach to an instance specified by the [TARGET] argument.
 
              EXAMPLES
-                 devenv attach [TARGET]
+                 devenv attach TARGET
                  devenv -t TARGET attach
                  devenv -p PATH attach
 
@@ -156,9 +167,9 @@ setting.
              Create a new instance.
 
              EXAMPLES
-                 devenv create [TARGET] [PATH]
-                 devenv -p PATH create [TARGET]
-                 devenv -t TARGET create [PATH]
+                 devenv init TARGET PATH
+                 devenv -p PATH create TARGET
+                 devenv -t TARGET create PATH
                  devenv -t TARGET -p PATH create
 
          kill [TARGET]
