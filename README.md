@@ -131,7 +131,8 @@ setting.
          --vimrc, --vimrc=PATH
              Specify a vim configuration file. If PATH is omitted then
              $HOME/.vimrc will be assumed. If the --vimrc option is
-             omitted then the .vimrc file from the docker image will be used.
+             omitted entirely then the default .vimrc file included with the
+             docker image will be used.
 
              In addition, this script will attempt to mount a .vim/ folder
              from the same location as the .vimrc file.

@@ -116,7 +116,8 @@ function _devenv_show_help {
          --vimrc, --vimrc=PATH
              Specify a vim configuration file. If PATH is omitted then
              $HOME/.vimrc will be assumed. If the --vimrc option is
-             omitted then the .vimrc file from the docker image will be used.
+             omitted entirely then the default .vimrc file included with the
+             docker image will be used.
 
              In addition, this script will attempt to mount a .vim/ folder
              from the same location as the .vimrc file.
@@ -866,7 +867,6 @@ elif [ "init" == "${_devenv_command}" ]; then
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
     fi
-    echo "_devenv_create_container ${_devenv_container_name}; ${_devenv_project_path}; ${_tmux_conf_path}; ${_vimrc_conf_path}; ${_devenv_daemonize}; ${_devenv_ctags_excludes[@]}; ${_devenv_tmux_prefix}"
     _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix}
 
 
