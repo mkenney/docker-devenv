@@ -32,6 +32,9 @@ function! StartUp()
 endfunction
 autocmd VimEnter * call StartUp()
 
+" Minimap
+Plugin 'severin-lemaignan/vim-minimap'
+
 "Bundle 'ervandew/supertab'
 "let g:SuperTabDefaultCompletionType = ""
 

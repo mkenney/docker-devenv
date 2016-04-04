@@ -74,7 +74,8 @@ function _devenv_show_help {
              Used to specify files or directories that should be excluded when
              compiling the tags file. The value can be either a comma-
              separated list of glob patterns or this option can be specified
-             multiple times.
+             multiple times. The tags file is compiled when first attaching to
+             an instance.
 
          -d, --daemonize
              Used when initializing or restarting an instance. If specified,
