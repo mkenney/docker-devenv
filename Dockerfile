@@ -105,6 +105,7 @@ RUN apt-get install -qqy \
 # Dependencies
 ##############################################################################
 
+COPY bin/devenv /usr/local/bin/devenv
 COPY container /container
 
 # https://sourceforge.net/projects/cloc/
