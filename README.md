@@ -25,7 +25,7 @@ Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie). The def
 is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf) and, when using the  `devenv`
 cli, initializes and attaches to a tmux session when you connect to the
 container. Because this assumes `vim` will be the primary editor, the default
-command-prefix key has been remapped to 'C-\'. You can specify a secondary
+command-prefix key has been remapped to `C-\`. You can specify a secondary
 prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file
 using the `--tmux` option.
 
