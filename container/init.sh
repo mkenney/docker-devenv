@@ -22,8 +22,10 @@ fi
 # set tnsnames permissions
 ##############################################################################
 
-sudo chown oracle:dba /oracle/product/latest/network/admin/tnsnames.ora
-sudo chmod 644 /oracle/product/latest/network/admin/tnsnames.ora
+if [ -f "/oracle/product/latest/network/admin/tnsnames.ora" ]; then
+    sudo chown oracle:dba /oracle/product/latest/network/admin/tnsnames.ora
+    sudo chmod 644 /oracle/product/latest/network/admin/tnsnames.ora
+fi
 
 ##############################################################################
 # "become" the user that owns the project directory

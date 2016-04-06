@@ -7,11 +7,15 @@ script is available in the bash/ folder.
 
 # ABOUT
 
-This started as a way for me to easily move my dev environment around. The
-goal is to have a fully scripted development environment build that contains
-common tools I need to do my daily work (mainly PHP, Javascript, Perl, Bash,
-Python, etc.) and a control script that allows me to treat container instances
-as individual projects. Essentially, a VIM-based IDE.
+This project began as a way for me to easily move my development enviroment
+around with me, but quickly turned into my primary IDE for all my software
+development.
+
+The goal is to have a fully scripted development environment build that
+contains all the tools I need to do my daily work (mainly PHP, Javascript,
+Perl, Bash, Python, etc.) and a control script that allows me to treat
+container instances as individual projects. Essentially, a fully customized
+linux instance dedicated to a single software development project.
 
 ## Docker image
 
@@ -20,7 +24,7 @@ as individual projects. Essentially, a VIM-based IDE.
 Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment
 is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf) and, when using the  `devenv`
 cli, initializes and attaches to a tmux session when you connect to the
-container. Because this aims to be a `vim`-based IDE, the default
+container. Because this assumes `vim` will be the primary editor, the default
 command-prefix key has been remapped to 'C-\'. You can specify a secondary
 prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file
 using the `--tmux` option.
@@ -33,7 +37,7 @@ By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.c
 into the home directory and if a `tnsnames.ora` file exists on the host at
 `/oracle/product/latest/network/admin/tnsnames.ora` it will be copied to the
 same location inside the container. This should be enough to automate
-connecting to oracle (sqlplus is installed in the container). If the
+connecting to oracle (sqlplus is installed in the container) but ymmv. If the
 connection fails, make sure the path to the wallet files is correct. Take a
 look at `~/.oracle/network/admin/sqlnet.ora` and make sure the path doesn't
 contain your username from the host machine.
@@ -163,6 +167,14 @@ setting.
                  devenv attach TARGET
                  devenv -t TARGET attach
                  devenv -p PATH attach
+
+         build-tags [TARGET]
+             Update the project ctags file.
+
+             EXAMPLES
+                 devenv build-tags TARGET
+                 devenv -t TARGET build-tags
+                 devenv -p PATH build-tags
 
          init [TARGET] [PATH]
              Create a new instance.

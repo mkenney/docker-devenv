@@ -245,8 +245,9 @@ RUN groupadd dev \
 # remove repo resources
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && cp /container/init.sh / \
     && cp /container/attach.sh / \
+    && cp /container/build-tags.sh / \
+    && cp /container/init.sh / \
     && rm -rf /container
 
 USER dev

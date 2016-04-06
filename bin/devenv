@@ -149,6 +149,14 @@ function _devenv_show_help {
                  ${COMMAND} -t TARGET attach
                  ${COMMAND} -p PATH attach
 
+         build-tags [TARGET]
+             Update the project ctags file.
+
+             EXAMPLES
+                 ${COMMAND} build-tags TARGET
+                 ${COMMAND} -t TARGET build-tags
+                 ${COMMAND} -p PATH build-tags
+
          init [TARGET] [PATH]
              Create a new instance.
 
@@ -273,8 +281,19 @@ function _devenv_unpause_container {
 #
 # @param environment name returned by _devenv_list_environments
 function _devenv_init_session {
-    cat /oracle/product/latest/network/admin/tnsnames.ora | docker exec -i ${1}${CONTAINER_SUFFIX} sudo sh -c 'cat > /oracle/product/latest/network/admin/tnsnames.ora'
+    if [ -f "/oracle/product/latest/network/admin/tnsnames.ora" ]; then
+        cat /oracle/product/latest/network/admin/tnsnames.ora | docker exec -i ${1}${CONTAINER_SUFFIX} sudo sh -c 'cat > /oracle/product/latest/network/admin/tnsnames.ora'
+    else
+        echo "No tnsnames.ora file found on host."
+    fi
     docker exec -ti ${1}${CONTAINER_SUFFIX} script /dev/null -c 'sh /init.sh'
+}
+
+# Buld tags
+#
+# @param environment name returned by _devenv_list_environments
+function _devenv_build_tags {
+    docker exec -ti ${1}${CONTAINER_SUFFIX} script /dev/null -c 'sh /build-tags.sh'
 }
 
 # Start a dev container
@@ -345,6 +364,7 @@ function _devenv_create_container {
         docker run $docker_run_args ${CONTAINER_IMAGE}
 
         _devenv_init_session ${_target}
+        _devenv_build_tags ${_target}
         if [ "true" != "$_daemonize" ]; then
             _devenv_pause_container ${_target}
         else
@@ -1052,6 +1072,16 @@ while :; do
             fi
             ;;
         #
+        # Attach to a running container
+        #
+        build-tags)
+            _devenv_command=$1
+            if [ "" == "$_devenv_target" ]; then
+                _devenv_target=$2
+                shift
+            fi
+            ;;
+        #
         # Initialize a new container
         #
         create|init)
@@ -1216,6 +1246,20 @@ if [ "attach" == "${_devenv_command}" ]; then
         _devenv_unpause_container ${_devenv_container_name}
     fi
     _devenv_attach ${_devenv_container_name}
+    if [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
+        _devenv_pause_container ${_devenv_container_name}
+    fi
+
+
+# Attach to a running container
+elif [ "build-tags" == "${_devenv_command}" ]; then
+    if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+        _devenv_error_target_not_running $_devenv_container_name
+    fi
+    if [ "true" == "$(_devenv_is_paused ${_devenv_container_name})" ]; then
+        _devenv_unpause_container ${_devenv_container_name}
+    fi
+    _devenv_build_tags ${_devenv_container_name}
     if [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
