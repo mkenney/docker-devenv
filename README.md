@@ -2,8 +2,8 @@
 
 * [mkenney/docker-devenv](https://github.com/mkenney/docker-devenv)
 
-The devenv script is available in the bin/ folder and an auto-completion
-script is available in the bash/ folder.
+The `devenv` script is available in the `bin/` folder and an auto-completion
+script is available in the `bash/` folder.
 
 # ABOUT
 
