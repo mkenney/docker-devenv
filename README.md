@@ -24,7 +24,7 @@ By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.c
 
 Powerline is installed and enabled in the default tmux and vim configurations, you can easily override it with your own configuration files by passing the `--tmux` or `--vimrc` options when starting a new instance with the `init` or `restart` commands.
 
-If you do want to use `powerline`, you may want to install and use a compatible font in your terminal emulator. I use [iTerm 2](https://www.iterm2.com/) with the ["Liberation Mono Powerline"](https://github.com/powerline/fonts/tree/master/LiberationMono) font. If you're using iTerm, you should also uncheck the "Treat ambiguous-width characters as double width" setting.
+If you do want to use `powerline`, you may want to install and use a compatible font in your terminal emulator. I use [iTerm 2](https://www.iterm2.com/) with the [Liberation Mono Powerline](https://github.com/powerline/fonts/tree/master/LiberationMono) font. If you're using iTerm, you should also uncheck the "Treat ambiguous-width characters as double width" setting.
 
 ### Common packages
 
