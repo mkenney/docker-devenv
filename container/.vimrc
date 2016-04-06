@@ -296,6 +296,12 @@ let g:rainbow_active = 1
 " key mappings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+" Set Leader key to space
+let mapleader=" "
+
+" set ' p' as a paste-over-without-yank operation
+vnoremap <leader>p "_dP
+
 " tab switching
 map <M-Left> :tabp<CR>
 map <M-Right> :tabn<CR>
