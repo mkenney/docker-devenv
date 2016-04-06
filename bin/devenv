@@ -1274,10 +1274,6 @@ elif [ "self-update" == "${_devenv_command}" ]; then
 # Unpause a paused container
 elif [ "start" == "${_devenv_command}" ]; then
     _devenv_unpause_container ${_devenv_container_name}
-    _devenv_attach ${_devenv_container_name}
-    if [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
-        _devenv_pause_container ${_devenv_container_name}
-    fi
 
 
 # Pause a running container
