@@ -35,6 +35,7 @@ function _devenv_show_usage {
 
     Commands:
         attach [TARGET]             Attach to a running environment
+        build-tags [TARGET]         Trigger an update to project tags file
         init [TARGET] [PATH]        Create a new environment
         kill [TARGET]               Stop a running environment and clean up
         ls [PATTERN]                List available environments
@@ -1242,11 +1243,12 @@ if [ "attach" == "${_devenv_command}" ]; then
     if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_not_running $_devenv_container_name
     fi
-    if [ "true" == "$(_devenv_is_paused ${_devenv_container_name})" ]; then
+    _paused=$(_devenv_is_paused ${_devenv_container_name})
+    if [ "true" == "$_paused" ]; then
         _devenv_unpause_container ${_devenv_container_name}
     fi
     _devenv_attach ${_devenv_container_name}
-    if [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
+    if [ "true" == "$_paused" ] && [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 
@@ -1256,11 +1258,13 @@ elif [ "build-tags" == "${_devenv_command}" ]; then
     if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_not_running $_devenv_container_name
     fi
-    if [ "true" == "$(_devenv_is_paused ${_devenv_container_name})" ]; then
+
+    _paused=$(_devenv_is_paused ${_devenv_container_name})
+    if [ "true" == "$_paused" ]; then
         _devenv_unpause_container ${_devenv_container_name}
     fi
     _devenv_build_tags ${_devenv_container_name}
-    if [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
+    if [ "true" == "$_paused" ] && [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 

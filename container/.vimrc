@@ -158,7 +158,7 @@ set wrap
 set linebreak
 set textwidth=0
 set wrapmargin=0
-" Move vertically correctly across wrapped lines
+" Move vertically across wrapped lines when in insert mode
 inoremap <Down> <C-o>gj
 inoremap <Up> <C-o>gk
 " keep at least 5 offsets around the cursor
@@ -243,7 +243,7 @@ augroup END
 
 " syntax highlighting
 set background=dark
-highlight MatchParen ctermbg=darkblue guibg=blue
+highlight MatchParen ctermbg=darkblue
 
 set colorcolumn=78
 hi ColorColumn ctermbg=017
@@ -296,7 +296,7 @@ let g:rainbow_active = 1
 " key mappings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-" Map tab switching
+" tab switching
 map <M-Left> :tabp<CR>
 map <M-Right> :tabn<CR>
 
