@@ -2,59 +2,29 @@
 
 * [mkenney/docker-devenv](https://github.com/mkenney/docker-devenv)
 
-The `devenv` script is available in the `bin/` folder and an auto-completion
-script is available in the `bash/` folder.
+The `devenv` script is available in the `bin/` folder and an auto-completion script is available in the `bash/` folder.
 
 # ABOUT
 
-This project began as a way for me to easily move my development enviroment
-around with me, but quickly turned into my primary IDE for all my software
-development.
+This project began as a way for me to easily move my development enviroment around with me, but quickly turned into my primary IDE for all my software development.
 
-The goal is to have a fully scripted development environment build that
-contains all the tools I need to do my daily work (mainly PHP, Javascript,
-Perl, Bash, Python, etc.) and a control script that allows me to treat
-container instances as individual projects. Essentially, a fully customized
-linux instance dedicated to a single software development project.
+The goal is to have a fully scripted development environment build that contains all the tools I need to do my daily work (mainly PHP, Javascript, Perl, Bash, Python, etc.) and a control script that allows me to treat container instances as individual projects. Essentially, a fully customized linux instance dedicated to a single software development project.
 
 ## Docker image
 
 * [mkenney/devenv](https://hub.docker.com/r/mkenney/devenv/)
 
-Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment
-is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf) and, when using the  `devenv`
-cli, initializes and attaches to a tmux session when you connect to the
-container. Because this assumes `vim` will be the primary editor, the default
-command-prefix key has been remapped to `C-\`. You can specify a secondary
-prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file
-using the `--tmux` option.
+Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf) and, when using the `devenv` cli, initializes and attaches to a tmux session when you connect to the container. Because this assumes `vim` will be the primary editor, the default command-prefix key has been remapped to `C-\`. You can specify a secondary prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file using the `--tmux` option.
 
-The default user is modified when the container is initialized so it becomes
-the owner of the project directory on the host and belongs to the same group
-so new files will be created with the same uid/gid on the host.
+The default user is modified when the container is initialized so it becomes the owner of the project directory on the host and belongs to the same group so new files will be created with the same uid/gid on the host.
 
-By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.com/cd/B19306_01/network.102/b14266/cnctslsh.htm#g1033548)) are mounted
-into the home directory and if a `tnsnames.ora` file exists on the host at
-`/oracle/product/latest/network/admin/tnsnames.ora` it will be copied to the
-same location inside the container. This should be enough to automate
-connecting to oracle (sqlplus is installed in the container) but ymmv. If the
-connection fails, make sure the path to the wallet files is correct. Take a
-look at `~/.oracle/network/admin/sqlnet.ora` and make sure the path doesn't
-contain your username from the host machine.
-`(DIRECTORY = $HOME/.oracle/network/wallet)` should work for both the
-container and the host in most environments.
+By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.com/cd/B19306_01/network.102/b14266/cnctslsh.htm#g1033548)) are mounted into the home directory and if a `tnsnames.ora` file exists on the host at `/oracle/product/latest/network/admin/tnsnames.ora` it will be copied to the same location inside the container. This should be enough to automate connecting to oracle (sqlplus is installed in the container) but ymmv. If the connection fails, make sure the path to the wallet files is correct. Take a look at `~/.oracle/network/admin/sqlnet.ora` and make sure the path doesn't contain your username from the host machine. `(DIRECTORY = $HOME/.oracle/network/wallet)` should work for both the container and the host in most environments.
 
 ### Powerline
 
-Powerline is installed and enabled in the default tmux and vim configurations,
-you can easily override it with your own configuration files by passing the
-`--tmux` or `--vimrc` options when starting a new instance with the `init` or
-`restart` commands.
+Powerline is installed and enabled in the default tmux and vim configurations, you can easily override it with your own configuration files by passing the `--tmux` or `--vimrc` options when starting a new instance with the `init` or `restart` commands.
 
-You may want to install and use a compatible font in your terminal. I use
-[iTerm 2](https://www.iterm2.com/) with the ["Liberation Mono Powerline"](https://github.com/powerline/fonts/tree/master/LiberationMono) font. If you're using iTerm, you
-should also uncheck the "Treat ambiguous-width characters as double width"
-setting.
+If you do want to use `powerline`, you may want to install and use a compatible font in your terminal emulator. I use [iTerm 2](https://www.iterm2.com/) with the ["Liberation Mono Powerline"](https://github.com/powerline/fonts/tree/master/LiberationMono) font. If you're using iTerm, you should also uncheck the "Treat ambiguous-width characters as double width" setting.
 
 ### Common packages
 
