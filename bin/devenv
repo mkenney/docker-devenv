@@ -323,6 +323,7 @@ function _devenv_create_container {
 
         docker_run_args="
             -itd \
+            --storage-opt dm.no_warn_on_loop_devices=true \
             -e IS_DEVENV=true
             -h ${_target} \
             -e HOSTNAME=${_target} \
