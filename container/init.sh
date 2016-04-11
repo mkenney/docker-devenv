@@ -3,26 +3,29 @@
 echo "Creating new dev session..."
 
 ##############################################################################
-# environment setup
+# start system logger
 ##############################################################################
 
 sudo /usr/sbin/rsyslogd > /dev/null
 
-##############################################################################
-# project setup
-##############################################################################
+#############################################################################
+# Run-once updates
+#############################################################################
 
-cd $PROJECT_PATH
-if [ ! -f "/src/tags" ]; then
-    sudo ctags-exuberant --exclude='.git' --exclude='node_modules' --languages=+PHP,+JavaScript,+Perl,+Java,+Python -R /src
+# Custom tmux prefix string
+if [ "" != "$TMUX_PREFIX" ]; then
+    echo "# Custom prefix key set with --tmux-prefix" >> /home/dev/.tmux.conf
+    echo "set-option -g prefix2 $TMUX_PREFIX" >> /home/dev/.tmux.conf
 fi
 
-##############################################################################
+#############################################################################
 # set tnsnames permissions
 ##############################################################################
 
-sudo chown oracle:dba /oracle/product/latest/network/admin/tnsnames.ora
-sudo chmod 644 /oracle/product/latest/network/admin/tnsnames.ora
+if [ -f "/oracle/product/latest/network/admin/tnsnames.ora" ]; then
+    sudo chown oracle:dba /oracle/product/latest/network/admin/tnsnames.ora
+    sudo chmod 644 /oracle/product/latest/network/admin/tnsnames.ora
+fi
 
 ##############################################################################
 # "become" the user that owns the project directory

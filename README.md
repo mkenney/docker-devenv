@@ -2,54 +2,43 @@
 
 * [mkenney/docker-devenv](https://github.com/mkenney/docker-devenv)
 
-The devenv script is available in the bin/ folder and an auto-completion
-script is available in the bash/ folder.
+The `devenv` script is available in the `bin/` folder and an auto-completion script is available in the `bash/` folder.
 
-# DOCKER IMAGE
+# ABOUT
+
+This project began as a way for me to easily move my development enviroment around with me, but quickly turned into my primary IDE for all my software development.
+
+The goal is to have a fully scripted development environment build that contains all the tools I need to do my daily work (mainly PHP, Javascript, Perl, Bash, Python, etc.) and a control script that allows me to treat container instances as individual projects. Essentially, a fully customized linux instance dedicated to a single software development project.
+
+## Docker image
 
 * [mkenney/devenv](https://hub.docker.com/r/mkenney/devenv/)
 
-Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment
-is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf) and, when using the  `devenv`
-cli, initializes and attaches to a tmux session when you connect to the
-container. The included `.tmux.conf` remaps the prefix key to `Ctrl-\` so you
-can override that with `--tmux` when initializing a new instance.
+Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_conf) and, when using the `devenv` cli, initializes and attaches to a tmux session when you connect to the container. Because this assumes `vim` will be the primary editor, the default command-prefix key has been remapped to `C-\`. You can specify a secondary prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file using the `--tmux` option.
 
-The default user is modified when the container is initialized so it becomes
-the owner of the project directory on the host and belongs to the same group
-so new files will be created with the same uid/gid on the host.
+The default user is modified when the container is initialized so it becomes the owner of the project directory on the host and belongs to the same group so new files will be created with the same uid/gid on the host.
 
-By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.com/cd/B19306_01/network.102/b14266/cnctslsh.htm#g1033548)) are mounted
-into the home directory and if a `tnsnames.ora` file exists on the host at
-`/oracle/product/latest/network/admin/tnsnames.ora` it will be copied to the
-same location inside the container. This should be enough to automate
-connecting to oracle (sqlplus is installed in the container). If the
-connection fails, make sure the path to the wallet files is correct. Take a
-look at `~/.oracle/network/admin/sqlnet.ora` and make sure the path doesn't
-contain your username from the host machine.
-`(DIRECTORY = $HOME/.oracle/network/wallet)` should work for both the
-container and the host in most environments.
+By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.com/cd/B19306_01/network.102/b14266/cnctslsh.htm#g1033548)) are mounted into the home directory and if a `tnsnames.ora` file exists on the host at `/oracle/product/latest/network/admin/tnsnames.ora` it will be copied to the same location inside the container. This should be enough to automate connecting to oracle (sqlplus is installed in the container) but ymmv. If the connection fails, make sure the path to the wallet files is correct. Take a look at `~/.oracle/network/admin/sqlnet.ora` and make sure the path doesn't contain your username from the host machine. `(DIRECTORY = $HOME/.oracle/network/wallet)` should work for both the container and the host in most environments.
 
-## Powerline
+### Powerline
 
-Powerline is installed and enabled in the default tmux and vim configurations,
-you can easily override it with your own configuration files by passing the
-`--tmux` or `--vimrc` options when starting a new instance with the `init` or
-`restart` commands.
+Powerline is installed and enabled in the default tmux and vim configurations, you can easily override it with your own configuration files by passing the `--tmux` or `--vimrc` options when starting a new instance with the `init` or `restart` commands.
 
-## Common packages
+If you do want to use `powerline`, you may want to install and use a compatible font in your terminal emulator. I use [iTerm 2](https://www.iterm2.com/) with the [Liberation Mono Powerline](https://github.com/powerline/fonts/tree/master/LiberationMono) font. If you're using iTerm, you should also uncheck the "Treat ambiguous-width characters as double width" setting.
+
+### Common packages
 
 * curl dialog exuberant-ctags fonts-powerline git graphviz htop less libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng12-dev libbz2-dev libaio1 locate man powerline python python-dev python3 python3-dev python-pip python-powerline python-powerline-doc rsync rsyslog ruby sudo tcpdump telnet tmux unzip wget vim-nox vim-addon-manager x11-xserver-utils
 
-## Node packages
+### Node packages
 
 * nodejs:v5 build-essential npm:v3.8 bower:v1.7 grunt-cli:v1.1 gulp-cli:v1.2 yo:v1.7 generator-webapp
 
-## PHP 5.6 packages
+### PHP 5.6 packages
 
 * oci8 composer phpunit phpdocumentor phpcodesniffer phpmd xdebug pcntl
 
-## Oracle packages
+### Oracle packages
 
 * instantclient:v11.2 basic devel sqlplus
 
@@ -74,10 +63,16 @@ you can easily override it with your own configuration files by passing the
          --help, help
              Show this extended help screen
 
+         --ctags-exclude
+             Used to specify files or directories that should be excluded when
+             compiling the tags file. The value can be either a comma-
+             separated list of glob patterns or this option can be specified
+             multiple times.
+
          -d, --daemonize
-             Used when attaching to an instance. If specified, allow the
-             instance to continue running after detaching from the session,
-             otherwise the container will be paused automatically.
+             Used when initializing or restarting an instance. If specified,
+             allow the instance to continue running after detaching from the
+             session, otherwise the container will be paused automatically.
 
              This is useful executing a long-running script to come back to
              or starting a daemon. If you forget to daemonize an instance,
@@ -99,38 +94,65 @@ you can easily override it with your own configuration files by passing the
              is omitted then the .tmux.conf file from the docker image will
              be used.
 
+         --tmux-prefix=PREFIX
+             The default prefix key has been set to C-\ (control+backslash)
+             to keep it from interfering with the default vim 'PageUp'
+             binding. You can specify your preferred prefix binding when
+             initializing an instance with this option. For example, to
+             restore the default tmux prefix binding, use '--tmux-prefix=C-b'
+             when initializing a new instance.
+
          --vimrc, --vimrc=PATH
              Specify a vim configuration file. If PATH is omitted then
              $HOME/.vimrc will be assumed. If the --vimrc option is
-             omitted then the .vimrc file from the docker image will be used.
+             omitted entirely then the default .vimrc file included with the
+             docker image will be used.
 
              In addition, this script will attempt to mount a .vim/ folder
              from the same location as the .vimrc file.
 
 # COMMANDS
-     Available commands devenv can execute. TARGET refers to the name of
-     the instance you are managing and PATH refers to the mounted working
-     directory. If PATH is omitted, it defaults to the current directory.
+     Available commands 'devenv' can execute. Most commands accept the
+     optional TARGET or PATH arguments. TARGET refers to the name of the
+     instance you are manipulating and PATH refers to the working directory
+     that gets mounted into the /src directory in the instance.
 
-     If TARGET is omitted, current instances are searched to see if any are
-     attached to the specified PATH, and if so, TARGET is set to the instance
-     name. If not, TARGET defaults to the basename of the PATH value.
+     If PATH is omitted, it defaults to the current directory. If TARGET is,
+     omitted, current instances are searched to see if any are attached to
+     PATH, and if so, TARGET is set to that instance name. If not, TARGET
+     defaults to the basename of the PATH value.
+
+     If TARGET is specified but PATH is omitted, the reverse behavior happens
+     and current instances are searced for one named TARGET. If one is found,
+     PATH is set to the path the TARGET instance is attached to, otherwise the
+     default again becomes the current directory.
+
+     Both TARGET and PATH can be specified using the option arguments --target
+     and --path respectively.
 
          attach [TARGET]
              Attach to an instance specified by the [TARGET] argument.
 
              EXAMPLES
-                 devenv attach [TARGET]
+                 devenv attach TARGET
                  devenv -t TARGET attach
                  devenv -p PATH attach
+
+         build-tags [TARGET]
+             Update the project ctags file.
+
+             EXAMPLES
+                 devenv build-tags TARGET
+                 devenv -t TARGET build-tags
+                 devenv -p PATH build-tags
 
          init [TARGET] [PATH]
              Create a new instance.
 
              EXAMPLES
-                 devenv create [TARGET] [PATH]
-                 devenv -p PATH create [TARGET]
-                 devenv -t TARGET create [PATH]
+                 devenv init TARGET PATH
+                 devenv -p PATH create TARGET
+                 devenv -t TARGET create PATH
                  devenv -t TARGET -p PATH create
 
          kill [TARGET]

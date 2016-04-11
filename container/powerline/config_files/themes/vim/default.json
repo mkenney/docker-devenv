@@ -74,40 +74,37 @@
 		],
 		"right": [
 			{
-				"function": "file_format",
-				"draw_soft_divider": false,
-				"exclude_modes": ["nc"],
-				"priority": 60
-			},
-			{
 				"function": "file_encoding",
 				"exclude_modes": ["nc"],
-				"priority": 60
+				"priority": 100
 			},
 			{
 				"function": "file_type",
 				"exclude_modes": ["nc"],
-				"priority": 60
+				"priority": 100
 			},
 			{
 				"function": "line_percent",
-				"priority": 50,
+				"priority": 2,
 				"width": 4,
 				"align": "r"
 			},
 			{
 				"type": "string",
+				"priority": 1,
 				"name": "line_current_symbol",
 				"highlight_group": ["line_current_symbol", "line_current"]
 			},
 			{
 				"function": "line_current",
+				"priority": 1,
 				"draw_soft_divider": false,
 				"width": 3,
 				"align": "r"
 			},
 			{
 				"function": "virtcol_current",
+				"priority": 1,
 				"draw_soft_divider": false,
 				"priority": 20,
 				"before": ":",

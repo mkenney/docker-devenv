@@ -105,6 +105,7 @@ RUN apt-get install -qqy \
 # Dependencies
 ##############################################################################
 
+COPY bin/devenv /usr/local/bin/devenv
 COPY container /container
 
 # https://sourceforge.net/projects/cloc/
@@ -177,8 +178,8 @@ ENV PATH /root/.composer/vendor/bin:$PATH
 
 RUN cd /root/src \
     && wget https://phar.phpunit.de/phpunit-5.2.9.phar \
-    && chmod +x phpunit.phar \
-    && mv phpunit.phar /usr/local/bin/phpunit \
+    && chmod +x phpunit-5.2.9.phar \
+    && mv phpunit-5.2.9.phar /usr/local/bin/phpunit \
     && phpunit --version
 
 ##############################################################################
@@ -209,7 +210,7 @@ RUN cd /root/src \
     && rsync -a /root/src/terminal_config/ /root/ \
     && cd /root/ \
     && rm -rf /root/src/terminal_config/ \
-    && echo "set tags=/src/tags"                               >> /root/.vimrc        \
+    && echo "set tags=/src/tags.devenv"                        >> /root/.vimrc        \
     && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          >> /root/.bash_profile \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  >> /root/.bash_profile \
     && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              >> /root/.bash_profile \
@@ -220,7 +221,7 @@ RUN cd /root/src \
     && echo "export LC_ALL=$(echo $LC_ALL)"                    >> /root/.bash_profile \
     && echo "export TERM=xterm"                                >> /root/.bash_profile \
     && echo "export PATH=$(echo $PATH)"                        >> /root/.bash_profile \
-    && rsync -a /container/.config/ /root/.config/ \
+    && rsync -ac /container/powerline/ /usr/share/powerline/ \
     && cp /container/.vimrc /root/.vimrc \
     && cp /container/.tmux.conf /root/.tmux.conf
 
@@ -240,11 +241,14 @@ RUN groupadd dev \
 ##############################################################################
 
 # cleanup apt cache
-# devenv support scripts
+# add devenv support scripts
+# remove repo resources
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
+    && cp /container/attach.sh / \
+    && cp /container/build-tags.sh / \
     && cp /container/init.sh / \
-    && cp /container/attach.sh /
+    && rm -rf /container
 
 USER dev
 VOLUME ["/src"]
