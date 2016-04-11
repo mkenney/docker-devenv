@@ -6,7 +6,7 @@ The `devenv` script is available in the `bin/` folder and an auto-completion scr
 
 # ABOUT
 
-This project began as a way for me to easily move my development enviroment around with me, but quickly turned into my primary IDE for all my software development.
+This project began as a way for me to easily move my development enviroment around with me, but is quickly turning into my primary IDE.
 
 The goal is to have a fully scripted development environment build that contains all the tools I need to do my daily work (mainly PHP, Javascript, Perl, Bash, Python, etc.) and a control script that allows me to treat container instances as individual projects. Essentially, a fully customized linux instance dedicated to a single software development project.
 
