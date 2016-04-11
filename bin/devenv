@@ -17,12 +17,17 @@ function _devenv_show_usage {
     Options:
         -h, -?                      Show usage
         --help, help                Show extended help
+        --ctags-exclude             Specify files or directories to exclude
+                                    when compiling the tags file.
         -d, --daemonize             Continue running the container after
                                     detaching
         -p PATH, --path=PATH        Specify the project path
         -t TARGET, --target=TARGET  Specify a target environment name
         --tmux, --tmux=PATH         Specify a tmux configuration file. If 
                                     path is omitted from this option then 
+        --tmux-prefix=PREFIX        Use the default tmux configuration file
+                                    but specify you're preferred prefix key.
+                                    The default key is 'C-\\'
                                     $HOME/.tmux.conf is assumed
         --vimrc, --vimrc=PATH       Specify a vim configuration file. If 
                                     path is omitted from this option then 
@@ -30,6 +35,7 @@ function _devenv_show_usage {
 
     Commands:
         attach [TARGET]             Attach to a running environment
+        build-tags [TARGET]         Trigger an update to project tags file
         init [TARGET] [PATH]        Create a new environment
         kill [TARGET]               Stop a running environment and clean up
         ls [PATTERN]                List available environments
@@ -51,7 +57,7 @@ function _devenv_show_help {
      ${COMMAND} -- Manage ${CONTAINER_IMAGE} docker work environment containers
 
  SYNOPSYS
-     ${COMMAND} [-t TARGET] [-p PATH] [-d] [command]
+     ${COMMAND} [-t TARGET] [-p PATH] [-d] [command] [command-args]
 
  DESCRIPTION
      The ${COMMAND} utility is used to manage ${CONTAINER_IMAGE} docker containers to
@@ -68,10 +74,17 @@ function _devenv_show_help {
          --help, help
              Show this extended help screen
 
+         --ctags-exclude
+             Used to specify files or directories that should be excluded when
+             compiling the tags file. The value can be either a comma-
+             separated list of glob patterns or this option can be specified
+             multiple times. The tags file is compiled when first attaching to
+             an instance.
+
          -d, --daemonize
-             Used when attaching to an instance. If specified, allow the
-             instance to continue running after detaching from the session,
-             otherwise the container will be paused automatically.
+             Used when initializing or restarting an instance. If specified,
+             allow the instance to continue running after detaching from the
+             session, otherwise the container will be paused automatically.
 
              This is useful executing a long-running script to come back to
              or starting a daemon. If you forget to daemonize an instance,
@@ -93,38 +106,65 @@ function _devenv_show_help {
              is omitted then the .tmux.conf file from the docker image will
              be used.
 
+         --tmux-prefix=PREFIX
+             The default prefix key has been set to C-\\ (control+backslash)
+             to keep it from interfering with the default vim 'PageUp'
+             binding. You can specify your preferred prefix binding when
+             initializing an instance with this option. For example, to
+             restore the default tmux prefix binding use '--tmux-prefix=C-b'
+             when initializing a new instance.
+
          --vimrc, --vimrc=PATH
              Specify a vim configuration file. If PATH is omitted then
-             $HOME/.vimrc will be assumed. If the --vimrc option is 
-             omitted then the .vimrc file from the docker image will be used.
-             
+             $HOME/.vimrc will be assumed. If the --vimrc option is
+             omitted entirely then the default .vimrc file included with the
+             docker image will be used.
+
              In addition, this script will attempt to mount a .vim/ folder
              from the same location as the .vimrc file.
 
  COMMANDS
-     Available commands ${COMMAND} can execute. TARGET refers to the name of
-     the instance you are managing and PATH refers to the mounted working
-     directory. If PATH is omitted, it defaults to the current directory.
+     Available commands '${COMMAND}' can execute. Most commands accept the
+     optional TARGET or PATH arguments. TARGET refers to the name of the
+     instance you are manipulating and PATH refers to the working directory
+     that gets mounted into the /src directory in the instance.
 
-     If TARGET is omitted, current instances are searched to see if any are
-     attached to the specified PATH, and if so, TARGET is set to the instance
-     name. If not, TARGET defaults to the basename of the PATH value.
+     If PATH is omitted, it defaults to the current directory. If TARGET is,
+     omitted, current instances are searched to see if any are attached to
+     PATH, and if so, TARGET is set to that instance name. If not, TARGET
+     defaults to the basename of the PATH value.
+
+     If TARGET is specified but PATH is omitted, the reverse behavior happens
+     and current instances are searced for one named TARGET. If one is found,
+     PATH is set to the path the TARGET instance is attached to, otherwise the
+     default again becomes the current directory.
+
+     Both TARGET and PATH can be specified using the option arguments --target
+     and --path respectively.
 
          attach [TARGET]
              Attach to an instance specified by the [TARGET] argument.
 
              EXAMPLES
-                 ${COMMAND} attach [TARGET]
+                 ${COMMAND} attach TARGET
                  ${COMMAND} -t TARGET attach
                  ${COMMAND} -p PATH attach
+
+         build-tags [TARGET]
+             Update the project ctags file.
+
+             EXAMPLES
+                 ${COMMAND} build-tags TARGET
+                 ${COMMAND} -t TARGET build-tags
+                 ${COMMAND} -p PATH build-tags
 
          init [TARGET] [PATH]
              Create a new instance.
 
              EXAMPLES
-                 ${COMMAND} create [TARGET] [PATH]
-                 ${COMMAND} -p PATH create [TARGET]
-                 ${COMMAND} -t TARGET create [PATH]
+                 ${COMMAND} init TARGET PATH
+                 ${COMMAND} -p PATH create TARGET
+                 ${COMMAND} -t TARGET create PATH
                  ${COMMAND} -t TARGET -p PATH create
 
          kill [TARGET]
@@ -191,7 +231,7 @@ function _devenv_show_help {
  AUTHORS
      Michael Kenney <mkenney@webbedlam.com>
 " | less
-    exit 1
+    exit 0
 }
 
 # Kill a dev container
@@ -242,8 +282,19 @@ function _devenv_unpause_container {
 #
 # @param environment name returned by _devenv_list_environments
 function _devenv_init_session {
-    cat /oracle/product/latest/network/admin/tnsnames.ora | docker exec -i ${1}${CONTAINER_SUFFIX} sudo sh -c 'cat > /oracle/product/latest/network/admin/tnsnames.ora'
+    if [ -f "/oracle/product/latest/network/admin/tnsnames.ora" ]; then
+        cat /oracle/product/latest/network/admin/tnsnames.ora | docker exec -i ${1}${CONTAINER_SUFFIX} sudo sh -c 'cat > /oracle/product/latest/network/admin/tnsnames.ora'
+    else
+        echo "No tnsnames.ora file found on host."
+    fi
     docker exec -ti ${1}${CONTAINER_SUFFIX} script /dev/null -c 'sh /init.sh'
+}
+
+# Buld tags
+#
+# @param environment name returned by _devenv_list_environments
+function _devenv_build_tags {
+    docker exec -ti ${1}${CONTAINER_SUFFIX} script /dev/null -c 'sh /build-tags.sh'
 }
 
 # Start a dev container
@@ -251,43 +302,75 @@ function _devenv_init_session {
 # $1 TARGET
 # $2 PATH
 # $3 .tmux.conf path
+# $4 .vimrc path
+# $5 Daemonize flag
+# $6 ctags excludes, comma-separated string
+# $7 Custom tmux prefix string, i.e. 'C-b'
 #
 function _devenv_create_container {
-    if [ "true" == "$(_devenv_is_running ${1})" ]; then
-        echo "Container '${1}' is already running"
+
+    local _target=$1
+    local _path=$2
+    local _tmux_conf=$3
+    local _vimrc=$4
+    local _daemonize=$5
+    local _ctags_excludes=$6
+    local _tmux_prefix=$7
+
+    if [ "true" == "$(_devenv_is_running ${_target})" ]; then
+        echo "Container '${_target}' is already running"
     else
 
         docker_run_args="
             -itd \
-            -h ${1} \
-            -e HOSTNAME=${1} \
+            -e IS_DEVENV=true
+            -h ${_target} \
+            -e HOSTNAME=${_target} \
             -e PROJECT_PATH=/src \
             --add-host docker:127.0.0.1 \
             -e TERM=$TERM \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v ${HOME}/.ssh/:/home/dev/.ssh/:ro \
             -v ${HOME}/.oracle/:/home/dev/.oracle/:ro \
-            -v ${2}:/src:rw \
+            -v ${_path}:/src:rw \
             -w /src \
-            --label project_path=${2} \
-            --name ${1}${CONTAINER_SUFFIX}
+            --label project_path=${_path} \
+            --name ${_target}${CONTAINER_SUFFIX}
         ";
-        
+
         # tmux config path
-        if [ -f "$3" ]; then
-            docker_run_args="$docker_run_args -v $(realpath $3):/home/dev/.tmux.conf:ro"
+        if [ -f "$_tmux_conf" ]; then
+            docker_run_args="$docker_run_args -v $(realpath $_tmux_conf):/home/dev/.tmux.conf:ro"
         fi
         # vimrc config path
-        if [ -f "$4" ]; then
-            docker_run_args="$docker_run_args -v $(realpath $4):/home/dev/$(basename $4):ro"
-            docker_run_args="$docker_run_args -v $(dirname $(realpath $4))/.vim/:/home/dev/.vim/:ro"
+        if [ -f "$_vimrc" ]; then
+            docker_run_args="$docker_run_args -v $(realpath $_vimrc):/home/dev/$(basename $_vimrc):ro"
+            docker_run_args="$docker_run_args -v $(dirname $(realpath $_vimrc))/.vim/:/home/dev/.vim/:ro"
+        fi
+        # daemonize
+        if [ "true" == "$_daemonize" ]; then
+            docker_run_args="$docker_run_args --label daemonize=${_daemonize}"
+        fi
+        # ctags excludes
+        if [ "-" != "$_ctags_excludes" ]; then
+            docker_run_args="$docker_run_args -e CTAGS_EXCLUDES=$_ctags_excludes"
+        fi
+        # custom tmux prefix key
+        if [ "-" != "$_tmux_prefix" ]; then
+            docker_run_args="$docker_run_args -e TMUX_PREFIX=$_tmux_prefix"
         fi
 
-        echo "Starting dev container '${1}' at ${2}..."
-        echo "docker run $docker_run_args ${CONTAINER_IMAGE}"
+        echo "Starting dev container '${_target}' at ${_path}..."
+
         docker run $docker_run_args ${CONTAINER_IMAGE}
 
-        _devenv_init_session ${1}
+        _devenv_init_session ${_target}
+        _devenv_build_tags ${_target}
+        if [ "true" != "$_daemonize" ]; then
+            _devenv_pause_container ${_target}
+        else
+            echo "Running '$_target' as a daemon"
+        fi
     fi
 }
 
@@ -297,6 +380,14 @@ function _devenv_get_path_from_container {
     project_path=$(docker inspect -f "{{json .Config.Labels.project_path }}" ${container_name}${CONTAINER_SUFFIX})
     project_path=${project_path/\"/}
     echo ${project_path%\"}
+}
+
+function _devenv_is_daemonized {
+    local container_name daemonize
+    container_name=${1}
+    daemonize=$(docker inspect -f "{{json .Config.Labels.daemonize }}" ${container_name}${CONTAINER_SUFFIX})
+    daemonize=${daemonize/\"/}
+    echo ${daemonize%\"}
 }
 
 # Attach to a dev environment
@@ -507,6 +598,362 @@ The file '$1' does not exist
     exit 1
 }
 
+#
+function _devenv_error_nesting_containers {
+
+    local memes=()
+
+    memes+=("
+    ─▄▀▀▀▀▄─█──█────▄▀▀█─▄▀▀▀▀▄─█▀▀▄
+    ─█────█─█──█────█────█────█─█──█
+    ─█────█─█▀▀█────█─▄▄─█────█─█──█
+    ─▀▄▄▄▄▀─█──█────▀▄▄█─▀▄▄▄▄▀─█▄▄▀
+    ────────────────────────────────
+    ─────────▄██████▀▀▀▀▀▀▄
+    ─────▄█████████▄───────▀▀▄▄
+    ──▄█████████████───────────▀▀▄
+    ▄██████████████─▄▀───▀▄─▀▄▄▄──▀▄
+    ███████████████──▄▀─▀▄▄▄▄▄▄────█
+    █████████████████▀█──▄█▄▄▄──────█
+    ███████████──█▀█──▀▄─█─█─█───────█
+    ████████████████───▀█─▀██▄▄──────█
+    █████████████████──▄─▀█▄─────▄───█
+    █████████████████▀███▀▀─▀▄────█──█
+    ████████████████──────────█──▄▀──█
+    ████████████████▄▀▀▀▀▀▀▄──█──────█
+    ████████████████▀▀▀▀▀▀▀▄──█──────█
+    ▀████████████████▀▀▀▀▀▀──────────█
+    ──███████████████▀▀─────█──────▄▀
+    ──▀█████████████────────█────▄▀
+    ────▀████████████▄───▄▄█▀─▄█▀
+    ──────▀████████████▀▀▀──▄███
+    ──────████████████████████─█
+    ─────████████████████████──█
+    ────████████████████████───█
+    ────██████████████████─────█
+    ────██████████████████─────█
+    ────██████████████████─────█
+    ────██████████████████─────█
+    ────██████████████████▄▄▄▄▄█
+    ───────────────────────────────
+    ─────────────█─────█─█──█─█───█
+    ─────────────█─────█─█──█─▀█─█▀
+    ─────────────█─▄█▄─█─█▀▀█──▀█▀
+    ─────────────██▀─▀██─█──█───█
+")
+
+    memes+=("
+    ───────▄▀▀▀▀▀▀▀▀▀▀▄▄
+    ────▄▀▀░░░░░░░░░░░░░▀▄
+    ──▄▀░░░░░░░░░░░░░░░░░░▀▄
+    ──█░░░░░░░░░░░░░░░░░░░░░▀▄
+    ─▐▌░░░░░░░░▄▄▄▄▄▄▄░░░░░░░▐▌
+    ─█░░░░░░░░░░░▄▄▄▄░░▀▀▀▀▀░░█
+    ▐▌░░░░░░░▀▀▀▀░░░░░▀▀▀▀▀░░░▐▌
+    █░░░░░░░░░▄▄▀▀▀▀▀░░░░▀▀▀▀▄░█
+    █░░░░░░░░░░░░░░░░▀░░░▐░░░░░▐▌
+    ▐▌░░░░░░░░░▐▀▀██▄░░░░░░▄▄▄░▐▌
+    ─█░░░░░░░░░░░▀▀▀░░░░░░▀▀██░░█
+    ─▐▌░░░░▄░░░░░░░░░░░░░▌░░░░░░█
+    ──▐▌░░▐░░░░░░░░░░░░░░▀▄░░░░░█
+    ───█░░░▌░░░░░░░░▐▀░░░░▄▀░░░▐▌
+    ───▐▌░░▀▄░░░░░░░░▀░▀░▀▀░░░▄▀
+    ───▐▌░░▐▀▄░░░░░░░░░░░░░░░░█
+    ───▐▌░░░▌░▀▄░░░░▀▀▀▀▀▀░░░█
+    ───█░░░▀░░░░▀▄░░░░░░░░░░▄▀
+    ──▐▌░░░░░░░░░░▀▄░░░░░░▄▀
+    ─▄▀░░░▄▀░░░░░░░░▀▀▀▀█▀
+    ▀░░░▄▀░░░░░░░░░░▀░░░▀▀▀▀▄▄▄▄▄
+")
+
+    memes+=("
+    ───────────────────────────────────
+    ─────────▄▄───────────────────▄▄───
+    ──────────▀█───────────────────▀█──
+    ──────────▄█───────────────────▄█──
+    ──█████████▀───────────█████████▀──
+    ───▄██████▄─────────────▄██████▄───
+    ─▄██▀────▀██▄─────────▄██▀────▀██▄─
+    ─██────────██─────────██────────██─
+    ─██───██───██─────────██───██───██─
+    ─██────────██─────────██────────██─
+    ──██▄────▄██───────────██▄────▄██──
+    ───▀██████▀─────────────▀██████▀───
+    ───────────────────────────────────
+    ───────────────────────────────────
+    ───────────────────────────────────
+    ───────────█████████████───────────
+    ───────────────────────────────────
+    ───────────────────────────────────
+")
+
+    memes+=("
+    ───────▄██████████████████▄───────
+    ────▄███████████████████████▄─────
+    ───███████████████████████████────
+    ──█████████████████████████████───
+    ─████████████▀─────────▀████████──
+    ██████████▀───────────────▀██████─
+    ███████▀────────────────────█████▌
+    ██████───▄▀▀▀▀▄──────▄▀▀▀▀▄──█████
+    █████▀──────────────────▄▄▄───████
+    ████────▄█████▄───────▄█▀▀▀█▄──██▀
+    ████──▄█▀────▀██─────█▀────────█▀─
+    ─▀██───────────▀────────▄███▄──██─
+    ──██───▄▄██▀█▄──▀▄▄▄▀─▄██▄▀────███
+    ▄███────▀▀▀▀▀──────────────▄▄──██▐
+    █▄▀█──▀▀▀▄▄▄▀▀───────▀▀▄▄▄▀────█▌▐
+    █▐─█────────────▄───▄──────────█▌▐
+    █▐─▀───────▐──▄▀─────▀▄──▌─────██▐
+    █─▀────────▌──▀▄─────▄▀──▐─────██▀
+    ▀█─█──────▐─────▀▀▄▀▀─────▌────█──
+    ─▀█▀───────▄────────────▄──────█──
+    ───█─────▄▀──▄█████████▄─▀▄───▄█──
+    ───█────█──▄██▀░░░░░░░▀██▄─█──█───
+    ───█▄───▀▄──▀██▄█████▄██▀─▄▀─▄█───
+    ────█▄────▀───▀▀▀▀──▀▀▀──▀──▄█────
+    ─────█▄────────▄▀▀▀▀▀▄─────▄█─────
+    ──────███▄──────────────▄▄██──────
+    ─────▄█─▀█████▄▄────▄▄████▀█▄─────
+    ────▄█───────▀▀██████▀▀─────█▄────
+    ───▄█─────▄▀───────────▀▄────█▄───
+    ──▄█─────▀───────────────▀────█▄──
+    ──────────────────────────────────
+    ▐▌▐█▄█▌▐▀▀█▐▀▀▌─█▀─█▀─▐▌▐▀█▐▀█─█─█
+    ▐▌▐─▀─▌▐▀▀▀▐──▌─▀█─▀█─▐▌▐▀▄▐▀▄─█─█
+    ▐▌▐───▌▐───▐▄▄▌─▄█─▄█─▐▌▐▄█▐─█─█▄█
+")
+
+    memes+=("
+    ░░░░░░░░░░░░░░░░░░░░░░░░░░█▄
+    ░▄▄▄▄▄▄░░░░░░░░░░░░░▄▄▄▄▄░░█▄
+    ░▀▀▀▀▀███▄░░░░░░░▄███▀▀▀▀░░░█▄
+    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░█
+    ░▄▀▀▀▀▀▄░░░░░░░░░░▄▀▀▀▀▀▄░░░░█
+    █▄████▄░▀▄░░░░░░▄█░▄████▄▀▄░░█▄
+    ████▀▀██░▀▄░░░░▄▀▄██▀█▄▄█░█▄░░█
+    ██▀██████░█░░░░█░████▀█▀██░█░░█
+    ████▀▄▀█▀░█░░░░█░█████▄██▀▄▀░░█
+    ███████▀░█░░░░░░█░█████▀░▄▀░░░█
+    ░▀▄▄▄▄▄▀▀░░░░░░░░▀▀▄▄▄▄▀▀░░░░░█
+    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░█
+    ░░▓▓▓▓▓▓▓░░░░░░░░░░▓▓▓▓▓▓▓░░░░█
+    ░░░▓▓▓▓▓░░░░░░░░░░░░▓▓▓▓▓░░░░░█
+    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░█
+    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░█▀
+    ░░░░░░░░░▄▄███████▄▄░░░░░░░░░█
+    ░░░░░░░░█████████████░░░░░░░█▀
+    ░░░░░░░░░▀█████████▀░░░░░░░█▀
+    ░░░░░░░░░░░░░░░░░░░░░░░░░░█▀
+    ░░░░░░░░░░░░░░░░░░░░░░░░░█▀
+")
+
+    memes+=("
+    ─────────────────▄▄▄▄▄▄▄▄▄▄▄
+    ────────────▄▄▀▀▀░░░░░░░░░░░▀▄▄
+    ────────▄▄▀▀░░░░░░░▄▄▄▄▄▄▄░░░░░▀▄
+    ──────▄▀░░░░░░░░░▄▄▄▄▄▄▄▄▄▄▄░░░░░█
+    ────▄▀░░░░░▄▄▄▄▄▄▄░░░░░░░░░░░▄▄▄▄▄█▄▄
+    ───▄▀░▐▌░░░░░░░░░░▀▀░░░░░░░▀▀░░░░░░█
+    ──█░░░▀░░░░░░░▄▀▀▀▄░░░░▄░░░░▄▀▀▀▄░░▐▌
+    ─█░░░░░░▄▄▄░░▐░░▄░░▌░░░░▀▄░▐░░▄░░▌░░█
+    ▐▌░░░░▀▀░░░░▄░▀▄▄▄▀░░░░░░░▌░▀▄▄▄▀░░░▐▌
+    █░░░░░░░░░░░░▀▄▄▄░░░░░░░░▐░░░░░▄▄▄▀░░█
+    █░░░░▄▀░░░░░░░▄▄░░░░░░▄▀░▐░░░▄▄░░░░░░█
+    ▐▌░░▀░░░░░░░▄▀░░░▐▀░░░░░░░▀▌░░░▀▄░░░░█
+    ▐▌░░░▐░░░░░▐▌░░░░░▀█░░░░░░░▌░░░░█░░░░█
+    ─█░░░░░░░░░░░░░░▄░░▀▀▄▄▄▄▀▀░▀▄░░░░░░░█
+    ─▐▌░░░░░░░░░░░▄▀░░░░▄▄▄▄▄▄░░░░▌░░░░░░█
+    ──█░░░░░░░░░░▐░░░░▄▀░░░░░░▀▄░░▌░░░░░▐▌
+    ──▐▌░░░░░░░░░▐░░░░▀░░░▀▀░░░▀░░░░░░░░█
+    ───█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▐▌
+    ───▐▌░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░█
+    ────▀▄░░░░░░░░░░░░░░░░░░░░░░░░░░░▄▀
+    ──────▀▄░░░░░░░░░░░░░░░░░░░░░░░▄▀
+    ────────▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+")
+
+    memes+=("
+    ──────────▄▀▀▀▀▀▀▄
+    ───────────▀▄─────▀▄───▄███▄
+    ─────────────▀▄▀▀▀▀▀▀▀▀█▀██▐█
+    ────────────▄▀─────────███▄██▄
+    ────────▄████▄──────────▀██▀─▀█
+    ────────█▌█▄██────────────────█▌
+    ────────▀█▄██▀─▄█████████▄─────█
+    ──────────█───██▀───────▀██────█
+    ▄▀▄▄▀▄────█──██───────────██───█
+    █▒▒▒▒█────█──█─────────────█───█
+    █▒▒▒▒█────█──▀─────────────▀───█
+    █▒▒▒▒█────█────────────────────█
+    █▒▒▒▒█────█────────────────────█
+    █▒▒▒▒█────█───────────────────▐█
+    █▒▒▒▒█───██───────────────────█▌
+    ▀████▀──██▀█──────────────────██
+    ──██───██──▀█───────────────▄███
+    ──██──██────▀█────────────▄▀▓▓██
+    ──██─██──────▀█▀▄▄▄▄▄▄▄▄▄▀▓▓▓▓██
+    ──████────────█▓▓▓▓▓▓▓▓▓▓▓▓▓▓███
+    ──███─────────█▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓█
+    ──██──────────█▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓█
+    ──██──────────█▓▓▓▓▓▓▓▓▓▓▓▓▓██▓█
+    ──██─────────▐█▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓█
+    ──██─────────█▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓█
+    ──██─────────█▓▓▓▓▓▓▓▓▓▓▓▓▓▓█▓▓█
+    ──██─────────█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█
+")
+
+    memes+=("
+    ░░░░░░░░░░░░░░░▄▄▄█▀▀▀▀▀▀▀▄▄▄░░░░░░░░░░
+    ░░░░░░░░░░░░▄█▀▀░░░░░░░░░░░▄█▀█▄▄░░░░░░
+    ░░░░░░░░░░▄█▀░░░░░░░░░░░░░░█░█▄░▀█▄░░░░
+    ░░░░░░░░░░█░░░░░░░░░░░▄░▄░░▄░▄▀░░░░█▄░░
+    ░░░░░░░░░█░░░░░░░░░░▄▄▄▀██▄░█▄░▄▄░░░▀▄░
+    ░░░░░░░░█▀░░░░░░░░░░░▀█▄░▄██░███▀█▄░░█▄
+    ░░░░░░░░█░░░░░░░░░░░▀▀▀▀▀░░░░▀████▀░░░█
+    ░░░░░░░░█░░░░░░░░░░░░░▀▀▀░▄▄▄░░█░░░░░░█
+    ░░░░░░░░█░░░░░░░░░░░░░░░░░██▀▀▀▀█░░░░░█
+    ░░░░░░░░█░░░░░░░░░░░░░░░░█░▄▀▄▄▄▀░░░░░█
+    ░░░░░░░░█░░░░░░░░░░░░░░░░██▀████░░░░░▄█
+    ░░░░░░░░█▄░░░░░░░░░░░░░░░█▄█████░░░░░█░
+    ░░░░░░░░░█▄░░░░░░░░░░░░░▀▀█████▀░░░░▄▀░
+    ░░░░░░░░░▄██▄░░░░░░░░░░▄▄▄▄▄░░▄░░░▄█▀░░
+    ░░░░░░░▄█▀▄░░▀▀▄▄░░▄▄▀░▀░░░░▀▀▀▄▄▀▀░░░░
+    ░░░░░▄█▀░░░▀▄░░░░▀▀▀██▄▄▄▄▄▄█▀▀░░░░░░░░
+    ░░░▄▀░░░░░░░░█▄░░░░░░░▄█▀▄░▄▄▄░░░░▀███░
+    ░░█▀░░░░░░░░░░▀█▄░░░░▄█▄▄▄█████▄▄▄▀░░░░
+    ▄▀░░░░░░░░░░░░░░░▀▀▀█▀▀▀░░░░▀██▀▀░░░░░░
+")
+
+    memes+=("
+    ░░░░▄▄▄▄▀▀▀▀▀▀▀▀▄▄▄▄▄▄
+    ░░░░█░░░░▒▒▒▒▒▒▒▒▒▒▒▒░░▀▀▄
+    ░░░█░░░▒▒▒▒▒▒░░░░░░░░▒▒▒░░█
+    ░░█░░░░░░▄██▀▄▄░░░░░▄▄▄░░░█
+    ░▀▒▄▄▄▒░█▀▀▀▀▄▄█░░░██▄▄█░░░█
+    █▒█▒▄░▀▄▄▄▀░░░░░░░░█░░░▒▒▒▒▒█
+    █▒█░█▀▄▄░░░░░█▀░░░░▀▄░░▄▀▀▀▄▒█
+    ░█▀▄░█▄░█▀▄▄░▀░▀▀░▄▄▀░░░░█░░█
+    ░░█░░▀▄▀█▄▄░█▀▀▀▄▄▄▄▀▀█▀██░█
+    ░░░█░░██░░▀█▄▄▄█▄▄█▄████░█
+    ░░░░█░░░▀▀▄░█░░░█░███████░█
+    ░░░░░▀▄░░░▀▀▄▄▄█▄█▄█▄█▄▀░░█
+    ░░░░░░░▀▄▄░▒▒▒▒░░░░░░░░░░█
+    ░░░░░░░░░░▀▀▄▄░▒▒▒▒▒▒▒▒▒▒░█
+    ░░░░░░░░░░░░░░▀▄▄▄▄▄░░░░░█
+")
+
+    memes+=("
+    ──────────────────────────────────
+    ───▓▓▓▓───────────────────────────
+    ───████───────█▀▀▀ █▀▀█───────────
+    ───████───────█─▀█ █──█───────────
+    ───████───────▀▀▀▀ ▀▀▀▀───────────
+    ─▄██████▄ █──█ █▀▀█ █▀▄▀█ █▀▀─────
+    ─████████ █▀▀█ █──█ █─▀─█ █▀▀─────
+    ─████████ ▀──▀ ▀▀▀▀ ▀───▀ ▀▀▀─────
+    ─█▒▒▒▒▒▒█─────────────────────────
+    ─█▒▒▒▒▒▒█───█──█ █▀▀█ █──█────────
+    ─█▒▒▒▒▒▒█───█▄▄█ █──█ █──█────────
+    ─█▒▒▒▒▒▒█───▄▄▄█ ▀▀▀▀ ─▀▀▀────────
+    ─█▒▒▒▒▒▒█─────────────────────────
+    ─█▒▒▒▒▒▒█───█▀▀█ █▀▀█ █▀▀─────────
+    ─█▒▒▒▒▒▒█───█▄▄█ █▄▄▀ █▀▀─────────
+    ─█▒▒▒▒▒▒█───▀──▀ ▀─▀▀ ▀▀▀─────────
+    ─█▒▒▒▒▒▒█─────────────────────────
+    ─█▒▒▒▒▒▒█ █▀▀▄ █▀▀█ █──█ █▀▀▄ █─█─
+    ─█▒▒▒▒▒▒█ █──█ █▄▄▀ █──█ █──█ █▀▄─
+    ─▀██████▀ ▀▀▀─ ▀─▀▀ ▀▀▀▀ ▀──▀ ▀─▀─
+    ──────────────────────────────────
+")
+
+    memes+=("
+    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+    ▌▄─────────────────────────────▄▐
+    ▌───────────────────────────────▐
+    ▌──▄▀▀▄──▄▀▀──▄▀▀──█▄─▄█──▄▀▀▄──▐
+    ▌──█─────█────█────█─█─█──█─────▐
+    ▌───▀▀▄──█▀▀──█▀▀──█───█───▀▀▄──▐
+    ▌─────█──█────█────█───█─────█──▐
+    ▌──▀▄▄▀──▀▄▄──▀▄▄──█───█──▀▄▄▀──▐
+    ▌───────────────────────────────▐
+    ▌───────────────────────────────▐
+    ▌──█────▄▀▀──▄▀▀▀▄───▀───▀▀█▀▀──▐
+    ▌──█────█────█──────▀█▀────█────▐
+    ▌──█────█▀▀──█──▀█───█─────█────▐
+    ▌──█────█────█───█───█─────█────▐
+    ▌──█▄▄──▀▄▄──▀▄▄▄▀──▄█▄────█────▐
+    ▌───────────────────────────────▐
+    ▌▀─────────────────────────────▀▐
+    ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+")
+
+    memes+=("
+    █▀▀█ ─▀─ ▀▀█▀▀ █▀▀ █──█
+    █▀▀▄ ▀█▀ ──█── █── █▀▀█
+    █▄▄█ ▀▀▀ ──▀── ▀▀▀ ▀──▀
+
+    █▀▀█ █── █▀▀ █▀▀█ █▀▀ █▀▀ █
+    █──█ █── █▀▀ █▄▄█ ▀▀█ █▀▀ ▀
+    █▀▀▀ ▀▀▀ ▀▀▀ ▀──▀ ▀▀▀ ▀▀▀ ▄
+")
+
+    memes+=("
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@       ,@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@/     .,.*@@@@@@@# *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@(.   %@@@@@@@@@@@@@@@@@@ .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@(   %@@@@@@@@@@@@/@@&@@@@@@(% (@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@.  &@@@@@@@,@@@@@@@%#@&@@@@&@@@@% .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@  @@@@@@@@@@@@@@@*&*#@@@@/@@@(%@@@@,  @@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@. @@@@@.@@%*@*** @@@@@@@@&@*# &./ /@@@#   &@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@( @@@@@@*@@@@. . %%@@@@*@@@@@% #/ '  &@@@@@     *@@@@@@@@@@@@@@@@@@
+    @@@@@@& %@@@@@@@@@&@ */,,,@@@@&@@@@@@@(.*  (@&&&%#####%@*  &@@@@@@@@@@@@@@
+    @@@@@@ .@@@@@@@@@@@@/ *, //@@&@&@@//@@@@%*#&@@@@%(*   .@@@@. @@@@@@@@@@@@@
+    @@@@@% &@@@@@@@@@@@%*#**@@@@#@@,%%@@@@@@@@@@&/      @@@/@@@@@  .@@@@@@@@@@
+    @@@@@& @@%/@@@@@@@*@@&/(@@*@@@@@@.@(@@@@&@.@@,     &@@@@@@@@@@@@. *@@@@@@@
+    @@@@@& @@@@@@@@@@@@@@#%@@@@@@@@@@@ @@@/.        ,@@&@@@@#@@@@@@@@@ ,@@@@@@
+    @@@@@& @@@@@@@@@@@/@@(/  . ... .     *&*@,.   %@@*@@*@@@@@@@@@@@@@@  @@@@@
+    @@@@@  (@@@@@@@@@&@@@(*@@@@@@@@@%&@.&&&*/@@(@@@#@@@/@@@@@@@@@@@@@@@@  *@@@
+    @@@@ *@@.@@@@@@@@&@@@@&@@/@##*(@@@@@@@@@@@@@@*@@*/@@@@@@@@@@@@@@@@@@@@ .@@
+    @@@/ @@@@@ @@@@@@@@&@@(*@@@@@@@@@@@//&@((@@@@@@@@@@@@@@@@@@@*@@@@@@@@@& #@
+    @@@ /@@@@*#@@(@@@@@@@@@&@@*@@@@@@@@@@@@@@@@@@@@@%@@@@@@@@@@*@@@@@@@@@&@  @
+    @@@ #@@@@@@@@*@@@@@@@@@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@/@@(@@@@@@@@@@@@*% @
+    @@@ #@@(@@@@@%@@@@@@@@@*@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@% @
+    @@. @@@@/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@(@@@@@@@@@@@@@@@  @
+    @& #@/@@@@@@@@@@@@@@@@@/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@(*@@@@@@@@@@@% %@
+    @& &@@@@&*@@@@(@@@@@@@@@@#&@@@@@@@@@@@@@@@@@@@@@@@@&@@&@@@@@@@@@@@@@@@ ,@@
+    @@  @@#@@@@@@@@&@@@@@@@@@@@*@@@@@@@@@@@@@@@@@@@@@@@@@@(@@@@@@@@@@@@@@ ,@@@
+    @@@  @@@@@@@@@@*@@@@@@@@@@@@%@@@@@@@*&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@/ (@@@@
+    @@@@* %@@@@@@@@@@@@@@@@@@@@@@*@@@@@@@@@@@@@@@*@@@@@@@@@@@@@@@@@@@@  @@@@@@
+    @@@@@&  @@@@@@@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@%@@@@@@@@@@@@@@@@@@@@ .@@@@@@@
+    @@@@@@@%   .&@/@&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  &@@@@@@@@
+    @@@@@@@@@@@@%  .@@**@%@@@@@@@@@@@@@@@@@@@@@@(@@@@@@@@@@@@@@@@* *@@@@@@@@@@
+    @@@@@@@@@@@@@@@  &@@@@&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  @@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@* @@@@/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@/ @@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@* ,////&@@@@@@@@@@@@@@@@@@@*@@@@@@@@&&@@@& /@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@/   /@@@@@@/(@@@@@@@&@@*@@@@@@@(*/@*  .@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@.    /#@@@@@@@@@@@@@@@@@@&.   @@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@####/*,          .%@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&     /@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@/ @& @@@   /@@@@@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  @@@**@@@@@@@/  @@@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@, /@@@@@ @@@@@@@@@* @@@@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@( ,@@@@@@ %@@@@@@@@@@. @@@@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@. @@@@@@@@@ @@@@@@@@@@@@* @@@@@@@@@@@@@@@@@
+    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ &@@@@@@@@@@@@@  &@@@@@@@@@@@@@@
+")
+
+    meme=${memes[$RANDOM % ${#memes[@]}]}
+
+    echo "$meme
+
+    You can't start an instance inside an instance
+"
+    exit 1
+}
+
 ##############################################################################
 # Parse command options
 ##############################################################################
@@ -514,6 +961,8 @@ The file '$1' does not exist
 _devenv_path=""
 _devenv_target=""
 _devenv_daemonize="false"
+_devenv_ctags_excludes=()
+_devenv_tmux_prefix='-'
 
 while :; do
     case $1 in
@@ -525,6 +974,13 @@ while :; do
             ;;
         --help|help)
             _devenv_show_help
+            ;;
+        #
+        # Add an exclude pattern to the ctags build
+        # see `man ctags-exuberant`
+        #
+        --ctags-exclude=?*)
+            _devenv_ctags_excludes+=("${1#*=}")
             ;;
         #
         # continue running when detaching, otherwise pause
@@ -584,6 +1040,12 @@ while :; do
             fi
             ;;
         #
+        # secondary tmux prefix key binding
+        #
+        --tmux-prefix=?*)
+            _devenv_tmux_prefix=${1#*=}
+            ;;
+        #
         # .vimrc path
         #
         --vimrc=?*)
@@ -604,6 +1066,16 @@ while :; do
         # Attach to a running container
         #
         attach)
+            _devenv_command=$1
+            if [ "" == "$_devenv_target" ]; then
+                _devenv_target=$2
+                shift
+            fi
+            ;;
+        #
+        # Attach to a running container
+        #
+        build-tags)
             _devenv_command=$1
             if [ "" == "$_devenv_target" ]; then
                 _devenv_target=$2
@@ -689,6 +1161,10 @@ while :; do
     shift
 done
 
+if [ "true" == "$IS_DEVENV" ]; then
+    _devenv_error_nesting_containers
+fi
+
 if [[ $@ ]]; then
     _devenv_show_usage
 fi
@@ -737,12 +1213,25 @@ if [ "" == "${_devenv_command}" ]; then
     _devenv_command='attach'
 fi
 
-# Conf path arguments
+# Conf path argument defaults
 if [ "" == "${_tmux_conf_path}" ]; then
     _tmux_conf_path='-'
 fi
 if [ "" == "${_vimrc_conf_path}" ]; then
     _vimrc_conf_path='-'
+fi
+if [ "" == "${_devenv_daemonize}" ]; then
+    _devenv_daemonize='-'
+fi
+
+_devenv_ctags_excludes=${_devenv_ctags_excludes[@]}
+_devenv_ctags_excludes=$(echo $_devenv_ctags_excludes | sed "s/ /,/g")
+if [ "" == "$_devenv_ctags_excludes" ]; then
+    _devenv_ctags_excludes='-'
+fi
+
+if [ "" == "$_devenv_tmux_prefix" ]; then
+    _devenv_tmux_prefix='-'
 fi
 
 ##############################################################################
@@ -754,11 +1243,28 @@ if [ "attach" == "${_devenv_command}" ]; then
     if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_not_running $_devenv_container_name
     fi
-    if [ "true" == "$(_devenv_is_paused ${_devenv_container_name})" ]; then
+    _paused=$(_devenv_is_paused ${_devenv_container_name})
+    if [ "true" == "$_paused" ]; then
         _devenv_unpause_container ${_devenv_container_name}
     fi
     _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_daemonize}" ]; then
+    if [ "true" == "$_paused" ] && [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
+        _devenv_pause_container ${_devenv_container_name}
+    fi
+
+
+# Attach to a running container
+elif [ "build-tags" == "${_devenv_command}" ]; then
+    if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+        _devenv_error_target_not_running $_devenv_container_name
+    fi
+
+    _paused=$(_devenv_is_paused ${_devenv_container_name})
+    if [ "true" == "$_paused" ]; then
+        _devenv_unpause_container ${_devenv_container_name}
+    fi
+    _devenv_build_tags ${_devenv_container_name}
+    if [ "true" == "$_paused" ] && [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
 
@@ -770,7 +1276,7 @@ elif [ "init" == "${_devenv_command}" ]; then
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
     fi
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix}
 
 
 # Kill a running container
@@ -784,12 +1290,16 @@ elif [ "ls" == "${_devenv_command}" ]; then
 
 
 # Refresh the specified container
-elif [ "refresh" == "${_devenv_command}" ] || [ "restart" == "${_devenv_command}" ]; then
+elif [ "restart" == "${_devenv_command}" ]; then
     if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_not_running ${_devenv_container_name}
     fi
+    daemonize=$(_devenv_is_daemonized $_devenv_container_name)
+    if [ "true" == "$(_devenv_is_daemonized $_devenv_container_name)" ] || [ "true" == "$_devenv_daemonize" ]; then
+        daemonize='true'
+    fi
     _devenv_kill_container ${_devenv_container_name}
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix}
 
 
 # Rename a current container
@@ -812,10 +1322,6 @@ elif [ "self-update" == "${_devenv_command}" ]; then
 # Unpause a paused container
 elif [ "start" == "${_devenv_command}" ]; then
     _devenv_unpause_container ${_devenv_container_name}
-    _devenv_attach ${_devenv_container_name}
-    if [ "true" != "${_devenv_daemonize}" ]; then
-        _devenv_pause_container ${_devenv_container_name}
-    fi
 
 
 # Pause a running container
