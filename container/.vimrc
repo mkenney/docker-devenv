@@ -213,7 +213,7 @@ set nu
 set nobackup
 
 " type 'ii' to switch from insert to command mode
-imap ii <C-[>
+"imap ii <C-[>
 
 " when reopening a file, tell vim to restore the cursor to the saved position
 augroup JumpCursorOnEdit
