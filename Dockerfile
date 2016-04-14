@@ -55,6 +55,7 @@ ENV LC_ALL C.UTF-8
 RUN apt-get install -qqy \
         curl \
         dialog \
+        emacs \
         exuberant-ctags \
         fonts-powerline \
         git \
