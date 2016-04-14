@@ -4,6 +4,15 @@
 
 The `devenv` script is available in the `bin/` folder and an auto-completion script is available in the `bash/` folder.
 
+# Installation
+
+It's really just a bash script, but it uses docker and assumes that you can run `docker` commands without sudo so you might need some setup.
+
+1. Install docker on your system. This command varies from system to system so you're on your own, but there are tons of [instructions online](https://www.google.com/search?q=install+docker&oq=install+docker&aqs=chrome.0.0l2j69i60l3j0.1975j0j1&sourceid=chrome&ie=UTF-8) so it should be easy. For example, if you happen to be using a Debian-based system it's as simple as `sudo apt-get install docker`.
+2. Make sure your user [belongs to the docker group](http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo).
+3. Select an installation directory in your path (lets assume `/usr/bin`) and run `sudo wget -nv -O /usr/bin/devenv https://raw.githubusercontent.com/mkenney/docker-devenv/master/bin/devenv && sudo chmod +rwx /usr/bin/devenv && devenv self-update`.
+4. Profit
+
 # ABOUT
 
 This project began as a way for me to easily move my development enviroment around with me, but is quickly turning into my primary IDE.
