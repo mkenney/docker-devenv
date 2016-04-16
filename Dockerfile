@@ -57,7 +57,6 @@ RUN apt-get install -qqy \
         dialog \
         emacs \
         exuberant-ctags \
-        fonts-powerline \
         git \
         graphviz \
         htop \
