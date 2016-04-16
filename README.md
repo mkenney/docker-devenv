@@ -14,7 +14,10 @@ It's really just a bash script, but it uses docker and assumes that you can run 
   * Install [Homebrew](http://brew.sh/)
   * Run `brew install coreutils`
   * Add `/usr/local/opt/coreutils/libexec/gnubin` to your path (see the output of `brew install coreutils` for the exact path)
-4. Select an installation directory in your path (lets assume `/usr/bin`) and run `sudo wget -nv -O /usr/bin/devenv https://raw.githubusercontent.com/mkenney/docker-devenv/master/bin/devenv && sudo chmod +rwx /usr/bin/devenv && devenv self-update`.
+4. Select an installation directory in your path (lets assume `/usr/bin`) and run:
+  * `sudo wget -nv -O /usr/bin/devenv https://raw.githubusercontent.com/mkenney/docker-devenv/master/bin/devenv`
+  * `sudo chmod +rwx /usr/bin/devenv`
+  * `devenv self-update`
 5. Profit
 
 # ABOUT
