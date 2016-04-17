@@ -327,8 +327,7 @@ function _devenv_create_container {
             -e IS_DEVENV=true
             -h $_target \
             -e HOSTNAME=$_target \
-            -e POWERLINE_HOST_HOSTNAME=Host:$(hostname) \
-            -e POWERLINE_HOSTNAME=$_target \
+            -e POWERLINE_HOST_HOSTNAME=$(hostname) \
             -e PROJECT_PATH=/src \
             --add-host docker:127.0.0.1 \
             -e TERM=$TERM \

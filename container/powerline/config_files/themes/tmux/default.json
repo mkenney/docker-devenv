@@ -2,6 +2,11 @@
     "segments": {
         "right": [
             {
+                "function": "powerline.segments.common.sys.cpu_load_percent",
+                "priority": 50,
+                "format": "CPU: u'{0:.0f}%'"
+            }
+            , {
                 "function": "powerline.segments.common.sys.system_load",
                 "priority": 50
             }
@@ -20,10 +25,7 @@
                 }
             }
             , {
-                "function": "powerline.segments.common.env.environment",
-                "args": {
-                    "variable": "POWERLINE_HOSTNAME"
-                }
+                "function": "powerline.segments.common.net.hostname"
             }
         ]
     }
