@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+# List of custom commands, space delimited.  This var should be
+# updated by your .bash/lib/[git-command] file
+export git_custom_commands=""
+
+# Return the list of custom commands.  This is also used for tab-completion
+function git_autocomplete_commands {
+    echo "${git_custom_commands}"
+}
+export -f git_autocomplete_commands
+
+# Load all of the custom commands in .bash/lib/.  These must be prefixed with 'git-'
+for git_lib in $(find ${HOME}/.bash/lib/git-* -maxdepth 1 -not -type d -and -not -name '.*'); do
+    . $git_lib
+done
+
+# git command wrapper + alias
+function _git_better {
+    custom_commands="$(git_autocomplete_commands)"
+    for a in ${custom_commands[@]}
+    do
+        if [ "${1}" = "${a}" ]; then
+            "git-$a" "${@:2}"
+            return
+        fi
+    done
+
+    /usr/bin/env git "$@"
+
+}
+export -f _git_better
+
+alias git='_git_better'

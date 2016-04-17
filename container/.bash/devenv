@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# Source this file
+
+CONTAINER_SUFFIX=.devenv
+
+# Return the list of standard and custom commands as well as current
+# container names for tab-completion
+function _devenv_autocomplete {
+    local cur prev opts _docker_container_names name _devenv_commands
+    _devenv_commands="--ctags-exclude= --daemonize --help --target= --tmux --tmux= --tmux-prefix= --path= attach init help kill ls pause refresh restart reload rename self-update start stop unpause"
+    COMPREPLY=()
+
+    _docker_container_names=""
+    # Add all current container names to the auto-complete command list
+    if [ "" != "$(docker ps -a | grep -e "$CONTAINER_SUFFIX\$")" ]; then
+        for a in $(docker inspect --format='{{.Name}}' $(docker ps -aq --no-trunc) | grep -e "$CONTAINER_SUFFIX\$"); do
+            name=${a:1:${#a}-1}
+            name=${name%$CONTAINER_SUFFIX}
+            _docker_container_names="$_docker_container_names ${name}"
+        done
+    fi
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="${_devenv_commands} ${_docker_container_names}"
+
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+}
+complete -o default -F _devenv_autocomplete devenv

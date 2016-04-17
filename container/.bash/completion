@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# enable pathname expansion
+shopt -s direxpand
+
+# disable spelling correction
+shopt -u dirspell
+
+# include dotfiles in filename expansion
+shopt -s dotglob
+
+# enable alias name expansion
+shopt -s expand_aliases
+
+# enable extended pattern matching: http://en.chys.info/2009/02/extglob/
+shopt -s extglob
+
+# auto-complete hostnames in /etc/hosts
+export HOSTFILE=/etc/hosts
+
+# Case-insensitive auto-completion
+set completion-ignore-case On
+
+# Tab completion for sudo
+complete -cf sudo
+
+# Tab completion for which
+complete -cf which
+
+# Tab completion for man
+complete -cf man

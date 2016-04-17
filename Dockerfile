@@ -204,12 +204,17 @@ RUN pear install --alldeps php_codesniffer \
 
 # Configure root account
 RUN cd /root/src \
-    && git clone https://github.com/mkenney/terminal_config.git \
-    && cd /root/src/terminal_config/ \
-    && git submodule update --init --recursive \
-    && rsync -a /root/src/terminal_config/ /root/ \
+    && rsync -ac /container/powerline/ /usr/share/powerline/ \
+    && mkdir -p /root/.vim/bundle/ \
+    && cd /root/.vim/bundle/ \
+    && git clone https://github.com/VundleVim/Vundle.vim.git \
     && cd /root/ \
-    && rm -rf /root/src/terminal_config/ \
+    && rsync -ac /container/.bash/ /root/.bash/ \
+    && cp /container/.bash_profile /root/.bash_profile \
+    && cp /container/.bashrc /root/.bashrc \
+    && cp /container/.vimrc /root/.vimrc \
+    && cp /container/.tmux.conf /root/.tmux.conf \
+    && vim +PluginInstall +qall > /dev/null 2>&1 \
     && echo "set tags=/src/tags.devenv"                        >> /root/.vimrc        \
     && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          >> /root/.bash_profile \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  >> /root/.bash_profile \
@@ -220,17 +225,13 @@ RUN cd /root/src \
     && echo "export LANGUAGE=$(echo $LANGUAGE)"                >> /root/.bash_profile \
     && echo "export LC_ALL=$(echo $LC_ALL)"                    >> /root/.bash_profile \
     && echo "export TERM=xterm"                                >> /root/.bash_profile \
-    && echo "export PATH=$(echo $PATH)"                        >> /root/.bash_profile \
-    && rsync -ac /container/powerline/ /usr/share/powerline/ \
-    && cp /container/.vimrc /root/.vimrc \
-    && cp /container/.tmux.conf /root/.tmux.conf
+    && echo "export PATH=$(echo $PATH)"                        >> /root/.bash_profile
 
 # Add a dev user and configure all accounts
 RUN groupadd dev \
     && useradd dev -s /bin/bash -m -g dev -G root \
     && echo "dev:password" | chpasswd \
     && echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
-    && vim +PluginInstall +qall > /dev/null 2>&1 \
     && rsync -a /root/ /home/dev/ \
     && rsync -a /root/ /home/oracle/ \
     && chown -R dev:dev /home/dev/ \

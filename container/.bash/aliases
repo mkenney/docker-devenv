@@ -1,0 +1,44 @@
+
+alias e='exit'
+
+alias ll='ls -l'
+alias l='ls -1'
+alias ls='ls -aF --time-style=+"%a %Y-%m-%d %T" --color=auto'
+
+alias rm='rm -i'
+alias cp='cp -i'
+alias mv='mv -i'
+
+alias cls='clear'
+alias csl='clear'
+alias lcs='clear'
+
+# I'm old
+alias pico='nano'
+alias pioc='nano'
+alias pcio='nano'
+alias pcoi='nano'
+
+alias nano='vim'
+alias vi='vim'
+alias ivm='vim'
+alias ed='vim'
+alias vim-plugins="vim +PluginInstall +qall"
+
+alias em="emacs"
+
+alias less='less -R'
+alias more='less'
+alias grep='grep --color=auto'
+alias top='htop -d 5'
+alias suod='sudo'
+alias rsync='rsync --progress'
+
+alias locate='locate -i'
+alias pstree='pstree -ahlpuU'
+
+alias yes="echo no"
+
+alias busy='while [ TRUE ]; do head -n 100 /dev/urandom; sleep .05; done | hexdump -C | grep --color=none "ca fe"'
+
+alias a="cal"

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+# Lang
+export LANG="en_US.UTF-8"
+
+# Term
+export TERM=xterm-256color
+
+# Oracle
+export ORACLE_HOME=/oracle/product/latest
+export TNS_ADMIN=/na/home/mkenney/.oracle/network/admin
+export LD_LIBRARY_PATH=$ORACLE_HOME/lib:$LD_LIBRARY_PATH
+export PATH=$ORACLE_HOME/bin:$PATH:$HOME/bin
+
+# Perl
+export PERLLIB=$HOME/projects/rp_perl_libs/lib:$HOME/projects/cert_performance_backend/lib:$HOME/projects/cert_applicants_backend/lib
+export PERL5LIB=$PERLLIB
+export CERT_PERFORMANCE_HOME=$HOME/projects/cert_performance_backend
+
+# Path
+PATH=/usr/local/bin:$PATH
+PATH=$PATH:$HOME
+PATH=$PATH:$HOME/bin
+PATH=$PATH:/usr/local/hadoop/bin
+PATH=$PATH:/usr/local/hbase/bin
+PATH=$PATH:/usr/local/hive/bin
+PATH=$PATH:/usr/local/pig/bin
+PATH=$PATH:$HOME/hdshell/bin
+#PATH=$PATH:/usr/local/php/bin
+PATH=$PATH:/opt/rh/php54/root/usr/bin
+PATH=$PATH:/usr/local/apache-maven/bin
+PATH=$PATH:/usr/local/ant/bin
+PATH=$PATH:/usr/local/apache/bin
+export PATH
+
+# Put terminal in VI mode
+set -o vi
+export VISUAL=vim
+export EDITOR=vim
+
+# History length
+export HISTSIZE=5000
+

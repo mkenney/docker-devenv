@@ -1,0 +1,3 @@
+#PERL5LIB=$PERL5LIB:/home/mkenney/perl; export PERL5LIB
+
+alias perlshell="perl -MCPAN -e \"shell\""
