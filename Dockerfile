@@ -209,16 +209,15 @@ RUN cd /root/src \
     && cd /root/.vim/bundle/ \
     && git clone https://github.com/VundleVim/Vundle.vim.git \
     && cd /root/ \
-    && rsync -ac /container/.bash/ /root/.bash/ \
-    && cp /container/.bash_profile /root/.bash_profile \
-    && cp /container/.bashrc /root/.bashrc \
-    && cp /container/.gitconfig /root/.gitconfig \
-    && cp /container/.gitignore_global /root/.gitignore_global \
-    && cp /container/.vimrc /root/.vimrc \
-    && cp /container/.vimdiff_wrapper /root/.vimdiff_wrapper \
-    && cp /container/.tmux.conf /root/.tmux.conf \
+    && rsync -ac /container/dotfiles/.bash/     /root/.bash/ \
+    && cp /container/dotfiles/.bash_profile     /root/.bash_profile \
+    && cp /container/dotfiles/.bashrc           /root/.bashrc \
+    && cp /container/dotfiles/.gitconfig        /root/.gitconfig \
+    && cp /container/dotfiles/.gitignore_global /root/.gitignore_global \
+    && cp /container/dotfiles/.vimrc            /root/.vimrc \
+    && cp /container/dotfiles/.vimdiff_wrapper  /root/.vimdiff_wrapper \
+    && cp /container/dotfiles/.tmux.conf        /root/.tmux.conf \
     && vim +PluginInstall +qall > /dev/null 2>&1 \
-    && echo "set tags=/src/tags.devenv"                        >> /root/.vimrc        \
     && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          >> /root/.bash_profile \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  >> /root/.bash_profile \
     && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              >> /root/.bash_profile \

@@ -307,3 +307,4 @@ vnoremap <leader>p "_dP
 map <M-Left> :tabp<CR>
 map <M-Right> :tabn<CR>
 
+set tags=/src/tags.devenv
