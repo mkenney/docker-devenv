@@ -211,6 +211,7 @@ set nu
 
 " don't create swp files
 set nobackup
+set noswapfile
 
 " type 'ii' to switch from insert to command mode
 "imap ii <C-[>

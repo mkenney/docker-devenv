@@ -212,7 +212,10 @@ RUN cd /root/src \
     && rsync -ac /container/.bash/ /root/.bash/ \
     && cp /container/.bash_profile /root/.bash_profile \
     && cp /container/.bashrc /root/.bashrc \
+    && cp /container/.gitconfig /root/.gitconfig \
+    && cp /container/.gitignore_global /root/.gitignore_global \
     && cp /container/.vimrc /root/.vimrc \
+    && cp /container/.vimdiff_wrapper /root/.vimdiff_wrapper \
     && cp /container/.tmux.conf /root/.tmux.conf \
     && vim +PluginInstall +qall > /dev/null 2>&1 \
     && echo "set tags=/src/tags.devenv"                        >> /root/.vimrc        \

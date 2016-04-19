@@ -332,13 +332,28 @@ function _devenv_create_container {
             --add-host docker:127.0.0.1 \
             -e TERM=$TERM \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -v $HOME/.ssh/:/home/dev/.ssh/:ro \
-            -v $HOME/.oracle/:/home/dev/.oracle/:ro \
             -v $_path:/src:rw \
             -w /src \
             --label project_path=$_path \
             --name $_target$CONTAINER_SUFFIX
         ";
+
+        # Mount the .ssh/ directory
+        if [ -d "$HOME/.ssh" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.ssh/:/home/dev/.ssh/:ro"
+        fi
+        # Mount the .oracle/ directory
+        if [ -d "$HOME/.oracle" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.oracle/:/home/dev/.oracle/:ro"
+        fi
+        # Include the .gitconfig
+        if [ -f "$HOME/.gitconfig" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitconfig:ro"
+        fi
+        # Include the .gitignore_global
+        if [ -f "$HOME/.gitignore_global" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitignore_global:ro"
+        fi
 
         # tmux config path
         if [ -f "$_tmux_conf" ]; then
