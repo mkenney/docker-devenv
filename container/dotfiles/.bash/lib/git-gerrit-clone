@@ -1,0 +1,10 @@
+# add 'rp-clone' to the current list of custom commands
+export git_custom_commands="${git_custom_commands} rp-clone"
+
+#
+# RP clone, automatically grab the Gerrit commit id hook
+#
+function git-rp-clone {
+	command git clone ssh://gerrit/"$1"
+	scp -p -P 29418 gerrit:hooks/commit-msg "$1"/.git/hooks/
+}

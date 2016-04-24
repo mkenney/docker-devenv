@@ -8,10 +8,17 @@ The `devenv` script is available in the `bin/` folder and an auto-completion scr
 
 It's really just a bash script, but it uses docker and assumes that you can run `docker` commands without sudo so you might need some setup.
 
-1. Install docker on your system. This command varies from system to system so you're on your own, but there are tons of [instructions online](https://www.google.com/search?q=install+docker&oq=install+docker&aqs=chrome.0.0l2j69i60l3j0.1975j0j1&sourceid=chrome&ie=UTF-8) so it should be easy. For example, if you happen to be using a Debian-based system it's as simple as `sudo apt-get install docker`.
-2. Make sure your user [belongs to the docker group](http://askubuntu.com/questions/477551/how-can-i-use-docker-without-sudo).
-3. Select an installation directory in your path (lets assume `/usr/bin`) and run `sudo wget -nv -O /usr/bin/devenv https://raw.githubusercontent.com/mkenney/docker-devenv/master/bin/devenv && sudo chmod +rwx /usr/bin/devenv && devenv self-update`.
-4. Profit
+1. Install docker on your system. This command varies from system to system so you're on your own, but there are tons of [instructions online](https://www.google.com/search?q=install+docker&oq=install+docker&aqs=chrome.0.0l2j69i60l3j0.1975j0j1&sourceid=chrome&ie=UTF-8) so it should be easy. For example, if you happen to be using a Debian-based system it's as simple as `sudo apt-get install docker`. If you're on a Mac, things are less simple but still [pretty easy](https://docs.docker.com/engine/installation/mac/).
+2. Linux users will need to make sure your user can [run docker without sudo](https://docs.docker.com/v1.8/installation/ubuntulinux/#create-a-docker-group).
+3. Mac users will need to add some core utilities before proceeding to get super unusual rarely used unique functionality like `realpath`...
+  * Install [Homebrew](http://brew.sh/)
+  * Run `brew install coreutils`
+  * Add `/usr/local/opt/coreutils/libexec/gnubin` to your path (see the output of `brew install coreutils` for the exact path)
+4. Select an installation directory in your path for the `devenv` utility (lets assume `/usr/bin`) and run:
+  * `sudo wget -nv -O /usr/bin/devenv https://raw.githubusercontent.com/mkenney/docker-devenv/master/bin/devenv`
+  * `sudo chmod +rwx /usr/bin/devenv` (write permission lets it `self-update` as any user).
+  * `devenv self-update`
+5. Profit
 
 # ABOUT
 

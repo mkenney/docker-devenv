@@ -1,0 +1,14 @@
+# add 'rp-hooks' to the current list of custom commands
+export git_custom_commands="${git_custom_commands} rp-hooks"
+
+#
+# RP hooks - load the the Gerrit commit id hook
+#
+function git-rp-hooks {
+	if [ -d ".git/hooks" ]; then
+		scp -p -P 29418 gerrit:hooks/commit-msg .git/hooks/
+	else
+		echo "You need to run this command from the toplevel of the working tree."
+		echo
+	fi
+}

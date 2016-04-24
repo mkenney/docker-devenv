@@ -1,0 +1,9 @@
+# add 'rp-list' to the current list of custom commands
+export git_custom_commands="${git_custom_commands} rp-list"
+
+#
+# RP list - List gerrit projects
+#
+function git-rp-list {
+	command ssh gerrit gerrit ls-projects
+}
