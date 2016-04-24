@@ -325,19 +325,35 @@ function _devenv_create_container {
         docker_run_args="
             -itd \
             -e IS_DEVENV=true
-            -h ${_target} \
-            -e HOSTNAME=${_target} \
+            -h $_target \
+            -e HOSTNAME=$_target \
+            -e POWERLINE_HOST_HOSTNAME=$(hostname) \
             -e PROJECT_PATH=/src \
             --add-host docker:127.0.0.1 \
             -e TERM=$TERM \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -v ${HOME}/.ssh/:/home/dev/.ssh/:ro \
-            -v ${HOME}/.oracle/:/home/dev/.oracle/:ro \
-            -v ${_path}:/src:rw \
+            -v $_path:/src:rw \
             -w /src \
-            --label project_path=${_path} \
-            --name ${_target}${CONTAINER_SUFFIX}
+            --label project_path=$_path \
+            --name $_target$CONTAINER_SUFFIX
         ";
+
+        # Mount the .ssh/ directory
+        if [ -d "$HOME/.ssh" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.ssh/:/home/dev/.ssh/:ro"
+        fi
+        # Mount the .oracle/ directory
+        if [ -d "$HOME/.oracle" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.oracle/:/home/dev/.oracle/:ro"
+        fi
+        # Include the .gitconfig
+        if [ -f "$HOME/.gitconfig" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitconfig:ro"
+        fi
+        # Include the .gitignore_global
+        if [ -f "$HOME/.gitignore_global" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitignore_global:ro"
+        fi
 
         # tmux config path
         if [ -f "$_tmux_conf" ]; then
@@ -465,52 +481,48 @@ function _devenv_list_environments {
         shift
     fi
 
+    local name
+
     # Stopped environments
-    if [ "" != "$(docker ps -a -f "status=exited" | grep -e "$CONTAINER_SUFFIX\$")" ]; then
-        for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep -e "$CONTAINER_SUFFIX\$"); do
-            name=${a:1:${#a}-1}
-            name=${name%$CONTAINER_SUFFIX}
-            path=$(_devenv_get_path_from_container $name)
-            if [ "" == "${1}" ] || [[ "$name" == $1 ]]; then
+    for a in $(docker ps -a -f "status=exited" | grep -e "$CONTAINER_SUFFIX\$" | awk '{print $NF}'); do
+        name=${a%$CONTAINER_SUFFIX}
+        path=$(_devenv_get_path_from_container $name)
+        if [ "" == "$1" ] || [[ "$name" == $1 ]]; then
+            if [ "true" == "$quiet" ]; then
+                echo $name
+            else
+                echo " stopped: $name @ $path"
+            fi
+        fi
+    done
+
+    # Running environments
+    for a in $(docker ps | grep -e "$CONTAINER_SUFFIX\$" | awk '{print $NF}'); do
+        name=${a%$CONTAINER_SUFFIX}
+        path=$(_devenv_get_path_from_container $name)
+        if [ "" == "${1}" ] || [[ "$name" == $1 ]]; then
+            if [ "true" == "$(_devenv_is_paused $name)" ]; then
                 if [ "true" == "$quiet" ]; then
                     echo $name
                 else
-                    echo " stopped: ${name} @ ${path}"
+                    echo " paused:  $name @ $path"
                 fi
-            fi
-        done
-    fi
-
-    # Running environments
-    local name
-    if [ "" != "$(docker ps | grep -e "$CONTAINER_SUFFIX\$")" ]; then
-        for a in $(docker inspect --format='{{.Name}}' $(docker ps -q --no-trunc) | grep -e "$CONTAINER_SUFFIX\$"); do
-            name=${a:1:${#a}-1}
-            name=${name%$CONTAINER_SUFFIX}
-            path=$(_devenv_get_path_from_container $name)
-            if [ "" == "${1}" ] || [[ "$name" == $1 ]]; then
-                if [ "true" == "$(_devenv_is_paused ${name%$CONTAINER_SUFFIX})" ]; then
-                    if [ "true" == "$quiet" ]; then
-                        echo $name
-                    else
-                        echo " paused:  ${name} @ ${path}"
-                    fi
+            else
+                if [ "true" == "$quiet" ]; then
+                    echo $name
                 else
-                    if [ "true" == "$quiet" ]; then
-                        echo $name
-                    else
-                        echo " running: ${name} @ ${path}"
-                    fi
+                    echo " running: $name @ $path"
                 fi
             fi
-        done
-    fi
+        fi
+    done
 
     exit 0
 }
 
 function _devenv_get_target_from_path {
-    for name in $(_devenv_list_environments -q); do
+    for a in $(docker ps -a | grep -e "$CONTAINER_SUFFIX\$" | awk '{print $NF}'); do
+        name=${a%$CONTAINER_SUFFIX}
         path=$(_devenv_get_path_from_container $name)
         if [ "$path" == "$1" ]; then
             echo $name;
@@ -1080,6 +1092,7 @@ while :; do
             _devenv_command=$1
             if [ "" == "$_devenv_target" ]; then
                 _devenv_target=$2
+                _devenv_path='n/a'
                 shift
             fi
             ;;
@@ -1110,6 +1123,7 @@ while :; do
         ls)
             _devenv_command=$1
             _devenv_secondary_command=$2
+            _devenv_target='n/a'
             shift
             ;;
         #
@@ -1140,6 +1154,7 @@ while :; do
             ;;
         self-update)
             _devenv_command=$1
+            _devenv_target='n/a'
            ;;
         start|unpause)
             _devenv_command='start'

@@ -52,10 +52,10 @@ ENV LC_ALL C.UTF-8
 # Packages
 ##############################################################################
 
-RUN apt-get install -qqy \
+RUN apt-get install -y \
         curl \
         dialog \
-        emacs \
+        emacs24 \
         exuberant-ctags \
         fonts-powerline \
         git \
@@ -81,6 +81,8 @@ RUN apt-get install -qqy \
         rsync \
         rsyslog \
         ruby \
+        sbcl \
+        slime \
         sudo \
         tcpdump \
         telnet \
@@ -224,6 +226,7 @@ RUN cd /root/src \
     && echo "export PATH=$(echo $PATH)"                        >> /root/.bash_profile \
     && rsync -ac /container/powerline/ /usr/share/powerline/ \
     && cp /container/.vimrc /root/.vimrc \
+    && cp /container/.emacs /root/.emacs \
     && cp /container/.tmux.conf /root/.tmux.conf
 
 # Add a dev user and configure all accounts
