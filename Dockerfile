@@ -318,13 +318,9 @@ RUN set -x \
 
     # .dotfiles
     && git clone https://github.com/mkenney/.dotfiles.git /root/.dotfiles \
-&& cd /root/.dotfiles \
-&& git checkout zsh \
     && /root/.dotfiles/init.sh \
 
     && git clone https://github.com/mkenney/.dotfiles.git /home/dev/.dotfiles \
-&& cd /home/dev/.dotfiles \
-&& git checkout zsh \
     && chown -R dev:dev /home/dev/.dotfiles \
     && sudo -u dev /home/dev/.dotfiles/init.sh \
 
