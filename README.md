@@ -24,13 +24,13 @@ It's really just a bash script, but it uses docker and assumes that you can run 
 
 This project began as a way for me to easily move my development enviroment around with me, but is quickly turning into my primary IDE.
 
-The goal is to have a fully scripted development environment build that contains all the tools I need to do my daily work (mainly PHP, Javascript, Perl, Bash, Python, etc.) and a control script that allows me to treat container instances as individual projects. Essentially, a fully customized linux instance dedicated to a single software development project.
+The goal is to have a fully scripted development environment build that contains all the tools I need to do my daily work (mainly PHP, Javascript, Perl, Bash, Python, Go, etc.) and a control script that allows me to treat container instances as individual projects. Essentially, a fully customized linux instance dedicated to a single software development project.
 
 ## Docker image
 
 * [mkenney/devenv](https://hub.docker.com/r/mkenney/devenv/)
 
-Based on [php:5 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_config) and, when using the `devenv` cli, initializes and attaches to a tmux session when you connect to the container. Because this assumes `vim` will be the primary editor, the default command-prefix key has been remapped to `C-\`. You can specify a secondary prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file using the `--tmux` option.
+Based on [php:7 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_config) and, when using the `devenv` cli, initializes and attaches to a tmux session when you connect to the container. Because this assumes `vim` will be the primary editor, the default command-prefix key has been remapped to `C-\`. You can specify a secondary prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file using the `--tmux` option.
 
 The default user is modified when the container is initialized so it becomes the owner of the project directory on the host and belongs to the same group so new files will be created with the same uid/gid on the host.
 
@@ -50,7 +50,7 @@ If you do want to use `powerline`, you may want to install and use a compatible 
 
 * nodejs:v5 build-essential npm:v3.8 bower:v1.7 grunt-cli:v1.1 gulp-cli:v1.2 yo:v1.7 generator-webapp
 
-### PHP 5.6 packages
+### PHP 7 packages
 
 * oci8 composer phpunit phpdocumentor phpcodesniffer phpmd xdebug pcntl
 
@@ -187,7 +187,7 @@ If you do want to use `powerline`, you may want to install and use a compatible 
              EXAMPLES
                  devenv ls
                  devenv ls java*
-                 devenv ls *-php-v5.?
+                 devenv ls *-php-v7.?
                  devenv ls -q
 
          pause [TARGET]

@@ -1,0 +1,54 @@
+#!/bin/sh
+
+stat_dir="/src"
+groupmod -g $(stat -c '%g' $stat_dir) -o dev > /dev/null 2>&1
+usermod -u $(stat -c '%u' $stat_dir) -o dev > /dev/null 2>&1
+chown -R dev:dev ~dev/ > /dev/null 2>&1
+exit_code=0
+
+files=
+file_count=0
+for file in "$@"; do
+    if [ -d "$file" ]; then
+        for subfile in $(find $file -name "*.php"); do
+            if [ -f "$subfile" ]; then
+                if grep -q '.php$' "$subfile"; then
+                  files="$files $subfile"
+                  file_count=$((file_count + 1))
+              fi
+            fi
+        done
+    else
+        files="$files $file"
+        file_count=$((file_count + 1))
+    fi
+done
+
+count=0
+total=0
+script_exit_code=0
+for file in $files; do
+    sudo -u dev /usr/local/bin/phpmd.phar $file text /usr/local/phpmd/phpmd-ruleset.xml > /tmp/script_output.txt 2>&1
+    exit_code=$?
+
+    if [ 0 -eq $exit_code ]; then
+        printf '.'
+    else
+        printf 'E'
+        errors="$errors\n    $(cat /tmp/script_output.txt)"
+        script_exit_code=$exit_code
+    fi
+
+    if [ 60 -eq $count ]; then
+        printf "  $total / $file_count ($(($(($total * 100)) / $file_count))%%)\n";
+        count=0
+    fi
+    count=$((count + 1))
+    total=$((total + 1))
+done
+
+if [ 0 -ne $script_exit_code ]; then
+    printf "\n$errors"
+    echo
+fi
+exit $script_exit_code

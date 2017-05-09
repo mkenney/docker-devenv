@@ -1,0 +1,7 @@
+#!/bin/sh
+
+stat_dir="/src"
+groupmod -g $(stat -c '%g' $stat_dir) -o dev > /dev/null 2>&1
+usermod -u $(stat -c '%u' $stat_dir) -o dev > /dev/null 2>&1
+chown -R dev:dev ~dev/ > /dev/null 2>&1
+sudo -u dev /usr/local/bin/phpcs.phar --standard=/usr/local/phpcs/phpcs-ruleset.xml,/usr/local/phpcs/RpStandard -nsp $@

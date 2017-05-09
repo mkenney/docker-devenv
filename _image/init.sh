@@ -16,6 +16,9 @@ sudo /usr/sbin/rsyslogd > /dev/null
 if [ "" != "$TMUX_PREFIX" ]; then
     echo "# Custom prefix key set with --tmux-prefix" >> /home/dev/.tmux.conf
     echo "set-option -g prefix2 $TMUX_PREFIX" >> /home/dev/.tmux.conf
+    echo "# Enable window toggling" >> /home/dev/.tmux.conf
+    echo "bind-key '$TMUX_PREFIX' send-prefix" >> /home/dev/.tmux.conf
+    echo "bind-key '$TMUX_PREFIX' last-window" >> /home/dev/.tmux.conf
 fi
 
 #############################################################################

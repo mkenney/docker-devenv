@@ -3,7 +3,8 @@
 COMMAND=$(basename ${0})
 COMMAND_PATH=$0
 CONTAINER_SUFFIX=.devenv
-CONTAINER_IMAGE='mkenney/devenv'
+#CONTAINER_IMAGE='mkenney/devenv'
+CONTAINER_IMAGE='devenv'
 
 ##############################################################################
 # Define all functions
@@ -23,14 +24,14 @@ function _devenv_show_usage {
                                     detaching
         -p PATH, --path=PATH        Specify the project path
         -t TARGET, --target=TARGET  Specify a target environment name
-        --tmux, --tmux=PATH         Specify a tmux configuration file. If 
-                                    path is omitted from this option then 
+        --tmux, --tmux=PATH         Specify a tmux configuration file. If
+                                    path is omitted from this option then
         --tmux-prefix=PREFIX        Use the default tmux configuration file
                                     but specify you're preferred prefix key.
                                     The default key is 'C-\\'
                                     $HOME/.tmux.conf is assumed
-        --vimrc, --vimrc=PATH       Specify a vim configuration file. If 
-                                    path is omitted from this option then 
+        --vimrc, --vimrc=PATH       Specify a vim configuration file. If
+                                    path is omitted from this option then
                                     $HOME/.vimrc is assumed
 
     Commands:
@@ -321,7 +322,7 @@ function _devenv_create_container {
         echo "Container '${_target}' is already running"
     else
 
-            #--storage-opt=\"dm.no_warn_on_loop_devices=true\" \
+        #--storage-opt=\"dm.no_warn_on_loop_devices=true\" \
         docker_run_args="
             -itd \
             -e IS_DEVENV=true
@@ -346,24 +347,25 @@ function _devenv_create_container {
         if [ -d "$HOME/.oracle" ]; then
             docker_run_args="$docker_run_args -v $HOME/.oracle/:/home/dev/.oracle/:ro"
         fi
-        # Include the .gitconfig
-        if [ -f "$HOME/.gitconfig" ]; then
-            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitconfig:ro"
-        fi
-        # Include the .gitignore_global
-        if [ -f "$HOME/.gitignore_global" ]; then
-            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitignore_global:ro"
-        fi
 
-        # tmux config path
-        if [ -f "$_tmux_conf" ]; then
-            docker_run_args="$docker_run_args -v $(realpath $_tmux_conf):/home/dev/.tmux.conf:ro"
-        fi
-        # vimrc config path
-        if [ -f "$_vimrc" ]; then
-            docker_run_args="$docker_run_args -v $(realpath $_vimrc):/home/dev/$(basename $_vimrc):ro"
-            docker_run_args="$docker_run_args -v $(dirname $(realpath $_vimrc))/.vim/:/home/dev/.vim/:ro"
-        fi
+#        # Include the .gitconfig
+#        if [ -f "$HOME/.gitconfig" ]; then
+#            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitconfig:ro"
+#        fi
+#        # Include the .gitignore_global
+#        if [ -f "$HOME/.gitignore_global" ]; then
+#            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitignore_global:ro"
+#        fi
+#
+#        # tmux config path
+#        if [ -f "$_tmux_conf" ]; then
+#            docker_run_args="$docker_run_args -v $(realpath $_tmux_conf):/home/dev/.tmux.conf:ro"
+#        fi
+#        # vimrc config path
+#        if [ -f "$_vimrc" ]; then
+#            docker_run_args="$docker_run_args -v $(realpath $_vimrc):/home/dev/$(basename $_vimrc):ro"
+#            docker_run_args="$docker_run_args -v $(dirname $(realpath $_vimrc))/.vim/:/home/dev/.vim/:ro"
+#        fi
         # daemonize
         if [ "true" == "$_daemonize" ]; then
             docker_run_args="$docker_run_args --label daemonize=${_daemonize}"
@@ -1217,6 +1219,9 @@ else
         _devenv_project_path=$(_devenv_get_path_from_container ${_devenv_container_name})
     fi
 fi
+
+# strip any invalid characters
+_devenv_container_name=$(echo "$_devenv_container_name" | tr -d '.,;:\\')
 
 # Flag noting whether the environment specified by _devenv_container_name exists
 _devenv_target_exists='false'
