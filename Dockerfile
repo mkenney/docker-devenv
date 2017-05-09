@@ -64,7 +64,7 @@ RUN set -x \
         automake \
         curl \
         dialog \
-        emacs \
+        emacs24 \
         exuberant-ctags \
         gcc \
         git \
@@ -92,6 +92,8 @@ RUN set -x \
         rsync \
         rsyslog \
         ruby \
+        sbcl \
+        slime \
         sudo \
         tcpdump \
         telnet \
