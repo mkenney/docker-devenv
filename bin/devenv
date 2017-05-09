@@ -342,6 +342,10 @@ function _devenv_create_container {
         if [ -d "$HOME/.ssh" ]; then
             docker_run_args="$docker_run_args -v $HOME/.ssh/:/home/dev/.ssh/:ro"
         fi
+        # Mount the .aws/ directory
+        if [ -d "$HOME/.aws" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.aws/:/home/dev/.aws/:ro"
+        fi
         # Mount the .oracle/ directory
         if [ -d "$HOME/.oracle" ]; then
             docker_run_args="$docker_run_args -v $HOME/.oracle/:/home/dev/.oracle/:ro"
