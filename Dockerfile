@@ -307,7 +307,7 @@ RUN set -x \
 RUN set -x \
     && curl -OL https://releases.hashicorp.com/terraform/0.9.4/terraform_0.9.4_linux_amd64.zip \
     && unzip terraform_0.9.4_linux_amd64.zip \
-    && /usr/local/bin/terraform \
+    && mv /terraform /usr/local/bin/terraform \
     && chmod 0755 /usr/local/bin/terraform
 
 ##############################################################################
