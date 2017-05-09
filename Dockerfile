@@ -79,8 +79,10 @@ RUN set -x \
         libpng12-dev \
         libbz2-dev \
         libaio1 \
+        libpq-dev \
         locate \
         man \
+        mysql-client \
         powerline \
         python \
         python-dev \
@@ -219,6 +221,7 @@ RUN set -x \
         mcrypt \
         mysqli \
         pdo_mysql \
+        pdo_pgsql \
         pcntl \
         soap \
         sockets \

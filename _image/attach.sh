@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TMUXSESSION=devenv
+TMUXSESSION=$HOSTNAME
 
 tmux attach-session -t $TMUXSESSION
 if [ $? != 0 ]

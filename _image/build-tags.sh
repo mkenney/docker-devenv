@@ -16,4 +16,4 @@ if [ "" != "$CTAGS_EXCLUDES" ]; then # defined by `docker run`
     done
 fi
 
-ctags-exuberant --exclude=.git --exclude=node_modules $ctags_flags -f /src/tags.devenv --append -R $PROJECT_PATH > /dev/null 2>&1
+ctags-exuberant --exclude=.git --exclude=node_modules --exclude=vendor $ctags_flags -f /src/tags.devenv --append -R $PROJECT_PATH > /dev/null 2>&1
