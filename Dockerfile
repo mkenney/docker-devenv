@@ -337,7 +337,7 @@ RUN set -x \
     && chown -R dev:dev /home/dev/.dotfiles \
     && sudo -u dev /home/dev/.dotfiles/init.sh \
 
-    # oracle
+    && echo ":set tags=/src/tags.devenv,./tags.devenv"         | tee /root/.vimrc        >> /home/dev/.vimrc        \
     && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              | tee /root/.bash_profile >> /home/dev/.bash_profile \

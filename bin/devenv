@@ -244,11 +244,9 @@ function _devenv_kill_container {
     if [ "true" == "$(_devenv_is_running ${1})" ]; then
         echo "Stopping '${1}'..."
         docker stop ${1}${CONTAINER_SUFFIX} > /dev/null
-        echo "Removing '${1}'..."
-        docker rm ${1}${CONTAINER_SUFFIX} > /dev/null
-    else
-        echo "Container '$1' is not running"
     fi
+    echo "Removing '${1}'..."
+    docker rm ${1}${CONTAINER_SUFFIX} > /dev/null
     running='false'
 }
 
@@ -465,6 +463,18 @@ function _devenv_is_running {
     echo ${running}
 }
 
+# Check to see if a named environment is stopped
+#
+# @param environment name returned by _devenv_list_environments
+function _devenv_is_exited {
+    container_name="${1}${CONTAINER_SUFFIX}"
+    exited='false'
+    if [ "false" == "$(_devenv_is_running ${1})" ] && [ "exited" == "$(docker inspect --format="{{ .State.Status }}" ${container_name})" ]; then
+        exited='true'
+    fi
+    echo ${exited}
+}
+
 # Check to see if a named environment is paused
 #
 # @param environment name returned by _devenv_list_environments
@@ -566,6 +576,14 @@ function _devenv_error_target_not_running {
     echo ""
     echo "The specified enviroment '${1}' does not exist, try creating it with"
     echo "'devenv init ${1} [PATH]'"
+    exit 1
+}
+
+# Display error message
+function _devenv_error_target_exists_exited {
+    echo ""
+    echo "The specified enviroment exists but has exited. Try cleaning it with"
+    echo "'devenv kill [-t environment_name]'"
     exit 1
 }
 
@@ -1228,7 +1246,7 @@ _devenv_container_name=$(echo "$_devenv_container_name" | tr -d '.,;:\\')
 
 # Flag noting whether the environment specified by _devenv_container_name exists
 _devenv_target_exists='false'
-if [ "" != "$(_devenv_list_environments | grep '^${_devenv_container_name}')" ]; then
+if [ "" != "$(_devenv_list_environments -q | grep "^${_devenv_container_name}")" ]; then
     _devenv_target_exists='true'
 fi
 
@@ -1295,7 +1313,9 @@ elif [ "build-tags" == "${_devenv_command}" ]; then
 
 # Create and start a new container
 elif [ "init" == "${_devenv_command}" ]; then
-    if [ "true" == "${_devenv_target_exists}" ] && [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+    if [ "true" == "${_devenv_target_exists}" ] && [ "true" == "$(_devenv_is_exited ${_devenv_container_name})" ]; then
+        _devenv_error_target_exists_exited
+    elif [ "true" == "${_devenv_target_exists}" ] && [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_stopped
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
