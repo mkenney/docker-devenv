@@ -3,7 +3,8 @@
 COMMAND=$(basename ${0})
 COMMAND_PATH=$0
 CONTAINER_SUFFIX=.devenv
-CONTAINER_IMAGE='mkenney/devenv'
+#CONTAINER_IMAGE='mkenney/devenv'
+CONTAINER_IMAGE='devenv'
 
 ##############################################################################
 # Define all functions
@@ -348,7 +349,6 @@ function _devenv_create_container {
         if [ -d "$HOME/.oracle" ]; then
             docker_run_args="$docker_run_args -v $HOME/.oracle/:/home/dev/.oracle/:ro"
         fi
-
 #        # Include the .gitconfig
 #        if [ -f "$HOME/.gitconfig" ]; then
 #            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitconfig:ro"
@@ -357,16 +357,18 @@ function _devenv_create_container {
 #        if [ -f "$HOME/.gitignore_global" ]; then
 #            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitignore_global:ro"
 #        fi
-#
-#        # tmux config path
-#        if [ -f "$_tmux_conf" ]; then
-#            docker_run_args="$docker_run_args -v $(realpath $_tmux_conf):/home/dev/.tmux.conf:ro"
-#        fi
-#        # vimrc config path
-#        if [ -f "$_vimrc" ]; then
-#            docker_run_args="$docker_run_args -v $(realpath $_vimrc):/home/dev/$(basename $_vimrc):ro"
-#            docker_run_args="$docker_run_args -v $(dirname $(realpath $_vimrc))/.vim/:/home/dev/.vim/:ro"
-#        fi
+        # tmux config path
+        if [ -f "$_tmux_conf" ]; then
+            docker_run_args="$docker_run_args -v $(realpath $_tmux_conf):/home/dev/.tmux.conf:ro"
+        fi
+        # vim resources
+        if [ -f "$_vimrc" ]; then
+            docker_run_args="$docker_run_args -v $(realpath $_vimrc):/home/dev/$(basename $_vimrc):ro"
+            docker_run_args="$docker_run_args -v $(dirname $(realpath $_vimrc))/.vim/undodir:/home/dev/.vim/undodir:rw"
+        else
+            docker_run_args="$docker_run_args -v $HOME/.vim/undodir:/home/dev/.vim/undodir:rw"
+            docker_run_args="$docker_run_args -v $HOME/.vim/data:/home/dev/.vim/data:rw"
+        fi
         # daemonize
         if [ "true" == "$_daemonize" ]; then
             docker_run_args="$docker_run_args --label daemonize=${_daemonize}"

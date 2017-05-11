@@ -21,7 +21,7 @@ then
 
     # editor
     tmux new-window        -t $TMUXSESSION:1
-    tmux send-keys         -t $TMUXSESSION:1 "cd ${PROJECT_PATH} && clear && vim" C-m
+    tmux send-keys         -t $TMUXSESSION:1 "cd ${PROJECT_PATH} && clear && vim ." C-m
 
     # shell
     tmux new-window        -t $TMUXSESSION:2

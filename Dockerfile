@@ -342,11 +342,11 @@ RUN set -x \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export CFLAGS=$(echo $CFLAGS)"                    | tee /root/.bash_profile >> /home/dev/.bash_profile \
+    && echo "export TERM=xterm"                                | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export NLS_LANG=$(echo $NLS_LANG)"                | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export LANG=$(echo $LANG)"                        | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export LANGUAGE=$(echo $LANGUAGE)"                | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export LC_ALL=$(echo $LC_ALL)"                    | tee /root/.bash_profile >> /home/dev/.bash_profile \
-    && echo "export TERM=xterm"                                | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export PATH=$(echo $PATH)"                        | tee /root/.bash_profile >> /home/dev/.bash_profile
 
 ##############################################################################
