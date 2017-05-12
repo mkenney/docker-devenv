@@ -207,6 +207,7 @@ RUN set -x \
     && apt-get install -qqy \
         libaio1 \
         libicu-dev \
+        libpcre3-dev \
         libvpx-dev \
         libwebp-dev \
         libxpm-dev \
