@@ -340,6 +340,10 @@ function _devenv_create_container {
         if [ -d "$HOME/.ssh" ]; then
             docker_run_args="$docker_run_args -v $HOME/.ssh/:/home/dev/.ssh/:ro"
         fi
+        # Mount the .kube/ directory
+        if [ -d "$HOME/.kube" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.kube/:/home/dev/.kube/:ro"
+        fi
         # Mount the .aws/ directory
         if [ -d "$HOME/.aws" ]; then
             docker_run_args="$docker_run_args -v $HOME/.aws/:/home/dev/.aws/:ro"
