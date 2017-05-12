@@ -2,6 +2,7 @@ FROM php:7
 
 ENV DEBIAN_FRONTEND noninteractive
 
+
 ##############################################################################
 # Configurations
 ##############################################################################
@@ -22,6 +23,7 @@ ENV TNS_ADMIN /home/dev/.oracle/network/admin
 ENV CFLAGS "-I/usr/include/oracle/${ORACLE_VERSION_SHORT}/client64/"
 ENV NLS_LANG American_America.AL32UTF8
 
+
 ##############################################################################
 # Upgrade
 ##############################################################################
@@ -33,6 +35,7 @@ RUN set -x \
     && apt-get install -qqy apt-utils \
     && apt-get -qq upgrade \
     && apt-get -qq dist-upgrade
+
 
 ##############################################################################
 # UTF-8 Locale, timezone
@@ -53,6 +56,7 @@ RUN set -x \
 ENV LANG C.UTF-8
 ENV LANGUAGE C.UTF-8
 ENV LC_ALL C.UTF-8
+
 
 ##############################################################################
 # Packages
@@ -80,6 +84,7 @@ RUN set -x \
         libbz2-dev \
         libaio1 \
         libpq-dev \
+        libyaml-dev \
         locate \
         man \
         mysql-client \
@@ -95,6 +100,7 @@ RUN set -x \
         rsyslog \
         ruby \
         sbcl \
+        silversearcher-ag \
         slime \
         sudo \
         tcpdump \
@@ -142,6 +148,19 @@ RUN set -x \
 COPY bin/devenv /usr/local/bin/devenv
 COPY _image /_image
 
+
+##############################################################################
+# users
+##############################################################################
+
+# Add a dev user
+RUN set -x \
+    && groupadd dev \
+    && useradd dev -s /bin/bash -m -g dev -G root \
+    && echo "dev:password" | chpasswd \
+    && echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+
 ##############################################################################
 # Oracle instantclient
 ##############################################################################
@@ -162,6 +181,7 @@ RUN set -x \
     && rm -f /oracle-instantclient${ORACLE_VERSION_SHORT}-basic_${ORACLE_VERSION_LONG}_amd64.deb \
     && rm -f /oracle-instantclient${ORACLE_VERSION_SHORT}-devel_${ORACLE_VERSION_LONG}_amd64.deb \
     && rm -f /oracle-instantclient${ORACLE_VERSION_SHORT}-sqlplus_${ORACLE_VERSION_LONG}_amd64.deb
+
 
 ##############################################################################
 # PHP
@@ -236,6 +256,7 @@ RUN set -x \
     && echo "report_memleaks=On"        > $PHP_INI_DIR/report_memleaks.ini \
     && echo "error_log=syslog"          > $PHP_INI_DIR/error_log.ini
 
+
 ##############################################################################
 # xdebug (for code-coverage reports)
 ##############################################################################
@@ -248,6 +269,7 @@ RUN set -x \
     && echo "xdebug.remote_autostart=on" >> /usr/local/etc/php/conf.d/xdebug.ini \
     && echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/xdebug.ini
 
+
 ##############################################################################
 # composer
 ##############################################################################
@@ -256,12 +278,14 @@ RUN set -x \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && /usr/local/bin/composer config -g secure-http false
 
+
 ##############################################################################
 # codeception (includes phpunit)
 ##############################################################################
 
 RUN set -x \
     && composer global require "codeception/codeception:*"
+
 
 ##############################################################################
 # phpDocumentor
@@ -271,6 +295,7 @@ RUN set -x \
     && apt-get -q -y install graphviz \
     && pear channel-discover pear.phpdoc.org \
     && pear install phpdoc/phpDocumentor
+
 
 ##############################################################################
 # linting
@@ -303,6 +328,26 @@ RUN set -x \
     && chmod 0755 /run-phpmd-checks \
     && chmod 0755 /run-phpsyntax-checks
 
+
+##############################################################################
+# kubectl
+##############################################################################
+
+RUN set -x \
+    && curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
+    && chmod +x ./kubectl \
+    && mv ./kubectl /usr/local/bin/kubectl
+
+
+##############################################################################
+# awscli
+##############################################################################
+
+RUN set -x \
+    && pip install --upgrade --user awscli \
+    && sudo -u dev pip install --upgrade --user awscli
+
+
 ##############################################################################
 # terraform
 ##############################################################################
@@ -313,16 +358,12 @@ RUN set -x \
     && mv /terraform /usr/local/bin/terraform \
     && chmod 0755 /usr/local/bin/terraform
 
+
 ##############################################################################
-# users
+# configure user accounts
 ##############################################################################
 
-# Add a dev user and configure all accounts
 RUN set -x \
-    && groupadd dev \
-    && useradd dev -s /bin/bash -m -g dev -G root \
-    && echo "dev:password" | chpasswd \
-    && echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
 
     # powerline config
     && rsync -ac /_image/powerline/ /usr/share/powerline/ \
@@ -332,11 +373,11 @@ RUN set -x \
     # .dotfiles
     && git clone https://github.com/mkenney/.dotfiles.git /root/.dotfiles \
     && /root/.dotfiles/init.sh \
-
     && git clone https://github.com/mkenney/.dotfiles.git /home/dev/.dotfiles \
     && chown -R dev:dev /home/dev/.dotfiles \
     && sudo -u dev /home/dev/.dotfiles/init.sh \
 
+    # env
     && echo ":set tags=/src/tags.devenv,./tags.devenv"         | tee /root/.vimrc        >> /home/dev/.vimrc        \
     && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee /root/.bash_profile >> /home/dev/.bash_profile \
