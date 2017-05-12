@@ -211,8 +211,9 @@ RUN set -x \
         libwebp-dev \
         libxpm-dev \
         libxml2-dev \
-        php-pear \
+        php-pear
 
+RUN set -x \
     # Configure and install oci8
     # Don't poke it or it'll break
     && cp /usr/include/oracle/${ORACLE_VERSION_SHORT}/client64/* /oracle/product/latest/ \
@@ -222,8 +223,9 @@ RUN set -x \
     && ln -s lib/libclntsh.so.11.1 libclntsh.so \
     && ln -s lib/libclntsh.so.11.1 libclntsh.so.11.1 \
     && echo "instantclient,/oracle/product/latest" | pecl install oci8-2.1.1.tgz \
-    && echo "extension=oci8.so" > $PHP_INI_DIR/oci8.ini \
+    && echo "extension=oci8.so" > $PHP_INI_DIR/oci8.ini
 
+RUN set -x \
     # Extensions
     && docker-php-source extract \
     && docker-php-ext-configure gd \
@@ -245,8 +247,9 @@ RUN set -x \
         pcntl \
         soap \
         sockets \
-        zip \
+        zip
 
+RUN set -x \
     # INI settings
     && echo "memory_limit=-1"           > $PHP_INI_DIR/memory_limit.ini \
     && echo "date.timezone=${TIMEZONE}" > $PHP_INI_DIR/date_timezone.ini \
