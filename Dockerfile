@@ -66,12 +66,14 @@ RUN set -x \
     && apt-get install -qqy \
         autogen \
         automake \
+        cmake \
         curl \
         dialog \
         emacs24 \
         exuberant-ctags \
         gcc \
         git \
+        golang \
         graphviz \
         htop \
         less \
@@ -143,6 +145,7 @@ RUN set -x \
         grunt-cli \
         gulp-cli \
         markdown-styles \
+        typescript \
         yarn
 
 COPY bin/devenv /usr/local/bin/devenv
@@ -159,6 +162,49 @@ RUN set -x \
     && useradd dev -s /bin/bash -m -g dev -G root \
     && echo "dev:password" | chpasswd \
     && echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+
+##############################################################################
+# configure user accounts
+##############################################################################
+
+RUN set -x \
+    # .dotfiles
+    && echo "woot4" \
+    && git clone https://github.com/mkenney/.dotfiles.git /root/.dotfiles \
+    && /root/.dotfiles/init.sh \
+    && rsync -a /root/.dotfiles/ /home/dev/.dotfiles/ \
+    && chown -R dev:dev /home/dev/.dotfiles \
+    && sudo -u dev /home/dev/.dotfiles/init.sh
+
+
+##############################################################################
+# vim plugin support
+##############################################################################
+
+RUN set -x \
+    # YouCompleteMe support
+    && cd /root \
+    && mkdir ycm_build \
+    && mkdir ycm_temp \
+    && curl -OL http://releases.llvm.org/4.0.0/clang+llvm-4.0.0-x86_64-linux-gnu-debian8.tar.xz \
+    && tar xvf clang+llvm-4.0.0-x86_64-linux-gnu-debian8.tar.xz \
+    && mv clang+llvm-4.0.0-x86_64-linux-gnu-debian8 ycm_temp/llvm_root_dir \
+
+    && cd ycm_build \
+    && cmake -G "Unix Makefiles" -DPATH_TO_LLVM_ROOT=~/ycm_temp/llvm_root_dir . /root/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp \
+    && cmake --build . --target ycm_core \
+    && cd /root/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/gocode \
+    && go build \
+    && cd /root/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/tern_runtime \
+    && npm install --production \
+
+    # YouCompleteMe - dev
+    && rsync -a /root/ycm_build/ /home/dev/ycm_build/ \
+    && rsync -a /root/.vim/bundle/YouCompleteMe/ /home/dev/.vim/bundle/YouCompleteMe/ \
+    && chown -R dev:dev /home/dev/ycm_build \
+    && chown -R dev:dev /home/dev/.vim/bundle \
+    && rm -rf /root/ycm_tmp
 
 
 ##############################################################################
@@ -302,7 +348,7 @@ RUN set -x \
 
 
 ##############################################################################
-# linting
+# PHP linting
 ##############################################################################
 
 COPY /_image/RpStandard /usr/local/phpcs/RpStandard
@@ -360,29 +406,17 @@ RUN set -x \
     && curl -OL https://releases.hashicorp.com/terraform/0.9.4/terraform_0.9.4_linux_amd64.zip \
     && unzip terraform_0.9.4_linux_amd64.zip \
     && mv /terraform /usr/local/bin/terraform \
-    && chmod 0755 /usr/local/bin/terraform
+    && chmod 0755 /usr/local/bin/terraform \
+    && rm -f terraform_0.9.4_linux_amd64.zip
 
 
 ##############################################################################
-# configure user accounts
+# configure environment
 ##############################################################################
 
 RUN set -x \
-
-    # powerline config
-    && rsync -ac /_image/powerline/ /usr/share/powerline/ \
-    && mkdir -p /usr/local/powerline \
-    && ln -s /usr/share/powerline/bindings/tmux/powerline.conf /usr/local/powerline/powerline.conf \
-
-    # .dotfiles
-    && git clone https://github.com/mkenney/.dotfiles.git /root/.dotfiles \
-    && /root/.dotfiles/init.sh \
-    && git clone https://github.com/mkenney/.dotfiles.git /home/dev/.dotfiles \
-    && chown -R dev:dev /home/dev/.dotfiles \
-    && sudo -u dev /home/dev/.dotfiles/init.sh \
-
     # env
-    && echo ":set tags=/src/tags.devenv,./tags.devenv"         | tee /root/.vimrc        >> /home/dev/.vimrc        \
+    && echo "set tags=/src/tags.devenv,./tags.devenv"         | tee /root/.vimrc        >> /home/dev/.vimrc        \
     && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              | tee /root/.bash_profile >> /home/dev/.bash_profile \
@@ -393,6 +427,18 @@ RUN set -x \
     && echo "export LC_ALL=$(echo $LC_ALL)"                    | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export TERM=xterm"                                | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export PATH=$(echo $PATH)"                        | tee /root/.bash_profile >> /home/dev/.bash_profile
+
+
+##############################################################################
+# terminal plugin support
+##############################################################################
+
+RUN set -x \
+    # powerline config
+    && rsync -ac /_image/powerline/ /usr/share/powerline/ \
+    && mkdir -p /usr/local/powerline \
+    && ln -s /usr/share/powerline/bindings/tmux/powerline.conf /usr/local/powerline/powerline.conf
+
 
 ##############################################################################
 # ~ fin ~
