@@ -111,7 +111,9 @@ RUN set -x \
         telnet \
         unzip \
         wget \
-        zsh
+        zsh \
+    && rm -f /usr/bin/python \
+    && ln -s /usr/bin/python3 /usr/bin/python
 
 ##############################################################################
 # Applications
