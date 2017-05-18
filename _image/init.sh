@@ -21,7 +21,7 @@ if [ "" != "$TMUX_PREFIX" ]; then
 fi
 
 # update the locate database
-updatedb --localpaths=$PROJECT_PATH
+sudo updatedb --localpaths=$PROJECT_PATH
 
 #############################################################################
 # set tnsnames permissions
