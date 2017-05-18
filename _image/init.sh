@@ -20,6 +20,9 @@ if [ "" != "$TMUX_PREFIX" ]; then
     echo "bind-key '$TMUX_PREFIX' last-window" >> /home/dev/.tmux.conf
 fi
 
+# update the locate database
+updatedb --localpaths=$PROJECT_PATH
+
 #############################################################################
 # set tnsnames permissions
 ##############################################################################

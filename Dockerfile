@@ -59,13 +59,14 @@ ENV LC_ALL C.UTF-8
 
 
 ##############################################################################
-# Packages
+# Apt Packages
 ##############################################################################
 
 RUN set -x \
     && apt-get install -qqy \
         autogen \
         automake \
+        build-essential \
         cmake \
         curl \
         dialog \
@@ -90,6 +91,7 @@ RUN set -x \
         locate \
         man \
         mysql-client \
+        ncurses-dev \
         powerline \
         python \
         python-dev \
@@ -109,10 +111,26 @@ RUN set -x \
         telnet \
         unzip \
         wget \
-        vim-nox \
-        vim-addon-manager \
-        x11-xserver-utils \
-        zsh \
+        zsh
+
+##############################################################################
+# Applications
+##############################################################################
+
+RUN set -x \
+    # install latest vim from source
+    && git clone https://github.com/vim/vim \
+    && cd vim \
+    && make distclean \
+    && ./configure \
+        --with-features=huge \
+        --enable-perlinterp \
+        --enable-pythoninterp \
+        --enable-python3interp \
+        --enable-rubyinterp \
+    && make \
+    && make install \
+    && cd / \
 
     # install current tmux
     && curl -OL https://github.com/tmux/tmux/releases/download/2.4/tmux-2.4.tar.gz \
@@ -125,9 +143,6 @@ RUN set -x \
     && rm -f tmux-2.4.tar.gz \
     && rm -rf tmux-2.4 \
 
-    # locate db
-    && updatedb \
-
     # install node and tools
     && curl -sL https://deb.nodesource.com/setup_5.x | bash - > /dev/null \
     && apt-get install -qqy \
@@ -135,7 +150,8 @@ RUN set -x \
         build-essential \
 
     # Upgrade npm
-    # Don't use npm to self-upgrade, see issue https://github.com/npm/npm/issues/9863
+    # Don't use npm to self-upgrade, see issue
+    # https://github.com/npm/npm/issues/9863
     && curl -L https://npmjs.org/install.sh | sh \
 
     # Install node packages
@@ -170,7 +186,6 @@ RUN set -x \
 
 RUN set -x \
     # .dotfiles
-    && echo "woot4" \
     && git clone https://github.com/mkenney/.dotfiles.git /root/.dotfiles \
     && /root/.dotfiles/init.sh \
     && rsync -a /root/.dotfiles/ /home/dev/.dotfiles/ \
@@ -416,7 +431,7 @@ RUN set -x \
 
 RUN set -x \
     # env
-    && echo "set tags=/src/tags.devenv,./tags.devenv"         | tee /root/.vimrc        >> /home/dev/.vimrc        \
+    && echo "set tags=/src/tags.devenv,./tags.devenv"          | tee /root/.vimrc        >> /home/dev/.vimrc        \
     && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              | tee /root/.bash_profile >> /home/dev/.bash_profile \
