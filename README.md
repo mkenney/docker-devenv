@@ -1,36 +1,44 @@
-# SOURCE REPOSITORY
+# My personal IDE
 
 * [mkenney/docker-devenv](https://github.com/mkenney/docker-devenv)
 
-The `devenv` script is available in the `bin/` folder and an auto-completion script is available in the `bash/` folder.
+This is a `vim`+`bash` based environment that should work as a complete development environment for most software development needs. It's essentially a `bash` script that manages a set of docker containers, each dedicated to a seperate development project. The `devenv` script is available in the `bin/` folder and a bash auto-completion script is available in the `bash/` folder.
 
 # Installation
 
-It's really just a bash script, but it uses docker and assumes that you can run `docker` commands without sudo so you might need some setup.
+The bash script uses `docker` to for the runtime environment and assumes that your user can run `docker` commands without sudo so you might need some setup. At a high level, this should work for most envrionments:
 
-1. Install docker on your system. This command varies from system to system so you're on your own, but there are tons of [instructions online](https://www.google.com/search?q=install+docker&oq=install+docker&aqs=chrome.0.0l2j69i60l3j0.1975j0j1&sourceid=chrome&ie=UTF-8) so it should be easy. For example, if you happen to be using a Debian-based system it's as simple as `sudo apt-get install docker`. If you're on a Mac, things are less simple but still [pretty easy](https://docs.docker.com/engine/installation/mac/).
-2. Linux users will need to make sure your user can [run docker without sudo](https://docs.docker.com/v1.8/installation/ubuntulinux/#create-a-docker-group).
-3. Mac users will need to add some core utilities before proceeding to get super unusual rarely used unique functionality like `realpath`...
+1. Install docker on your system. This command varies from system to system so you're on your own, but there are tons of [instructions online](https://www.google.com/search?q=install+docker&oq=install+docker&aqs=chrome.0.0l2j69i60l3j0.1975j0j1&sourceid=chrome&ie=UTF-8) so it should be easy. For example, if you happen to be using a Debian-based system it's as simple as `sudo apt-get install docker`. If you're on a Mac things are less simple but still [pretty easy](https://docs.docker.com/docker-for-mac/).
+1. Linux users will want to make sure your user can [run docker without sudo](https://docs.docker.com/v1.8/installation/ubuntulinux/#create-a-docker-group).
+1. Mac users will need to add some utilities before proceeding:
   * Install [Homebrew](http://brew.sh/)
   * Run `brew install coreutils`
   * Add `/usr/local/opt/coreutils/libexec/gnubin` to your path (see the output of `brew install coreutils` for the exact path)
-4. Select an installation directory in your path for the `devenv` utility (lets assume `/usr/bin`) and run:
+1. Select an installation directory in your path for the `devenv` utility (lets assume `/usr/bin`) and run:
   * `sudo wget -nv -O /usr/bin/devenv https://raw.githubusercontent.com/mkenney/docker-devenv/master/bin/devenv`
   * `sudo chmod +rwx /usr/bin/devenv` (write permission lets it `self-update` as any user).
   * `devenv self-update`
-5. Profit
+1. Run `devenv --help` for the full documentation
 
 # ABOUT
 
-This project began as a way for me to easily move my development enviroment around with me, but is quickly turning into my primary IDE.
+This project began as a way for me to easily move some of my development tools around with me, but quickly turned into my primary IDE.
 
-The goal is to have a fully scripted development environment build that contains all the tools I need to do my daily work (mainly PHP, Javascript, Perl, Bash, Python, Go, etc.) and a control script that allows me to treat container instances as individual projects. Essentially, a fully customized linux instance dedicated to a single software development project.
+The goal is to have a fully scripted development environment build that contains all the tools I need to do my daily work (mainly PHP, Javascript, Go, Bash, Python, Perl, etc.) and a control script that allows me to treat container instances as individual projects. Essentially, a fully customized linux instance dedicated to a single software development project.
 
 ## Docker image
 
 * [mkenney/devenv](https://hub.docker.com/r/mkenney/devenv/)
 
-Based on [php:7 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_config) and, when using the `devenv` cli, initializes and attaches to a tmux session when you connect to the container. Because this assumes `vim` will be the primary editor, the default command-prefix key has been remapped to `C-\`. You can specify a secondary prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file using the `--tmux` option.
+Based on [php:7 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default shell is `bash`, though I am slowly adding some `zsh` support as I start to use it more. There are many customizations (aliases, command wrappers, etc.), see [mkenney/.dotfiles](https://github.com/mkenney/.dotfiles) for details.
+
+When initialized using the `devenv` cli, your shell session initializes and attaches to a tmux session inside container and the current (or specified) directory is volmounted into the `/src` directory, which is also the default working directory.
+
+
+
+
+
+Because this assumes `vim` will be the primary editor, the default command-prefix key has been remapped to `C-<space>`. You can specify a secondary prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file using the `--tmux` option.
 
 The default user is modified when the container is initialized so it becomes the owner of the project directory on the host and belongs to the same group so new files will be created with the same uid/gid on the host.
 
@@ -38,17 +46,17 @@ By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.c
 
 ### Powerline
 
-Powerline is installed and enabled in the default tmux and vim configurations, you can easily override it with your own configuration files by passing the `--tmux` or `--vimrc` options when starting a new instance with the `init` or `restart` commands.
+Powerline is installed and enabled in the default tmux configuration, you can easily override it with your own configuration files by passing the `--tmux` option when starting a new instance with the `init` or `restart` commands.
 
 If you do want to use `powerline`, you may want to install and use a compatible font in your terminal emulator. I use [iTerm 2](https://www.iterm2.com/) with the [Liberation Mono Powerline](https://github.com/powerline/fonts/tree/master/LiberationMono) font. If you're using iTerm, you should also uncheck the "Treat ambiguous-width characters as double width" setting.
 
 ### Common packages
 
-* curl dialog emacs exuberant-ctags fonts-powerline git graphviz htop less libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng12-dev libbz2-dev libaio1 locate man powerline python python-dev python3 python3-dev python-pip python-powerline python-powerline-doc rsync rsyslog ruby sbcl slime sudo tcpdump telnet tmux unzip wget vim-nox vim-addon-manager
+* autogen automake build-essential cmake curl dialog emacs24 exuberant-ctags gcc git golang graphviz htop less libevent-dev libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libncurses5-dev libpng12-dev libbz2-dev libaio1 libpq-dev libyaml-dev locate man mysql-client ncurses-dev powerline python python-dev python3 python3-dev python-pip python-powerline python-powerline-doc rsync rsyslog ruby sbcl silversearcher-ag slime sudo tcpdump telnet unzip wget zsh
 
 ### Node packages
 
-* nodejs:v5 build-essential npm:v3.8 bower:v1.7 grunt-cli:v1.1 gulp-cli:v1.2 yo:v1.7 generator-webapp
+* nodejs:v5 build-essential npm:v4.5 bower:v1.8 grunt-cli:v1.1 gulp-cli:v1.2 tsc:v2.3 yarn:v0.24
 
 ### PHP 7 packages
 
