@@ -95,9 +95,10 @@ RUN set -x \
         powerline \
         python \
         python-dev \
+        python-pip \
         python3 \
         python3-dev \
-        python-pip \
+        python3-pip \
         python-powerline \
         python-powerline-doc \
         rsync \
@@ -111,12 +112,10 @@ RUN set -x \
         telnet \
         unzip \
         wget \
-        zsh \
-    && rm -f /usr/bin/python \
-    && ln -s /usr/bin/python3 /usr/bin/python
+        zsh
 
 ##############################################################################
-# Applications
+# latest vim from source
 ##############################################################################
 
 RUN set -x \
@@ -143,31 +142,67 @@ RUN set -x \
     && make install \
     && cd .. \
     && rm -f tmux-2.4.tar.gz \
-    && rm -rf tmux-2.4 \
+    && rm -rf tmux-2.4
 
-    # install node and tools
-    && curl -sL https://deb.nodesource.com/setup_5.x | bash - > /dev/null \
+
+##############################################################################
+# pinned nodejs version from source
+##############################################################################
+
+ENV NODE_VERSION v7.7.4
+ENV NODE_PREFIX /usr/local
+RUN set -x \
+    # build requirements
     && apt-get install -qqy \
-        nodejs \
-        build-essential \
+        paxctl \
+    # Download and validate the NodeJs source
+    && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys \
+        9554F04D7259F04124DE6B476D5A82AC7E37093B \
+        94AE36675C464D64BAFA68DD7434390BDBE9B9C5 \
+        0034A06D9D9B0064CE8ADF6BF1747F4AD2306D93 \
+        FD3A5288F042B6850C66B31F09FE44734EB7990E \
+        71DCFD284A79C3B38668286BC97EC7A07EDE3FC1 \
+        DD8F2338BAE7501E3DD5AC78C273792F7D83545D \
+        C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8 \
+        B9AE9905FFD7803F25714661B63B535A4C206CA9 \
+    && mkdir /node_src \
+    && cd /node_src \
+    && curl -o node-${NODE_VERSION}.tar.gz -sSL https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}.tar.gz \
+    && curl -o SHASUMS256.txt.asc -sSL https://nodejs.org/dist/${NODE_VERSION}/SHASUMS256.txt.asc \
+    && gpg --verify SHASUMS256.txt.asc \
+    && grep node-${NODE_VERSION}.tar.gz SHASUMS256.txt.asc | sha256sum -c - \
 
+    # Compile and install
+    && cd /node_src \
+    && tar -zxf node-${NODE_VERSION}.tar.gz \
+    && cd node-${NODE_VERSION} \
+    && export GYP_DEFINES="linux_use_gold_flags=0" \
+    && ./configure --prefix=${NODE_PREFIX} \
+    && NPROC=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || 1) \
+    && make -j${NPROC} -C out mksnapshot BUILDTYPE=Release \
+    && paxctl -cm out/Release/mksnapshot \
+    && make -j${NPROC} \
+    && make install \
+    && paxctl -cm ${NODE_PREFIX}/bin/node
+
+
+##############################################################################
+# current npm and node tools
+##############################################################################
+
+RUN set -x \
     # Upgrade npm
-    # Don't use npm to self-upgrade, see issue
-    # https://github.com/npm/npm/issues/9863
+    # Don't use npm to self-upgrade, see issue https://github.com/npm/npm/issues/9863
     && curl -L https://npmjs.org/install.sh | sh \
 
     # Install node packages
     && npm install --silent -g \
-        npm \
-        bower \
-        grunt-cli \
         gulp-cli \
+        grunt-cli \
+        bower \
         markdown-styles \
         typescript \
         yarn
-
-COPY bin/devenv /usr/local/bin/devenv
-COPY _image /_image
 
 
 ##############################################################################
@@ -200,28 +235,27 @@ RUN set -x \
 ##############################################################################
 
 RUN set -x \
-    # YouCompleteMe support
-    && cd /root \
-    && mkdir ycm_build \
-    && mkdir ycm_temp \
-    && curl -OL http://releases.llvm.org/4.0.0/clang+llvm-4.0.0-x86_64-linux-gnu-debian8.tar.xz \
-    && tar xvf clang+llvm-4.0.0-x86_64-linux-gnu-debian8.tar.xz \
-    && mv clang+llvm-4.0.0-x86_64-linux-gnu-debian8 ycm_temp/llvm_root_dir \
 
-    && cd ycm_build \
-    && cmake -G "Unix Makefiles" -DPATH_TO_LLVM_ROOT=~/ycm_temp/llvm_root_dir . /root/.vim/bundle/YouCompleteMe/third_party/ycmd/cpp \
-    && cmake --build . --target ycm_core \
+    # YouCompleteMe support
+    && cd /root/.vim/bundle/YouCompleteMe \
+    && ./install.py \
     && cd /root/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/gocode \
     && go build \
     && cd /root/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/tern_runtime \
     && npm install --production \
 
     # YouCompleteMe - dev
-    && rsync -a /root/ycm_build/ /home/dev/ycm_build/ \
     && rsync -a /root/.vim/bundle/YouCompleteMe/ /home/dev/.vim/bundle/YouCompleteMe/ \
-    && chown -R dev:dev /home/dev/ycm_build \
     && chown -R dev:dev /home/dev/.vim/bundle \
     && rm -rf /root/ycm_tmp
+
+
+##############################################################################
+# image resources
+##############################################################################
+
+COPY bin/devenv /usr/local/bin/devenv
+COPY _image /_image
 
 
 ##############################################################################
@@ -461,10 +495,12 @@ RUN set -x \
 # ~ fin ~
 ##############################################################################
 
+# generate the initial locate database
 # cleanup apt cache
 # add devenv support scripts
 # remove repo resources
 RUN set -x \
+    && updatedb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && cp /_image/attach.sh / \
