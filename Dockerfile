@@ -197,9 +197,9 @@ RUN set -x \
 
     # Install node packages
     && npm install --silent -g \
-        gulp-cli \
-        grunt-cli \
         bower \
+        grunt-cli \
+        gulp-cli \
         markdown-styles \
         typescript \
         yarn
@@ -489,6 +489,25 @@ RUN set -x \
     && rsync -ac /_image/powerline/ /usr/share/powerline/ \
     && mkdir -p /usr/local/powerline \
     && ln -s /usr/share/powerline/bindings/tmux/powerline.conf /usr/local/powerline/powerline.conf
+
+
+##############################################################################
+# postgresql support
+##############################################################################
+
+RUN set -x \
+    # postgres client
+    && apt-get install -qqy postgresql-client
+
+
+##############################################################################
+# mysql / mariadb support
+##############################################################################
+
+RUN set -x \
+    # mysql client
+    && apt-get install -qqy \
+        mysql-client
 
 
 ##############################################################################
