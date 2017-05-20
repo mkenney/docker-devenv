@@ -328,6 +328,7 @@ function _devenv_build_tags {
 # $5 Daemonize flag
 # $6 ctags excludes, comma-separated string
 # $7 Custom tmux prefix string, i.e. 'C-b'
+# $7 List of volume mount strings
 #
 function _devenv_create_container {
 
