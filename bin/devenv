@@ -338,6 +338,7 @@ function _devenv_create_container {
     local _daemonize=$5
     local _ctags_excludes=$6
     local _tmux_prefix=$7
+    local _additional_volumes="$8"
 
     if [ "true" == "$(_devenv_is_running ${_target})" ]; then
         echo "Container '${_target}' is already running"
@@ -407,6 +408,13 @@ function _devenv_create_container {
         # custom tmux prefix key
         if [ "-" != "$_tmux_prefix" ]; then
             docker_run_args="$docker_run_args -e TMUX_PREFIX=$_tmux_prefix"
+        fi
+        # additional volumes
+        if [ "-" != "$_additional_volumes" ]; then
+            IFS=',' read -r -a volumes <<< "$_additional_volumes"
+            for volume in "${volumes[@]}"; do
+                docker_run_args="$docker_run_args -v $volume"
+            done
         fi
 
         echo "Starting dev container '${_target}' at ${_path}..."
@@ -1028,6 +1036,7 @@ _devenv_target=""
 _devenv_daemonize="false"
 _devenv_ctags_excludes=()
 _devenv_tmux_prefix='-'
+_devenv_additional_volumes=()
 
 while :; do
     case $1 in
@@ -1052,6 +1061,21 @@ while :; do
         #
         -d|--daemonize)
             _devenv_daemonize="true"
+            ;;
+
+        #
+        # volume mounts
+        #
+        -v)
+            if [ -n "$2" ]; then
+                _devenv_additional_volumes+=($2)
+                shift
+            else
+                _devenv_show_help
+            fi
+            ;;
+        --volume=?*)
+            _devenv_additional_volumes+=(${1#*=})
             ;;
         #
         # project path
@@ -1305,6 +1329,12 @@ if [ "" == "$_devenv_tmux_prefix" ]; then
     _devenv_tmux_prefix='-'
 fi
 
+_devenv_additional_volumes=${_devenv_additional_volumes[@]}
+_devenv_additional_volumes=$(echo $_devenv_additional_volumes | sed "s/ /,/g")
+if [ "" == "$_devenv_additional_volumes" ]; then
+    _devenv_additional_volumes='-'
+fi
+
 ##############################################################################
 # Execute
 ##############################################################################
@@ -1349,7 +1379,7 @@ elif [ "init" == "${_devenv_command}" ]; then
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
     fi
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix} "${_devenv_additional_volumes[@]}"
 
 
 # Kill a running container
@@ -1372,7 +1402,7 @@ elif [ "restart" == "${_devenv_command}" ]; then
         daemonize='true'
     fi
     _devenv_kill_container ${_devenv_container_name}
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix}
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix} "${_devenv_additional_volumes[@]}"
 
 
 # Rename a current container
