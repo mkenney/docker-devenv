@@ -23,7 +23,7 @@
 #
 
 #FROM mkenney/devenv-base:latest
-FROM devenv-base:latest
+FROM mkenney/devenv-base:latest
 
 ##############################################################################
 # users
