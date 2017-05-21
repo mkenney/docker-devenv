@@ -22,7 +22,6 @@
 # SOFTWARE.
 #
 
-#FROM mkenney/devenv-base:latest
 FROM mkenney/devenv-base:latest
 
 ##############################################################################
@@ -57,8 +56,14 @@ RUN set -x \
     && cd /root/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/tern_runtime \
     && npm install --production \
 
-    # YouCompleteMe - dev
+    # Cmd-T support
+    && cd /root/.vim/bundle/command-t/ruby/command-t \
+    && ruby extconf.rb \
+    && make \
+
+    # copy to the dev user
     && rsync -a /root/.vim/bundle/YouCompleteMe/ /home/dev/.vim/bundle/YouCompleteMe/ \
+    && rsync -a /root/.vim/bundle/command-t/ /home/dev/.vim/bundle/command-t/ \
     && chown -R dev:dev /home/dev/.vim/bundle \
     && rm -rf /root/ycm_tmp
 
