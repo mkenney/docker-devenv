@@ -21,6 +21,7 @@ if [ "" != "$TMUX_PREFIX" ]; then
 fi
 
 # update the locate database
+echo "Updating the locate database..."
 sudo updatedb --localpaths=$PROJECT_PATH
 
 # start the ssh daemon
