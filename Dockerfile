@@ -80,10 +80,10 @@ RUN set -x \
     && cp -f /_image/network/sshd_config /etc/ssh/sshd_config \
     && /etc/init.d/ssh start \
     # sshfs wrapper scripts
-    && cp -f /_image/network/mount-env /usr/local/bin \
-    && chmod 0755 /usr/local/bin/mount-env \
-    && cp -f /_image/network/unmount-env /usr/local/bin \
-    && chmod 0755 /usr/local/bin/unmount-env \
+    && cp -f /_image/network/mountenv /usr/local/bin \
+    && chmod 0755 /usr/local/bin/mountenv \
+    && cp -f /_image/network/umountenv /usr/local/bin \
+    && chmod 0755 /usr/local/bin/umountenv \
     && chmod 777 /mnt
 
 ##############################################################################

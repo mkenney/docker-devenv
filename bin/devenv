@@ -28,7 +28,6 @@ COMMAND=$(basename ${0})
 COMMAND_PATH=$0
 CONTAINER_SUFFIX=.devenv
 CONTAINER_IMAGE='mkenney/devenv'
-CONTAINER_IMAGE='devenv'
 
 ##############################################################################
 # Define all functions
