@@ -1,5 +1,5 @@
 Host *
     ServerAliveInterval 120
     User dev
-    IdentityFile ~/network/devenv_rsa
+    IdentityFile /home/dev/network/devenv_rsa
     StrictHostKeyChecking no

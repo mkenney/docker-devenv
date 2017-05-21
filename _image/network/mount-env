@@ -1,0 +1,6 @@
+#!/bin/bash
+
+if [ ! -d /mnt/$1 ]; then
+    mkdir /mnt/$1
+fi
+sshfs -F /home/dev/network/config $1.devenv:/src /mnt/$1 &

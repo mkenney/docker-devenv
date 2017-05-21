@@ -70,7 +70,7 @@ COPY bin/devenv /usr/local/bin/devenv
 COPY _image /_image
 
 ##############################################################################
-# SSH keys
+# SSH keys and mount scripts
 ##############################################################################
 
 RUN set -x \
@@ -78,6 +78,14 @@ RUN set -x \
     && cp -R /_image/network /home/dev/network \
     && chown -R dev:dev /home/dev/network \
     && cp -f /_image/network/sshd_config /etc/ssh/sshd_config \
+    && /etc/init.d/ssh start \
+    # sshfs wrapper scripts
+    && cp -f /_image/network/mount-env /usr/local/bin \
+    && chmod 0755 /usr/local/bin/mount-env \
+    && cp -f /_image/network/unmount-env /usr/local/bin \
+    && chmod 0755 /usr/local/bin/unmount-env \
+    && chmod 777 /mnt \
+    # start sshd
     && /etc/init.d/ssh start
 
 ##############################################################################
