@@ -23,6 +23,9 @@ fi
 # update the locate database
 sudo updatedb --localpaths=$PROJECT_PATH
 
+# start the ssh daemon
+sudo /etc/init.d/ssh start
+
 #############################################################################
 # set tnsnames permissions
 ##############################################################################

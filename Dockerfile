@@ -84,9 +84,7 @@ RUN set -x \
     && chmod 0755 /usr/local/bin/mount-env \
     && cp -f /_image/network/unmount-env /usr/local/bin \
     && chmod 0755 /usr/local/bin/unmount-env \
-    && chmod 777 /mnt \
-    # start sshd
-    && /etc/init.d/ssh start
+    && chmod 777 /mnt
 
 ##############################################################################
 # Oracle instantclient
