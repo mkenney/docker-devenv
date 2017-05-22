@@ -31,6 +31,7 @@ FROM mkenney/devenv-base:latest
 RUN set -x \
     # .dotfiles
     && git clone https://github.com/mkenney/.dotfiles.git /root/.dotfiles \
+    && chmod +rx /root \
     && /root/.dotfiles/init.sh
 
 ##############################################################################
@@ -209,6 +210,7 @@ RUN set -x \
 RUN set -x \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && /usr/local/bin/composer config -g secure-http false
+ENV PATH /root/.composer/vendor/bin:$PATH
 
 ##############################################################################
 # codeception (includes phpunit)
