@@ -25,22 +25,13 @@
 FROM mkenney/devenv-base:latest
 
 ##############################################################################
-# users
+# configure shell
 ##############################################################################
 
 RUN set -x \
-    # Add a dev user
-    && groupadd dev \
-    && useradd dev -s /bin/bash -m -g dev -G root \
-    && echo "dev:password" | chpasswd \
-    && echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
-
     # .dotfiles
     && git clone https://github.com/mkenney/.dotfiles.git /root/.dotfiles \
-    && /root/.dotfiles/init.sh \
-    && rsync -a /root/.dotfiles/ /home/dev/.dotfiles/ \
-    && chown -R dev:dev /home/dev/.dotfiles \
-    && sudo -u dev /home/dev/.dotfiles/init.sh
+    && /root/.dotfiles/init.sh
 
 ##############################################################################
 # vim plugin support
@@ -59,13 +50,23 @@ RUN set -x \
     # Cmd-T support
     && cd /root/.vim/bundle/command-t/ruby/command-t \
     && ruby extconf.rb \
-    && make \
+    && make
 
-    # copy to the dev user
-    && rsync -a /root/.vim/bundle/YouCompleteMe/ /home/dev/.vim/bundle/YouCompleteMe/ \
-    && rsync -a /root/.vim/bundle/command-t/ /home/dev/.vim/bundle/command-t/ \
-    && chown -R dev:dev /home/dev/.vim/bundle \
-    && rm -rf /root/ycm_tmp
+##############################################################################
+# users
+##############################################################################
+
+RUN set -x \
+    # Add a dev user
+    && groupadd dev \
+    && useradd dev -s /bin/bash -m -g dev -G root \
+    && echo "dev:password" | chpasswd \
+    && echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
+
+    # .dotfiles
+    && rsync -a /root/.dotfiles/ /home/dev/.dotfiles/ \
+    && chown -R dev:dev /home/dev/.dotfiles \
+    && sudo -u dev /home/dev/.dotfiles/init.sh
 
 ##############################################################################
 # image resources
