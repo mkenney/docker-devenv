@@ -30,7 +30,7 @@ The goal is to have a fully scripted development environment build that contains
 
 * [mkenney/devenv](https://hub.docker.com/r/mkenney/devenv/)
 
-Based on [php:7 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_config) and, when using the `devenv` cli, initializes and attaches to a tmux session when you connect to the container. Because this assumes `vim` will be the primary editor, the default command-prefix key has been remapped to `C-\`. You can specify a secondary prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file using the `--tmux` option.
+Based on [php:7 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_config) and, when using the `devenv` cli, initializes and attaches to a tmux session when you connect to the container. Because this assumes `vim` will be the primary editor, the default command-prefix key has been remapped to `M-space` (meta+space). You can specify a secondary prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file using the `--tmux` option.
 
 The default user is modified when the container is initialized so it becomes the owner of the project directory on the host and belongs to the same group so new files will be created with the same uid/gid on the host.
 
@@ -40,7 +40,7 @@ By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.c
 
 Powerline is installed and enabled in the default tmux and vim configurations, you can easily override it with your own configuration files by passing the `--tmux` or `--vimrc` options when starting a new instance with the `init` or `restart` commands.
 
-If you do want to use `powerline`, you may want to install and use a compatible font in your terminal emulator. I use [iTerm 2](https://www.iterm2.com/) with the [Liberation Mono Powerline](https://github.com/powerline/fonts/tree/master/LiberationMono) font. If you're using iTerm, you should also uncheck the "Treat ambiguous-width characters as double width" setting.
+If you do want to use `powerline`, you may want to install and use a compatible font in your terminal emulator. I use [iTerm 2](https://www.iterm2.com/) with the [Fira Code](https://github.com/tonsky/FiraCode) font. If you're using iTerm, you should also uncheck the "Treat ambiguous-width characters as double width" setting.
 
 ### Common packages
 
@@ -111,7 +111,7 @@ If you do want to use `powerline`, you may want to install and use a compatible 
              be used.
 
          --tmux-prefix=PREFIX
-             The default prefix key has been set to C-\ (control+backslash)
+             The default prefix key has been set to `M-space` (meta+space)
              to keep it from interfering with the default vim 'PageUp'
              binding. You can specify your preferred prefix binding when
              initializing an instance with this option. For example, to

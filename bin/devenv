@@ -41,21 +41,23 @@ function _devenv_show_usage {
     Options:
         -h, -?                      Show usage
         --help, help                Show extended help
-        --ctags-exclude             Specify files or directories to exclude
-                                    when compiling the tags file.
+        --ctags-exclude             Specify files or directories to exclude when
+                                    compiling the tags file.
         -d, --daemonize             Continue running the container after
                                     detaching
         -p PATH, --path=PATH        Specify the project path
         -t TARGET, --target=TARGET  Specify a target environment name
-        --tmux, --tmux=PATH         Specify a tmux configuration file. If
-                                    path is omitted from this option then
+        --tmux, --tmux=PATH         Specify a tmux configuration file. If path
+                                    is omitted from this option then
+                                    $HOME/.tmux.conf is assumed
         --tmux-prefix=PREFIX        Use the default tmux configuration file
                                     but specify you're preferred prefix key.
-                                    The default key is 'C-\\'
-                                    $HOME/.tmux.conf is assumed
+                                    The default key is 'M-space'
         --vimrc, --vimrc=PATH       Specify a vim configuration file. If
                                     path is omitted from this option then
                                     $HOME/.vimrc is assumed
+        -v PATH, --volume=PATH      Specify additional volumes to bind mount
+                                    into the container.
 
     Commands:
         attach [TARGET]             Attach to a running environment
@@ -84,8 +86,8 @@ function _devenv_show_help {
      ${COMMAND} [-t TARGET] [-p PATH] [-d] [command] [command-args]
 
  DESCRIPTION
-     The ${COMMAND} utility is used to manage ${CONTAINER_IMAGE} docker containers to
-     create a consistent bash-based shell environment. To detach from an
+     The ${COMMAND} utility is used to manage ${CONTAINER_IMAGE} docker containers
+     to create a consistent bash-based shell environment. To detach from an
      instance, simply detach from the 'tmux' session (':detach')
 
  OPTIONS
@@ -100,24 +102,24 @@ function _devenv_show_help {
 
          --ctags-exclude
              Used to specify files or directories that should be excluded when
-             compiling the tags file. The value can be either a comma-
-             separated list of glob patterns or this option can be specified
-             multiple times. The tags file is compiled when first attaching to
-             an instance.
+             compiling the tags file. The value can be either a comma-separated
+             list of glob patterns or this option can be specified multiple
+             times. The tags file is compiled when first attaching to an
+             instance.
 
          -d, --daemonize
              Used when initializing or restarting an instance. If specified,
              allow the instance to continue running after detaching from the
              session, otherwise the container will be paused automatically.
 
-             This is useful executing a long-running script to come back to
-             or starting a daemon. If you forget to daemonize an instance,
-             you can start it with the 'unpause' command after you detach.
+             This is useful executing a long-running script to come back to or
+             starting a daemon. If you forget to daemonize an instance, you can
+             start it with the 'unpause' command after you detach.
 
          -p PATH, --path=PATH
              Specify the project path, this directory is mounted into /src
-             inside the container. If omitted, the project path is set to
-             the current directory.
+             inside the container. If omitted, the project path is set to the
+             current directory.
 
          -t TARGET, --target=TARGET
              Specify an instance name. If omitted, current instances will be
@@ -126,44 +128,44 @@ function _devenv_show_help {
 
          --tmux, --tmux=PATH
              Specify a tmux configuration file. If PATH is omitted then
-             $HOME/.tmux.conf will be assumed. If the --tmux option
-             is omitted then the .tmux.conf file from the docker image will
-             be used.
+             $HOME/.tmux.conf will be assumed. If the --tmux option is omitted
+             then the .tmux.conf file from the docker image will be used.
 
          --tmux-prefix=PREFIX
-             The default prefix key has been set to C-\\ (control+backslash)
-             to keep it from interfering with the default vim 'PageUp'
-             binding. You can specify your preferred prefix binding when
-             initializing an instance with this option. For example, to
-             restore the default tmux prefix binding use '--tmux-prefix=C-b'
-             when initializing a new instance.
+             The default prefix key has been set to M-space (meta+space) to keep
+             it from interfering with the default vim 'PageUp' bindings or
+             common user configurations. You can specify your preferred prefix
+             binding when initializing an instance  with this option. For
+             example, to restore the default tmux prefix binding use
+             '--tmux-prefix=C-b' when initializing a new instance.
 
          --vimrc, --vimrc=PATH
              Specify a vim configuration file. If PATH is omitted then
-             $HOME/.vimrc will be assumed. If the --vimrc option is
-             omitted entirely then the default .vimrc file included with the
-             docker image will be used.
+             $HOME/.vimrc will be assumed. If the --vimrc option is omitted
+             entirely then the default .vimrc file included with the docker
+             image will be used. In addition, this script will attempt to mount
+             a .vim/ folder from the same location as the .vimrc file.
 
-             In addition, this script will attempt to mount a .vim/ folder
-             from the same location as the .vimrc file.
+         -v PATH, --volume=PATH
+             Specify additional volumes to bind mount into the container.
 
  COMMANDS
      Available commands '${COMMAND}' can execute. Most commands accept the
      optional TARGET or PATH arguments. TARGET refers to the name of the
-     instance you are manipulating and PATH refers to the working directory
-     that gets mounted into the /src directory in the instance.
+     instance you are manipulating and PATH refers to the working directory that
+     gets mounted into the /src directory in the instance.
 
-     If PATH is omitted, it defaults to the current directory. If TARGET is,
-     omitted, current instances are searched to see if any are attached to
-     PATH, and if so, TARGET is set to that instance name. If not, TARGET
-     defaults to the basename of the PATH value.
+     If PATH is omitted, it defaults to the current directory. If TARGET is
+     omitted, current instances are searched to see if any are attached to PATH,
+     and if so, TARGET is set to that instance name. If not, TARGET defaults to
+     the basename of the PATH value.
 
      If TARGET is specified but PATH is omitted, the reverse behavior happens
      and current instances are searced for one named TARGET. If one is found,
      PATH is set to the path the TARGET instance is attached to, otherwise the
      default again becomes the current directory.
 
-     Both TARGET and PATH can be specified using the option arguments --target
+     Both TARGET and PATH can be specified using the optional arguments --target
      and --path respectively.
 
          attach [TARGET]
@@ -200,9 +202,9 @@ function _devenv_show_help {
                  ${COMMAND} -p PATH kill
 
          ls [pattern]
-             List currently running instances, optionally filtering results
-             with a glob pattern. If pattern is '-q' (quiet) only instance
-             names are returned.
+             List currently running instances, optionally filtering results with
+             a glob pattern. If pattern is '-q' (quiet) only instance names are
+             returned.
 
              EXAMPLES
                  ${COMMAND} ls

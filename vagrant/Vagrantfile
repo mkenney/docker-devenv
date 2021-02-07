@@ -1,0 +1,210 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+    # The most common configuration options are documented and commented below.
+    # For a complete reference, please see the online documentation at
+    # https://docs.vagrantup.com.
+
+    # Every Vagrant development environment requires a box. You can search for
+    # boxes at https://vagrantcloud.com/search.
+    config.vm.box = "ubuntu/focal64"
+    config.disksize.size = '125GB' # requires `vagrant plugin install vagrant-disksize`
+
+    config.vm.provider "virtualbox" do |v|
+        v.name = "devenv"
+        v.memory = 6144
+        v.cpus = 2
+    end
+
+    # Disable automatic box update checking. If you disable this, then
+    # boxes will only be checked for updates when the user runs
+    # `vagrant box outdated`. This is not recommended.
+    # config.vm.box_check_update = false
+
+    # Create a forwarded port mapping which allows access to a specific port
+    # within the machine from a port on the host machine.
+    # NOTE: This will enable public access to the opened port
+    config.vm.network "forwarded_port", guest: 8080, host: 8080
+    config.vm.network "forwarded_port", guest: 80, host: 80
+    config.vm.network "forwarded_port", guest: 443, host: 443
+    config.vm.network "forwarded_port", guest: 50051, host: 50051
+    config.vm.network "forwarded_port", guest: 50052, host: 50052
+
+    # Create a forwarded port mapping which allows access to a specific port
+    # within the machine from a port on the host machine and only allow access
+    # via 127.0.0.1 to disable public access
+    # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+
+    # Create a private network, which allows host-only access to the machine
+    # using a specific IP.
+    config.vm.network "private_network", ip: "192.168.33.10"
+    # config.vm.network "private_network", ip: "10.0.0.255"
+
+    # Create a public network, which generally matched to bridged network.
+    # Bridged networks make the machine appear as another physical device on
+    # your network.
+    # config.vm.network "public_network"
+
+    # Share an additional folder to the guest VM. The first argument is
+    # the path on the host to the actual folder. The second argument is
+    # the path on the guest to mount the folder. And the optional third
+    # argument is a set of non-required options.
+    #config.vm.synced_folder "../.vg-docker-images", "/var/lib/docker", nfs: true
+    #config.vm.synced_folder "../.docker/docker-root-dir", "/var/lib/docker" #, nfs: true
+    config.vm.synced_folder "../.aquaduck", "/home/vagrant/.aquaduck", nfs: true
+    config.vm.synced_folder "../.aws", "/home/vagrant/.aws", nfs: true
+    config.vm.synced_folder "../.helm", "/home/vagrant/.helm", nfs: true
+    config.vm.synced_folder "../.kube", "/home/vagrant/.kube", nfs: true
+    config.vm.synced_folder "../.npm", "/home/vagrant/.npm", nfs: true
+    config.vm.synced_folder "../.secrets", "/home/vagrant/.secrets", nfs: true
+    config.vm.synced_folder "../.ssh", "/home/vagrant/.host.ssh", nfs: true
+    config.vm.synced_folder "../oracle-connection", "/home/vagrant/oracle-connection", nfs: true
+    config.vm.synced_folder "../src", "/home/vagrant/src", nfs: true
+
+    # Provider-specific configuration so you can fine-tune various
+    # backing providers for Vagrant. These expose provider-specific options.
+    # Example for VirtualBox:
+    #
+    # config.vm.provider "virtualbox" do |vb|
+    #   # Display the VirtualBox GUI when booting the machine
+    #   vb.gui = true
+    #
+    #   # Customize the amount of memory on the VM:
+    #   vb.memory = "1024"
+    # end
+    #
+    # View the documentation for the provider you are using for more
+    # information on available options.
+
+    # Enable provisioning with a shell script. Additional provisioners such as
+    # Ansible, Chef, Docker, Puppet and Salt are also available. Please see the
+    # documentation for more information about their specific syntax and use.
+    config.vm.provision :shell, :inline => "sudo rm /etc/localtime && sudo ln -s /usr/share/zoneinfo/America/Denver /etc/localtime", run: "always"
+    config.vm.provision "shell", inline: <<-SHELL
+        # system tools
+        curl -sL https://deb.nodesource.com/setup_15.x | sudo -E bash -
+        apt-get update -qq
+        apt-get upgrade -qqy
+        DEBIAN_FRONTEND=noninteractive apt-get install -qqy \
+            apt-transport-https \
+            ca-certificates \
+            curl \
+            dnsmasq \
+            git \
+            nodejs \
+            ntp \
+            python3 \
+            python3-pip \
+            telnet \
+            tmux \
+            unzip \
+            vim
+        DEBIAN_FRONTEND=noninteractive apt-get upgrade -qq
+
+        # golang
+        rm -rf /usr/local/go
+        wget https://golang.org/dl/go1.15.6.linux-amd64.tar.gz
+        tar -C /usr/local -xzf go1.15.6.linux-amd64.tar.gz
+
+        # aquaduck
+        curl https://aquadocs.returnpath.net/downloads/linux-aquaduck-latest.tar.gz > aquaduck-latest.tar.gz
+        tar xvfz aquaduck-latest.tar.gz
+        mv aquaduck /usr/local/bin/aquaduck
+        chmod +x /usr/local/bin/aquaduck
+        rm -f aquaduck-latest.tar.gz
+
+        # awscli
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        ./aws/install
+        rm -rf aws
+        rm -f awscliv2.zip
+
+        # ssh configuration
+        cd /home/vagrant/.ssh
+        cp -f ../.host.ssh/config config
+        chown vagrant:vagrant config
+        chmod 0600 config
+        ln -s ../.host.ssh/id_rsa id_rsa
+        ln -s ../.host.ssh/id_rsa-cert.pub id_rsa-cert.pub
+        ln -s ../.host.ssh/id_rsa-cert.pub.bak id_rsa-cert.pub.bak
+        ln -s ../.host.ssh/id_rsa-cert_eo-prod.pub id_rsa-cert_eo-prod.pub
+        ln -s ../.host.ssh/id_rsa-cert_eo-test.pub id_rsa-cert_eo-test.pub
+        ln -s ../.host.ssh/id_rsa.pub id_rsa.pub
+        ln -s ../.host.ssh/id_rsa.pub-cert.pub id_rsa.pub-cert.pub
+        ln -s ../.host.ssh/id_rsa_eo-prod-cert.pub id_rsa_eo-prod-cert.pub
+        ln -s ../.host.ssh/id_rsa_eo-prod.pub id_rsa_eo-prod.pub
+        ln -s ../.host.ssh/id_rsa_eo-test-cert.pub id_rsa_eo-test-cert.pub
+        ln -s ../.host.ssh/id_rsa_eo-test.pub id_rsa_eo-test.pub
+        cd -
+
+        # docker
+        apt-get update -qq
+        apt-get install -qqy docker.io
+        usermod -aG docker vagrant
+
+        # docker-compose
+        curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+        ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+        pip install docker-compose
+
+        # set hostname
+        hostnamectl set-hostname devenv
+        echo "127.0.0.1 devenv" >> /etc/hosts
+
+        # configure dnsmasq and docker network
+        ip addr add 10.0.0.255/32 dev lo
+        echo "address=/dcom/10.0.0.255" > /etc/dnsmasq.conf
+        echo "address=/dnet/10.0.0.255" >> /etc/dnsmasq.conf
+        echo "address=/dorg/10.0.0.255" >> /etc/dnsmasq.conf
+        echo "port=53"                  >> /etc/dnsmasq.conf
+        echo "nameserver 10.0.0.255" | cat - /etc/resolv.conf > /tmp/out && mv /tmp/out /etc/resolv.conf
+        echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+        mkdir -p /etc/docker
+        echo '{"dns":["172.17.0.1"]}' > /etc/docker/daemon.json
+        mkdir -p /etc/NetworkManager/dnsmasq.d
+        echo "listen-address=172.17.0.1" > /etc/NetworkManager/dnsmasq.d/docker-bridge.conf
+        systemctl enable dnsmasq
+
+        # copy dev secrets out of NFS directory
+        cp /home/vagrant/.secrets/eo-dev-secrets.env /home/vagrant
+        cp /home/vagrant/.secrets/vfe-dev-secrets.env /home/vagrant
+
+        # uncomment for the best bash setup evar :)
+        cd /home/vagrant/.ssh
+        cp -f ../.host.ssh/github_rsa github_rsa
+        ssh-keyscan github.com >> known_hosts
+        cd /home/vagrant
+        chown vagrant:vagrant .ssh/*
+        chmod 600 .ssh/*
+        sudo -H -u vagrant git clone git@github.com:mkenney/.dotfiles.git
+        sudo -H -u vagrant ./.dotfiles/init.sh
+        cd -
+
+        ## authenticate docker
+        #$(sudo -u vagrant aquaduck aws -p eo)
+        #sudo -u vagrant aws ecr get-login-password --region us-east-1 | docker login \
+        #        --username AWS \
+        #        --password-stdin \
+        #        $(sudo -u vagrant aws ecr get-authorization-token --output text --region us-east-1 --query "authorizationData[].proxyEndpoint")
+        #$(sudo -u vagrant aquaduck aws -p eo)
+        #sudo -u vagrant aws ecr get-login-password --region us-east-1 | docker login \
+        #        --username AWS \
+        #        --password-stdin \
+        #        $(sudo -u vagrant aws ecr get-authorization-token --output text --region us-east-1 --query "authorizationData[].proxyEndpoint")
+
+        ## start VFE services
+        #echo "starting services"
+        #cd /home/vagrant/src/github.com/ReturnPath/traefik-proxy
+        #sudo -u vagrant ./start.sh
+        #cd /home/vagrant/src/github.com/validityhq/vfe-webapp
+        #sudo -u vagrant ./start.sh
+    SHELL
+end

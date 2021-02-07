@@ -17,7 +17,7 @@ then
 
     # System logs
     tmux rename-window     -t $TMUXSESSION:0 'Logs'
-    tmux send-keys         -t $TMUXSESSION:0 "sudo tail -f /var/log/messages" C-m
+    tmux send-keys         -t $TMUXSESSION:0 "sudo tail -f /var/log/syslog" C-m
 
     # editor
     tmux new-window        -t $TMUXSESSION:1
