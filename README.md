@@ -1,71 +1,80 @@
-# SOURCE REPOSITORY
+# .bdlmrc
 
-* [mkenney/docker-devenv](https://github.com/mkenney/docker-devenv)
+`.bdlmrc` provides a rich `bash` shell environment aimed at software developers, but should be useful for for all types of digital content creation.
 
-The `devenv` script is available in the `bin/` folder and an auto-completion script is available in the `bash/` folder.
+## ABOUT
 
-# Installation
+This project began as a way to easily move a consistent working enviroment around from system to system, but quickly became a full-fledged, well-rounded IDE. The goal of this project is to have a fully isolated, lightweight, consistent, virtual environment dedicated to each individual project someone may be working on.
 
-It's really just a bash script, but it uses docker and assumes that you can run `docker` commands without sudo so you might need some setup.
+The "environments" are managed by an intuitive CLI tool, each one containing common development tools needed for most day-to-day tasks (code development, run scripts in various langunages, etc.). The `dev` CLI tool allows treating a `docker` container instance, via the [volume mount system](https://docs.docker.com/storage/volumes/), as an individual project. Essentially, a fully dedicated, extremely lightweight, [Ubuntu 20.04 LTS (Focal Fossa) 64-bit Linux](https://releases.ubuntu.com/20.04/) instance dedicated to a single project. The [docker image](https://hub.docker.com/r/bdlm/.bdlmrc) can easily be extended to suit your own needs.
+
+Because
+
+## Installation
+
+Installation is really just copying a fairly simple bash script into your path, but the script makes use of [Docker](https://www.docker.com/) and assumes that you can [run `docker` commands without sudo](https://docs.docker.com/engine/install/linux-postinstall/):
 
 1. Install docker on your system. This command varies from system to system so you're on your own, but there are tons of [instructions online](https://www.google.com/search?q=install+docker&oq=install+docker&aqs=chrome.0.0l2j69i60l3j0.1975j0j1&sourceid=chrome&ie=UTF-8) so it should be easy. For example, if you happen to be using a Debian-based system it's as simple as `sudo apt-get install docker`. If you're on a Mac, things are less simple but still [pretty easy](https://docs.docker.com/engine/installation/mac/).
-2. Linux users will need to make sure your user can [run docker without sudo](https://docs.docker.com/v1.8/installation/ubuntulinux/#create-a-docker-group).
-3. Mac users will need to add some core utilities before proceeding to get super unusual rarely used unique functionality like `realpath`...
+1. Linux users will want to make sure your user can [run `docker` commands without sudo](https://docs.docker.com/engine/install/linux-postinstall/).
+1. Mac users will need to add some core utilities before proceeding to get super unusual rarely used unique functionality like `realpath` (some barebones Linux distributions may need to install some similar packages)...
   * Install [Homebrew](http://brew.sh/)
   * Run `brew install coreutils`
   * Add `/usr/local/opt/coreutils/libexec/gnubin` to your path (see the output of `brew install coreutils` for the exact path)
-4. Select an installation directory in your path for the `devenv` utility (lets assume `/usr/bin`) and run:
-  * `sudo wget -nv -O /usr/bin/devenv https://raw.githubusercontent.com/mkenney/docker-devenv/master/bin/devenv`
-  * `sudo chmod +rwx /usr/bin/devenv` (write permission lets it `self-update` as any user).
-  * `devenv self-update`
-5. Profit
+1. Select an installation directory in your path for the `dev` utility (lets assume `/usr/bin`) and run:
+  * `sudo wget -nv -O /usr/bin/dev https://raw.githubusercontent.com/bdlm/.bdlmrc/master/bin/dev`
+  * `sudo chmod +rwx /usr/bin/dev` (write permission lets it `self-update` as any user).
+  * `dev self-update`
 
-# ABOUT
+### Docker image
 
-This project began as a way for me to easily move my development enviroment around with me, but is quickly turning into my primary IDE.
+* [bdlm/.bdlmrc](https://hub.docker.com/r/bdlm/.bdlmrc)
 
-The goal is to have a fully scripted development environment build that contains all the tools I need to do my daily work (mainly PHP, Javascript, Perl, Bash, Python, Go, etc.) and a control script that allows me to treat container instances as individual projects. Essentially, a fully customized linux instance dedicated to a single software development project.
+The Linux environment is based on [`ubuntu:20.04`](https://hub.docker.com/_/ubuntu?tab=tags&page=1&ordering=last_updated&name=20.04). The default bash shell is based on [mkenney/.dotfiles](https://github.com/mkenney/.dotfiles) and, when using the `dev` cli, initializes and attaches to a `tmux` session when you connect to the container. The default `tmux` command-prefix key has been remapped to `M-space` (meta+space) to avoid conflicts with nested Tmux sessions. You can specify a secondary command-prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file with the `--tmux` option.
 
-## Docker image
-
-* [mkenney/devenv](https://hub.docker.com/r/mkenney/devenv/)
-
-Based on [php:7 Offical](https://hub.docker.com/_/php/) (debian:jessie). The default bash environment is based on [mkenney/terminal_config](https://github.com/mkenney/terminal_config) and, when using the `devenv` cli, initializes and attaches to a tmux session when you connect to the container. Because this assumes `vim` will be the primary editor, the default command-prefix key has been remapped to `M-space` (meta+space). You can specify a secondary prefix key with the `--tmux-prefix` option or use your own `.tmux.conf` file using the `--tmux` option.
-
-The default user is modified when the container is initialized so it becomes the owner of the project directory on the host and belongs to the same group so new files will be created with the same uid/gid on the host.
+The default user is modified when the container is initialized so it runs as the owner of the project directory on the host and belongs to the same group so new files will be created with the same `uid` and `gid` on the host.
 
 By default, `~/.ssh/` and `~/.oracle/` (for [oracle wallet](http://docs.oracle.com/cd/B19306_01/network.102/b14266/cnctslsh.htm#g1033548)) are mounted into the home directory and if a `tnsnames.ora` file exists on the host at `/oracle/product/latest/network/admin/tnsnames.ora` it will be copied to the same location inside the container. This should be enough to automate connecting to oracle (sqlplus is installed in the container) but ymmv. If the connection fails, make sure the path to the wallet files is correct. Take a look at `~/.oracle/network/admin/sqlnet.ora` and make sure the path doesn't contain your username from the host machine. `(DIRECTORY = $HOME/.oracle/network/wallet)` should work for both the container and the host in most environments.
 
-### Powerline
+Several additional directories are also automatically mounted if they exist to provide a seamless experience, including:
+* `~/.aws`
+* `~/.config`
+* `~/.helm`
+* `~/.kube`
+* `~/.npm`
+* `~/.oracle`
+* `~/.ssh`
+* `~/.tmux.conf`
+* `~/.vim`
+* `~/.vimrc`
 
-Powerline is installed and enabled in the default tmux and vim configurations, you can easily override it with your own configuration files by passing the `--tmux` or `--vimrc` options when starting a new instance with the `init` or `restart` commands.
+#### Powerline
 
-If you do want to use `powerline`, you may want to install and use a compatible font in your terminal emulator. I use [iTerm 2](https://www.iterm2.com/) with the [Fira Code](https://github.com/tonsky/FiraCode) font. If you're using iTerm, you should also uncheck the "Treat ambiguous-width characters as double width" setting.
+[Powerline](https://github.com/powerline/powerline) is installed and enabled in the default `tmux` and `vim` configurations. You can easily override it with your own configuration files by passing the `--tmux` or `--vimrc` options when starting a new instance with the `init` or `restart` commands.
 
-### Common packages
+If you do want to use `powerline`, you may want to install and use a compatible font in your terminal emulator. I use [iTerm 2](https://www.iterm2.com/) with the [Fira Code](https://github.com/tonsky/FiraCode) font without any issues. If you're using iTerm, you should also uncheck the "_Treat ambiguous-width characters as double width_" setting.
+
+#### Common packages
 
 * curl dialog emacs exuberant-ctags fonts-powerline git graphviz htop less libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng12-dev libbz2-dev libaio1 locate man powerline python python-dev python3 python3-dev python-pip python-powerline python-powerline-doc rsync rsyslog ruby sbcl slime sudo tcpdump telnet tmux unzip wget vim-nox vim-addon-manager
 
-### Node packages
+#### Node packages
 
 * nodejs:v5 build-essential npm:v3.8 bower:v1.7 grunt-cli:v1.1 gulp-cli:v1.2 yo:v1.7 generator-webapp
 
-### PHP 7 packages
-
-* oci8 composer phpunit phpdocumentor phpcodesniffer phpmd xdebug pcntl
-
-### Oracle packages
+#### Oracle packages
 
 * instantclient:v11.2 basic devel sqlplus
 
+#
+
 # NAME
-     devenv -- Manage mkenney/devenv docker work environment containers
+     dev -- Manage bdlm/.bdlmrc docker work environment containers
 
 # SYNOPSYS
-     devenv [-t TARGET] [-p PATH] [-d] [command]
+     dev [-t TARGET] [-p PATH] [-d] [command]
 
 # DESCRIPTION
-     The devenv utility is used to manage mkenney/devenv docker containers to
+     The dev utility is used to manage bdlm/.bdlmrc docker containers to
      create a consistent bash-based shell environment. To detach from an
      instance, simply detach from the 'tmux' session (':detach')
 
@@ -128,7 +137,7 @@ If you do want to use `powerline`, you may want to install and use a compatible 
              from the same location as the .vimrc file.
 
 # COMMANDS
-     Available commands 'devenv' can execute. Most commands accept the
+     Available commands 'dev' can execute. Most commands accept the
      optional TARGET or PATH arguments. TARGET refers to the name of the
      instance you are manipulating and PATH refers to the working directory
      that gets mounted into the /src directory in the instance.
@@ -150,34 +159,34 @@ If you do want to use `powerline`, you may want to install and use a compatible 
              Attach to an instance specified by the [TARGET] argument.
 
              EXAMPLES
-                 devenv attach TARGET
-                 devenv -t TARGET attach
-                 devenv -p PATH attach
+                 dev attach TARGET
+                 dev -t TARGET attach
+                 dev -p PATH attach
 
          build-tags [TARGET]
              Update the project ctags file.
 
              EXAMPLES
-                 devenv build-tags TARGET
-                 devenv -t TARGET build-tags
-                 devenv -p PATH build-tags
+                 dev build-tags TARGET
+                 dev -t TARGET build-tags
+                 dev -p PATH build-tags
 
          init [TARGET] [PATH]
              Create a new instance.
 
              EXAMPLES
-                 devenv init TARGET PATH
-                 devenv -p PATH create TARGET
-                 devenv -t TARGET create PATH
-                 devenv -t TARGET -p PATH create
+                 dev init TARGET PATH
+                 dev -p PATH create TARGET
+                 dev -t TARGET create PATH
+                 dev -t TARGET -p PATH create
 
          kill [TARGET]
              Stop a running instance and clean up.
 
              EXAMPLES
-                 devenv kill TARGET
-                 devenv -t TARGET kill
-                 devenv -p PATH kill
+                 dev kill TARGET
+                 dev -t TARGET kill
+                 dev -p PATH kill
 
          ls [pattern]
              List currently running instances, optionally filtering results
@@ -185,49 +194,49 @@ If you do want to use `powerline`, you may want to install and use a compatible 
              names are returned.
 
              EXAMPLES
-                 devenv ls
-                 devenv ls java*
-                 devenv ls *-php-v7.?
-                 devenv ls -q
+                 dev ls
+                 dev ls java*
+                 dev ls *-php-v7.?
+                 dev ls -q
 
          pause [TARGET]
              Pause a running instance.
 
              EXAMPLES
-                 devenv pause TARGET
-                 devenv -t TARGET pause
-                 devenv -p PATH pause
+                 dev pause TARGET
+                 dev -t TARGET pause
+                 dev -p PATH pause
 
          restart [TARGET]
              Kill and re-create the specified running instance.
 
              EXAMPLES
-                 devenv restart TARGET
-                 devenv -t TARGET restart
-                 devenv -p PATH restart
+                 dev restart TARGET
+                 dev -t TARGET restart
+                 dev -p PATH restart
 
          rename [TARGET] NEW_NAME
              Rename a running or stopped instance. 'rename' does not accept a
              PATH argument.
 
              EXAMPLES
-                 devenv rename TARGET NEW_NAME
-                 devenv -t TARGET rename NEW_NAME
+                 dev rename TARGET NEW_NAME
+                 dev -t TARGET rename NEW_NAME
 
          self-update
-             Update to the latest 'mkenney/devenv' docker image and 'devenv'
-             control script.
+             Update to the latest 'bdlm/.bdlmrc' docker image and 'dev' control
+             script.
 
              EXAMPLES
-                 devenv self-update
+                 dev self-update
 
          unpause [TARGET]
              Start a paused instance.
 
              EXAMPLES
-                 devenv unpause TARGET
-                 devenv -t TARGET unpause
-                 devenv -p PATH unpause
+                 dev unpause TARGET
+                 dev -t TARGET unpause
+                 dev -p PATH unpause
 
 # TODO
      - Improve error handling and messages

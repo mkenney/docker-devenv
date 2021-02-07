@@ -1,0 +1,56 @@
+[url "git@github.com:"]
+	insteadOf = https://github.com/
+[diff]
+    external = ~/.dotfiles/.vimdiff_wrapper
+[pager]
+    diff =
+[color]
+    diff = auto
+    status = auto
+    branch = auto
+    interactive = auto
+    ui = auto
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+[color "branch"]
+    current = green bold
+    local = green
+    remote = red bold
+[color "status"]
+    added = green bold
+    changed = yellow bold
+    untracked = red
+[core]
+    pager = less
+    whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
+    excludesfile = ~/.gitignore_global
+    editor = vim
+[apply]
+    whitespace = fix
+[push]
+    default = matching
+[alias]
+    first = log --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(bold white)%s%C(reset) %C(dim white)- %an%C(reset)%n''%C(dim white)------------------------------------------------------------------------------------------%C(reset)%n' --all --diff-filter=A --
+
+    l = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)(%ar)%C(reset) %C(bold white)%s%C(reset) %C(dim white)- %an%C(reset)%C(bold yellow)%d%C(reset)' --all
+
+    ll = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(bold white)%s%C(reset) %C(dim white)- %an%C(reset)%n''%C(dim white)------------------------------------------------------------------------------------------%C(reset)%n' --all
+
+    committers = ! git log --abbrev-commit --decorate --format=format:'%an' --all | sort | uniq | less
+
+    # based on: https://gist.github.com/intel352/9761288
+    show-closest-branch = rev-parse --abbrev-ref HEAD
+
+    # based on: http://stackoverflow.com/questions/3161204/find-the-parent-branch-of-a-git-branch
+    show-closest-parent-branch = !"git show-branch -a --no-color 2> /dev/null | awk -F '[]^~[]' -v current_branch=`git show-closest-branch 2> /dev/null || true` 'BEGIN { rc=1 ; if ( length( current_branch ) == 0 ) { exit } } ( ( index( $1, \"*\" ) > 0 ) && ( length( $2 ) > 0 ) && ( $2 != current_branch ) ) { print $2 ; rc=0 ; exit } END { exit rc }'"
+
+    # short versions
+    cb = !git show-closest-branch
+    pb = !git show-closest-parent-branch
+
+    committers = ! git log --abbrev-commit --decorate --format=format:'%an' --all | sort | uniq | less
+
+	nthcheckout = "!nthlastcheckout() {\n        git reflog |\n        awk '$3==\"checkout:\" {++n}\n             n=='${1-1}' {print $NF; exit}\n             END {exit n!='${1-1}'}'\n}; nthlastcheckout \"$@\""

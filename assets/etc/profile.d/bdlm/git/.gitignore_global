@@ -1,0 +1,15 @@
+.DS_Store
+.svn
+.vscode
+*.bak
+*.orig
+*.pyc
+*.swp
+*.tmp
+*~
+bower_components
+log/*.log
+node_modules
+tags.devenv
+tmp
+tmp/**/*

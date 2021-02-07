@@ -27,7 +27,15 @@
 COMMAND=$(basename ${0})
 COMMAND_PATH=$0
 CONTAINER_SUFFIX=.devenv
-CONTAINER_IMAGE='mkenney/devenv'
+#CONTAINER_IMAGE='ghcr.io/bdlm/bdlmrc:latest'
+CONTAINER_IMAGE='mkenney/devenv:latest'
+OS=$(uname)
+PAGER=less
+if [ "Darwin" = "$OS" ]; then
+    PAGER="less --quit-if-one-screen --ignore-case --status-column --quit-on-intr --LONG-PROMPT --silent --tilde --RAW-CONTROL-CHARS"
+elif [ "Linux" = "$OS" ]; then
+    PAGER="less --quit-if-one-screen --ignore-case --status-column --quit-on-intr --LONG-PROMPT --silent --tilde --RAW-CONTROL-CHARS --mouse --save-marks"
+fi
 
 ##############################################################################
 # Define all functions
@@ -45,6 +53,8 @@ function _devenv_show_usage {
                                     compiling the tags file.
         -d, --daemonize             Continue running the container after
                                     detaching
+        --network=NETWORK           Specify an additional network to attach the
+                                    container to. May be specified multiple times.
         -p PATH, --path=PATH        Specify the project path
         -t TARGET, --target=TARGET  Specify a target environment name
         --tmux, --tmux=PATH         Specify a tmux configuration file. If path
@@ -56,8 +66,9 @@ function _devenv_show_usage {
         --vimrc, --vimrc=PATH       Specify a vim configuration file. If
                                     path is omitted from this option then
                                     $HOME/.vimrc is assumed
-        -v PATH, --volume=PATH      Specify additional volumes to bind mount
-                                    into the container.
+        -v PATH, --volume=PATH      Specify an additional volume to bind mount
+                                    into the container. May be specified multiple
+                                    times.
 
     Commands:
         attach [TARGET]             Attach to a running environment
@@ -72,7 +83,7 @@ function _devenv_show_usage {
         unpause [TARGET]            Start a paused environment
 
  Michael Kenney <mkenney@webbedlam.com>
-"
+" | $PAGER
     exit 1
 }
 
@@ -121,6 +132,10 @@ function _devenv_show_help {
              inside the container. If omitted, the project path is set to the
              current directory.
 
+         --network=NETWORK
+             Specify an additional network to attach the container to. This
+             option may be specified multiple times.
+
          -t TARGET, --target=TARGET
              Specify an instance name. If omitted, current instances will be
              searched to see if any are attached to the project path. If none
@@ -135,9 +150,9 @@ function _devenv_show_help {
              The default prefix key has been set to M-space (meta+space) to keep
              it from interfering with the default vim 'PageUp' bindings or
              common user configurations. You can specify your preferred prefix
-             binding when initializing an instance  with this option. For
-             example, to restore the default tmux prefix binding use
-             '--tmux-prefix=C-b' when initializing a new instance.
+             binding when initializing an instance with this option. For example,
+             to restore the default tmux prefix binding use '--tmux-prefix=C-b'
+             when initializing a new instance.
 
          --vimrc, --vimrc=PATH
              Specify a vim configuration file. If PATH is omitted then
@@ -147,7 +162,8 @@ function _devenv_show_help {
              a .vim/ folder from the same location as the .vimrc file.
 
          -v PATH, --volume=PATH
-             Specify additional volumes to bind mount into the container.
+             Specify an additional volume to bind mount into the container. This
+             option may be specified multiple times.
 
  COMMANDS
      Available commands '${COMMAND}' can execute. Most commands accept the
@@ -256,7 +272,7 @@ function _devenv_show_help {
 
  AUTHORS
      Michael Kenney <mkenney@webbedlam.com>
-" | less
+" | $PAGER
     exit 0
 }
 
@@ -330,7 +346,8 @@ function _devenv_build_tags {
 # $5 Daemonize flag
 # $6 ctags excludes, comma-separated string
 # $7 Custom tmux prefix string, i.e. 'C-b'
-# $7 List of volume mount strings
+# $8 List of volume mount strings
+# $9 List of Docker networks
 #
 function _devenv_create_container {
 
@@ -342,6 +359,7 @@ function _devenv_create_container {
     local _ctags_excludes=$6
     local _tmux_prefix=$7
     local _additional_volumes="$8"
+    local _additional_networks="$9"
 
     if [ "true" == "$(_devenv_is_running ${_target})" ]; then
         echo "Container '${_target}' is already running"
@@ -350,7 +368,8 @@ function _devenv_create_container {
         #--storage-opt=\"dm.no_warn_on_loop_devices=true\" \
         docker_run_args="
             -itd \
-            -e IS_DEVENV=true
+            -e __IS_DEVENV=true
+            -e __DEVENV=$_target$CONTAINER_SUFFIX
             -h $_target \
             -e HOSTNAME=$_target \
             -e POWERLINE_HOST_HOSTNAME=$(hostname) \
@@ -379,6 +398,18 @@ function _devenv_create_container {
         # Mount the .oracle/ directory
         if [ -d "$HOME/.oracle" ]; then
             docker_run_args="$docker_run_args -v $HOME/.oracle/:/home/dev/.oracle/:ro"
+        fi
+        # Mount the .config/ directory
+        if [ -d "$HOME/.config" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.config/:/home/dev/.config/:ro"
+        fi
+        # Mount the .helm/ directory
+        if [ -d "$HOME/.helm" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.helm/:/home/dev/.helm/:ro"
+        fi
+        # Mount the .npm/ directory
+        if [ -d "$HOME/.npm" ]; then
+            docker_run_args="$docker_run_args -v $HOME/.npm/:/home/dev/.npm/:ro"
         fi
 #        # Include the .gitconfig
 #        if [ -f "$HOME/.gitconfig" ]; then
@@ -421,10 +452,17 @@ function _devenv_create_container {
         fi
 
         echo "Starting dev container '${_target}' at ${_path}..."
-
         docker network create devenv 2> /dev/null
-
         docker run --network=devenv --privileged --cap-add=MKNOD --cap-add=CAP_SYS_ADMIN --device=/dev/fuse $docker_run_args ${CONTAINER_IMAGE}
+
+        # additional networks
+        if [ "-" != "$_additional_networks" ]; then
+            IFS=',' read -r -a networks <<< "$_additional_networks"
+            for network in "${networks[@]}"; do
+                echo "Connecting network $network..."
+                docker network connect $network $_target$CONTAINER_SUFFIX
+            done
+        fi
 
         _devenv_init_session ${_target}
         _devenv_build_tags ${_target}
@@ -436,6 +474,7 @@ function _devenv_create_container {
     fi
 }
 
+# Get the project_path label from an existing container
 function _devenv_get_path_from_container {
     local container_name project_path
     container_name=${1}
@@ -444,6 +483,7 @@ function _devenv_get_path_from_container {
     echo ${project_path%\"}
 }
 
+# Get the daemonize label from an existing container
 function _devenv_is_daemonized {
     local container_name daemonize
     container_name=${1}
@@ -588,87 +628,97 @@ function _devenv_get_target_from_path {
     done
 }
 
-#
+# Nested Tmux session warning
 function _devenv_error_in_tmux {
-    echo ""
-    echo "This shell is currently running in a Tmux session and attaching to"
-    echo "a 'devenv' environment will launch a new Tmux session. Sessions"
-    echo "should be nested with care, unset \$TMUX to force."
+    echo "
+This shell is currently running in a Tmux session and attaching to
+a 'devenv' environment will launch a new Tmux session. Sessions
+should be nested with care, unset \$TMUX to force.
+"
     exit 1
 }
 
 # Display error message
 function _devenv_error_notarget {
-    echo ""
-    echo "The target enviroment must be specified with the '-t' option. Available"
-    echo "envirnments can be listed with the 'ls' command: 'devenv ls'"
+    echo "
+The target enviroment must be specified with the '-t' option. Available
+envirnments can be listed with the 'ls' command: 'devenv ls'
+"
     exit 1
 }
 
 # Display error message
 function _devenv_error_nopath {
-    echo ""
-    echo "The target enviroment must be specified with the '-t' option. Available"
-    echo "envirnments can be listed with the 'ls' command: 'devenv ls'"
+    echo "
+The target enviroment must be specified with the '-t' option. Available
+envirnments can be listed with the 'ls' command: 'devenv ls'
+"
     exit 1
 }
 
 # Display error message
 function _devenv_error_target_not_running {
-    echo ""
-    echo "The specified enviroment '${1}' does not exist, try creating it with"
-    echo "'devenv init ${1} [PATH]'"
+    echo "
+The specified enviroment '${1}' does not exist, try creating it with
+'devenv init ${1} [PATH]'
+"
     exit 1
 }
 
 # Display error message
 function _devenv_error_target_exists_exited {
-    echo ""
-    echo "The specified enviroment exists but has exited. Try cleaning it with"
-    echo "'devenv kill [-t environment_name]'"
+    echo "
+The specified enviroment exists but has exited. Try cleaning it with
+'devenv kill [-t environment_name]'
+"
     exit 1
 }
 
 # Display error message
 function _devenv_error_target_exists_stopped {
-    echo ""
-    echo "The specified enviroment already exists, try starting it with"
-    echo "'devenv start [-t environment_name]'"
+    echo "
+The specified enviroment already exists, try starting it with
+'devenv start [-t environment_name]'
+"
     exit 1
 }
 
 # Display error message
 function _devenv_error_target_exists_running {
-    echo ""
-    echo "The specified enviroment already exists, try attaching to it with"
-    echo "'devenv attach [-t environment_name]'"
+    echo "
+The specified enviroment already exists, try attaching to it with
+'devenv attach [-t environment_name]'
+"
     exit 1
 }
 
 # Display error message
 function _devenv_error_target_does_not_exist {
-    echo ""
-    echo "The specified enviroment does not exist, try creating it with"
-    echo "'devenv create [-t environment_name] [-p environment_path]'"
+    echo "
+The specified enviroment does not exist, try creating it with
+'devenv create [-t environment_name] [-p environment_path]'
+"
     exit 1
 }
 
 # Display error message
 function _devenv_error_new_name_not_specified {
-    echo ""
-    echo "You must specify a new name to rename an environment:"
-    Tcho "'devenv rename -t oldname newname'"
+    echo "
+You must specify a new name to rename an environment:
+'devenv rename -t oldname newname'
+"
     exit 1
 }
 
 # Display error message
 function _devenv_error_not_a_directory {
-    echo ""
-    echo "The specified path '${1}' does not exist"
+    echo "
+The specified path '${1}' does not exist
+"
     exit 1
 }
 
-#
+# Display error message
 function _devenv_error_file_not_found {
     echo "
 The file '$1' does not exist
@@ -676,7 +726,7 @@ The file '$1' does not exist
     exit 1
 }
 
-#
+# Display error message
 function _devenv_error_nesting_containers {
 
     local memes=()
@@ -1042,6 +1092,7 @@ _devenv_daemonize="false"
 _devenv_ctags_excludes=()
 _devenv_tmux_prefix='-'
 _devenv_additional_volumes=()
+_devenv_additional_networks=()
 
 while :; do
     case $1 in
@@ -1081,6 +1132,12 @@ while :; do
             ;;
         --volume=?*)
             _devenv_additional_volumes+=(${1#*=})
+            ;;
+        #
+        # networks to attach to
+        #
+        --network=?*)
+            _devenv_additional_networks+=(${1#*=})
             ;;
         #
         # project path
@@ -1258,7 +1315,7 @@ while :; do
     shift
 done
 
-if [ "true" == "$IS_DEVENV" ]; then
+if [ "true" == "$__IS_DEVENV" ]; then
     _devenv_error_nesting_containers
 fi
 
@@ -1340,6 +1397,12 @@ if [ "" == "$_devenv_additional_volumes" ]; then
     _devenv_additional_volumes='-'
 fi
 
+_devenv_additional_networks=${_devenv_additional_networks[@]}
+_devenv_additional_networks=$(echo $_devenv_additional_networks | sed "s/ /,/g")
+if [ "" == "$_devenv_additional_networks" ]; then
+    _devenv_additional_networks='-'
+fi
+
 ##############################################################################
 # Execute
 ##############################################################################
@@ -1384,8 +1447,7 @@ elif [ "init" == "${_devenv_command}" ]; then
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
     fi
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix} "${_devenv_additional_volumes[@]}"
-
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix} "${_devenv_additional_volumes}" "${_devenv_additional_networks}"
 
 # Kill a running container
 elif [ "kill" == "${_devenv_command}" ]; then
@@ -1407,7 +1469,7 @@ elif [ "restart" == "${_devenv_command}" ]; then
         daemonize='true'
     fi
     _devenv_kill_container ${_devenv_container_name}
-    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix} "${_devenv_additional_volumes[@]}"
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix} "${_devenv_additional_volumes}" "${_devenv_additional_networks}"
 
 
 # Rename a current container

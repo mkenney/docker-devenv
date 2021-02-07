@@ -27,4 +27,4 @@ function _devenv_autocomplete {
     COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
     return 0
 }
-complete -o default -F _devenv_autocomplete devenv
+complete -o default -F _devenv_autocomplete dev

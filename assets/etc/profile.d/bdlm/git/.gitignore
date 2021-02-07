@@ -1,0 +1,8 @@
+.vim/.netrwhist
+.vim/bundle
+.vim/data
+.vim/undo
+.vim/undodir
+.viminfo
+/_*
+.git.*

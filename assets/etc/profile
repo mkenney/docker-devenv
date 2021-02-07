@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+export OS=$(uname)
+
+if [ -f /etc/proile.d/bdlm ]; then
+    # Aliases
+    #echo "/etc/proile.d/bdlm/common/aliases"
+    source /etc/proile.d/bdlm/common/aliases
+
+    # AWS
+    #echo "/etc/proile.d/bdlm/common/aws"
+    source /etc/proile.d/bdlm/common/aws
+
+    # Bash completion settings
+    if [ "Darwin" = "$(uname)" ] && [ "" != $(which brew) ] && [ -f $(brew --prefix)/etc/bash_completion ]; then
+        #echo "$(brew --prefix)/etc/bash_completion"
+        source $(brew --prefix)/etc/bash_completion
+    fi
+    #echo "/etc/proile.d/bdlm/bash/completion"
+    source /etc/proile.d/bdlm/bash/completion
+
+    # Clickhouse
+    #echo "/etc/proile.d/bdlm/common/clickhouse"
+    source /etc/proile.d/bdlm/common/clickhouse
+
+    # CVS shortcuts
+    #echo "/etc/proile.d/bdlm/common/cvs"
+    source /etc/proile.d/bdlm/common/cvs
+
+    # devenv
+    #echo "/etc/proile.d/bdlm/bash/devenv"
+    source /etc/proile.d/bdlm/bash/devenv
+
+    # ENV
+    #echo "/etc/proile.d/bdlm/common/env"
+    source /etc/proile.d/bdlm/common/env
+    #echo "/etc/proile.d/bdlm/common/env_platform"
+    source /etc/proile.d/bdlm/common/env_platform
+
+    # Command extensions
+    source /etc/proile.d/bdlm/bash/didyoumean
+    #echo "/etc/proile.d/bdlm/bash/ext/cmd"
+    source /etc/proile.d/bdlm/bash/ext/cmd
+
+    # Functions
+    #echo "/etc/proile.d/bdlm/common/functions"
+    source /etc/proile.d/bdlm/common/functions
+
+    # Git completion
+    #echo "/etc/proile.d/bdlm/common/git-completion"
+    source /etc/proile.d/bdlm/common/git-completion
+
+    # Git prompt
+    #echo "/etc/proile.d/bdlm/bash/git-status"
+    source /etc/proile.d/bdlm/bash/git-status
+
+    # Go
+    #echo "/etc/proile.d/bdlm/common/go"
+    source /etc/proile.d/bdlm/common/go
+
+    # helm
+    #echo "/etc/proile.d/bdlm/common/helm"
+    source /etc/proile.d/bdlm/common/helm
+
+    # Java
+    #echo "/etc/proile.d/bdlm/common/java"
+    source /etc/proile.d/bdlm/common/java
+
+    # kubectl
+    #echo "/etc/proile.d/bdlm/common/kubectl"
+    #    source /etc/proile.d/bdlm/common/kubectl
+    #
+    # Perl
+    #echo "/etc/proile.d/bdlm/common/perl"
+    source /etc/proile.d/bdlm/common/perl
+
+    # Prompt
+    #echo "/etc/proile.d/bdlm/bash/prompt"
+    source /etc/proile.d/bdlm/bash/prompt
+
+    # Screen aliases
+    #echo "/etc/proile.d/bdlm/common/screen"
+    source /etc/proile.d/bdlm/common/screen
+
+    # SSH tunnel aliases
+    #echo "~/.dbtunnels"
+    source ~/.dbtunnels
+
+    # Tmuxinator-completion
+    #echo "/etc/proile.d/bdlm/bash/tmuxinator-completion"
+    source /etc/proile.d/bdlm/bash/tmuxinator-completion
+
+    # Terraform
+    #echo "/etc/proile.d/bdlm/common/terraform"
+    source /etc/proile.d/bdlm/common/terraform
+
+    # TravisCI
+    #echo "~/.travis/travis.sh"
+    source ~/.travis/travis.sh
+
+    # VIM
+    #echo "/etc/proile.d/bdlm/common/vim"
+    source /etc/proile.d/bdlm/common/vim
+
+    # CDPATH
+    #echo "/etc/proile.d/bdlm/common/cdpath"
+    source /etc/proile.d/bdlm/common/cdpath
+
+    # tmux
+    #echo "/etc/proile.d/bdlm/common/tmux"
+    source /etc/proile.d/bdlm/common/tmux
+fi

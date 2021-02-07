@@ -22,17 +22,17 @@
 # SOFTWARE.
 #
 FROM ubuntu:20.04
-LABEL org.label-schema.description="This service provides a flexible base linux development environment." \
+LABEL org.label-schema.description="This service provides a flexible base for linux development environments." \
     org.label-schema.license="MIT"\
     org.label-schema.name="DevEnv" \
     org.label-schema.schema-version="1.0" \
-    org.label-schema.url="https://github.com/mkenney/docker-devenv" \
-    org.label-schema.vcs-url="https://github.com/mkenney/docker-devenv-base" \
+    org.label-schema.url="https://github.com/bdlm/.bdlmrc/blob/master/README.md" \
+    org.label-schema.vcs-url="https://github.com/bdlm/.bdlmrc" \
     org.label-schema.vendor="mkenney@webbedlam.com"
 
 # Load support scripts and resources
-COPY bin/devenv /usr/local/bin/devenv
-COPY _image /tmp/_image
+COPY bin/dev /usr/local/bin/dev
+COPY assets /tmp/assets
 
 # Global configurations
 WORKDIR /tmp
@@ -43,20 +43,17 @@ ENV DEBIAN_FRONTEND=noninteractive \
     TERM=xterm-256color \
     TIMEZONE=America/Denver
 
-# Locales
+# UTF-8 Locales
 RUN apt-get update \
     && apt-get install -qqy --no-install-recommends \
         debconf \
         gettext \
         gnupg  \
         locales \
-        netbase \
-    && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
-    && echo LANG=en_US.UTF-8 > /etc/default/locale \
-    && echo LANGUAGE=en_US.UTF-8 >> /etc/default/locale \
-    && echo LC_CTYPE=en_US.UTF-8 >> /etc/default/locale \
-    && echo LC_ALL=en_US.UTF-8 >> /etc/default/locale \
-    && locale-gen \
+        netbase
+COPY assets/etc/locale.gen /etc/locale.gen
+COPY assets/etc/default/locale /etc/default/locale
+RUN locale-gen \
     && dpkg-reconfigure locales
 ENV UTF8_LOCALE=en_US \
     LC_CTYPE=en_US.UTF-8 \
@@ -110,6 +107,7 @@ RUN set -x \
         npm \
         openssh-client \
         openssh-server \
+        php \
         powerline \
         python3 \
         python3-dev \
@@ -186,11 +184,14 @@ ENV LD_LIBRARY_PATH=${ORACLE_HOME}/lib
 ENV TNS_ADMIN=/home/dev/.oracle/network/admin
 ENV CFLAGS="-I/usr/include/oracle/${ORACLE_VERSION_SHORT}/client64/"
 ENV NLS_LANG=American_America.AL32UTF8
+COPY oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb /tmp/oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb
+COPY oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb /tmp/oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb
+COPY oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb /tmp/oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb
 RUN set -x \
     && groupadd dba -g 201 -o \
     && useradd oracle -u 102 -o -s /bin/bash -m -g dba \
     && echo "oracle:password" | chpasswd \
-    && cd /tmp/_image \
+    && cd /tmp \
     && dpkg -i oracle-instantclient${ORACLE_VERSION_SHORT}-basic_${ORACLE_VERSION_LONG}_amd64.deb \
     && dpkg -i oracle-instantclient${ORACLE_VERSION_SHORT}-devel_${ORACLE_VERSION_LONG}_amd64.deb \
     && dpkg -i oracle-instantclient${ORACLE_VERSION_SHORT}-sqlplus_${ORACLE_VERSION_LONG}_amd64.deb \
@@ -216,8 +217,8 @@ RUN set -x \
     && rm -f terraform_0.14.6_linux_amd64.zip
 
 # Powerline config
-RUN rsync -ac /tmp/_image/powerline/ /usr/share/powerline/ \
-    && mkdir -p /usr/local/powerline \
+COPY assets/powerline/ /usr/share/powerline/
+RUN mkdir -p /usr/local/powerline \
     && ln -s /usr/share/powerline/bindings/tmux/powerline.conf /usr/local/powerline/powerline.conf
 
 # PostgreSQL support
@@ -229,20 +230,15 @@ RUN apt-get install -qqy mysql-client
 # Fetch/configure various resources
 RUN set -x \
     && mkdir -p /root/src/github.com/mkenney \
-    && git clone https://github.com/mkenney/.dotfiles.git /root/src/github.com/mkenney/.dotfiles \
-    # .tmux.conf
-    && sed -i'' "s/set-option -g prefix.*/set-option -g prefix M-space/g" /root/src/github.com/mkenney/.dotfiles/.tmux.conf \
-    && sed -i'' "s/bind-key C-space last-window/bind-key M-space last-window/g" /root/src/github.com/mkenney/.dotfiles/.tmux.conf \
-    # .vimrc
-    && sed -i'' "s#\"Plugin 'Valloric/YouCompleteMe'#Plugin 'Valloric/YouCompleteMe'#g" /root/src/github.com/mkenney/.dotfiles/.vimrc \
-    && sed -i'' "s/\"let g:ycm_collect_identifiers_from_tags_files = 1/let g:ycm_collect_identifiers_from_tags_files = 1/g" /root/src/github.com/mkenney/.dotfiles/.vimrc \
-    && sed -i'' "s/\"let g:ycm_add_preview_to_completeopt = 1/let g:ycm_add_preview_to_completeopt = 1/g" /root/src/github.com/mkenney/.dotfiles/.vimrc \
-    && sed -i'' "s/\"let g:ycm_autoclose_preview_window_after_completion = 1/let g:ycm_autoclose_preview_window_after_completion = 1/g" /root/src/github.com/mkenney/.dotfiles/.vimrc \
-    # bash prompt
-    && cp -f /tmp/_image/.dotfiles/bash_prompt /root/src/github.com/mkenney/.dotfiles/bash/prompt
+    && git clone https://github.com/bdlm/didyoumean.git /root/src/github.com/bdlm/didyoumean \
+    && git clone https://github.com/bdlm/didyoumean.git /root/src/github.com/bdlm/.bdlmrc \
+    && git clone https://github.com/mkenney/git-import.git /root/src/github.com/mkenney/git-import \
+    && git clone https://github.com/mkenney/.dotfiles.git /root/src/github.com/mkenney/.dotfiles
 
 # Configure user shells
 RUN set -x \
+    && cp -f /tmp/assets/etc/profile /etc/profile \
+    #
     && cp -R /root/src/github.com/mkenney/.dotfiles /root/.dotfiles \
     && cd /root \
     && cd .dotfiles \
@@ -282,14 +278,14 @@ RUN set -x \
 # SSH keys and mount scripts
 RUN set -x \
     # SSH keys used for communicating between containers
-    && cp -R /tmp/_image/network /home/dev/network \
+    && cp -R /tmp/assets/network /home/dev/network \
     && chown -R dev:dev /home/dev/network \
-    && cp -f /tmp/_image/network/sshd_config /etc/ssh/sshd_config \
+    && cp -f /tmp/assets/network/sshd_config /etc/ssh/sshd_config \
     && /etc/init.d/ssh start \
     # sshfs wrapper scripts
-    && cp -f /tmp/_image/network/mountenv /usr/local/bin \
+    && cp -f /tmp/assets/network/mountenv /usr/local/bin \
     && chmod 0755 /usr/local/bin/mountenv \
-    && cp -f /tmp/_image/network/umountenv /usr/local/bin \
+    && cp -f /tmp/assets/network/umountenv /usr/local/bin \
     && chmod 0755 /usr/local/bin/umountenv \
     && chmod 777 /mnt
 
@@ -319,10 +315,10 @@ RUN echo "set tags=/src/tags.devenv,./tags.devenv"          | tee /root/.vimrc  
 RUN updatedb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && cp /tmp/_image/attach.sh / \
-    && cp /tmp/_image/build-tags.sh / \
-    && cp /tmp/_image/init.sh / \
-    && rm -rf /tmp/_image
+    && cp /tmp/assets/attach.sh / \
+    && cp /tmp/assets/build-tags.sh / \
+    && cp /tmp/assets/init.sh / \
+    && rm -rf /tmp/assets
 
 USER dev
 VOLUME ["/src"]
