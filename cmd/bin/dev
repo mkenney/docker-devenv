@@ -30,10 +30,8 @@ CONTAINER_SUFFIX=.devenv
 #CONTAINER_IMAGE='ghcr.io/bdlm/bdlmrc:latest'
 CONTAINER_IMAGE='bdlm/dev:latest'
 OS=$(uname)
-PAGER=less
-if [ "Darwin" = "$OS" ]; then
-    PAGER="less --quit-if-one-screen --ignore-case --status-column --quit-on-intr --LONG-PROMPT --silent --tilde --RAW-CONTROL-CHARS"
-elif [ "Linux" = "$OS" ]; then
+PAGER="less --quit-if-one-screen --ignore-case --status-column --quit-on-intr --LONG-PROMPT --silent --tilde --RAW-CONTROL-CHARS"
+if [ "Linux" = "$OS" ]; then
     PAGER="less --quit-if-one-screen --ignore-case --status-column --quit-on-intr --LONG-PROMPT --silent --tilde --RAW-CONTROL-CHARS --mouse --save-marks"
 fi
 
