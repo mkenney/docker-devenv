@@ -3,8 +3,7 @@
 TMUXSESSION=$HOSTNAME
 
 tmux attach-session -t $TMUXSESSION
-if [ $? != 0 ]
-then
+if [ $? != 0 ]; then
 
 ##############################################################################
 # tmux setup
@@ -21,7 +20,10 @@ then
 
     # editor
     tmux new-window        -t $TMUXSESSION:1
-    tmux send-keys         -t $TMUXSESSION:1 "cd ${PROJECT_PATH} && clear && vim ." C-m
+    tmux send-keys         -t $TMUXSESSION:1 "cd ${PROJECT_PATH} && clear" C-m
+    if [ "true" != "${__IS_SCRATCH}" ]; then
+        tmux send-keys      -t $TMUXSESSION:1 "vim ." C-m
+    fi
 
     # shell
     tmux new-window        -t $TMUXSESSION:2

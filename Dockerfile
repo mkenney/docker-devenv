@@ -32,7 +32,6 @@ LABEL org.label-schema.description="This service provides a flexible base image 
 
 # Load support scripts and resources
 COPY bin/dev /usr/local/bin/dev
-COPY assets /tmp/assets
 
 # Global configurations
 WORKDIR /tmp
@@ -194,7 +193,6 @@ RUN set -x \
     && groupadd dba -g 201 -o \
     && useradd oracle -u 102 -o -s /bin/bash -m -g dba \
     && echo "oracle:password" | chpasswd \
-    && cd /tmp \
     && dpkg -i oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb \
     && dpkg -i oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb \
     && dpkg -i oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb \
@@ -270,16 +268,16 @@ RUN set -x \
     && sudo -u dev pip3 install --upgrade --user awscli
 
 # SSH keys and mount scripts
+COPY assets/network /home/dev/network
+COPY assets/network/sshd_config /etc/ssh/sshd_config
+COPY assets/network/mountenv /usr/local/bin/
+COPY assets/network/umountenv /usr/local/bin/
 RUN set -x \
     # SSH keys used for communicating between containers
-    && cp -R /tmp/assets/network /home/dev/network \
     && chown -R dev:dev /home/dev/network \
-    && cp -f /tmp/assets/network/sshd_config /etc/ssh/sshd_config \
     && /etc/init.d/ssh start \
     # sshfs wrapper scripts
-    && cp -f /tmp/assets/network/mountenv /usr/local/bin \
     && chmod 0755 /usr/local/bin/mountenv \
-    && cp -f /tmp/assets/network/umountenv /usr/local/bin \
     && chmod 0755 /usr/local/bin/umountenv \
     && chmod 777 /mnt
 
@@ -306,12 +304,12 @@ RUN echo "set tags=/src/tags.devenv,./tags.devenv"             | tee /root/.vimr
 # cleanup apt-get cache
 # add devenv support scripts
 # remove repo resources
+COPY assets/attach.sh /attach.sh
+COPY assets/build-tags.sh /build-tags.sh
+COPY assets/init.sh /init.sh
 RUN updatedb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && cp /tmp/assets/attach.sh / \
-    && cp /tmp/assets/build-tags.sh / \
-    && cp /tmp/assets/init.sh / \
     && rm -rf /tmp/*
 
 USER dev
