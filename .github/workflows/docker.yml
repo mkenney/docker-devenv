@@ -23,10 +23,53 @@ jobs:
                     registry: ghcr.io
                     username: ${{ github.repository_owner }}
                     password: ${{ secrets.GITHUB_TOKEN }}
-            -   name: Push to GHCR
+            -   name: Build base image
                 uses: docker/build-push-action@v2
                 with:
                     context: ./cmd
                     file: ./cmd/Dockerfile
                     push: ${{ github.event_name != 'pull_request' }}
-                    tags: ghcr.io/bdlm/dev:latest
+                    tags: |
+                        ghcr.io/bdlm/dev:latest
+                        ghcr.io/bdlm/dev:scratch
+                        ghcr.io/bdlm/dev:base
+            -   name: Build golang image
+                uses: docker/build-push-action@v2
+                with:
+                    context: ./cmd
+                    file: ./cmd/go.Dockerfile
+                    push: ${{ github.event_name != 'pull_request' }}
+                    tags: |
+                        ghcr.io/bdlm/dev:go
+            -   name: Build node image
+                uses: docker/build-push-action@v2
+                with:
+                    context: ./cmd
+                    file: ./cmd/node.Dockerfile
+                    push: ${{ github.event_name != 'pull_request' }}
+                    tags: |
+                        ghcr.io/bdlm/dev:node
+            -   name: Build php image
+                uses: docker/build-push-action@v2
+                with:
+                    context: ./cmd
+                    file: ./cmd/php.Dockerfile
+                    push: ${{ github.event_name != 'pull_request' }}
+                    tags: |
+                        ghcr.io/bdlm/dev:php
+            -   name: Build python image
+                uses: docker/build-push-action@v2
+                with:
+                    context: ./cmd
+                    file: ./cmd/python.Dockerfile
+                    push: ${{ github.event_name != 'pull_request' }}
+                    tags: |
+                        ghcr.io/bdlm/dev:python
+            -   name: Build typescript image
+                uses: docker/build-push-action@v2
+                with:
+                    context: ./cmd
+                    file: ./cmd/ts.Dockerfile
+                    push: ${{ github.event_name != 'pull_request' }}
+                    tags: |
+                        ghcr.io/bdlm/dev:ts
