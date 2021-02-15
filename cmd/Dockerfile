@@ -1,7 +1,7 @@
-#
 # MIT License
 #
-# Copyright (c) 2017 Michael Kenney
+# Copyright (c) 2016 Michael Kenney
+# Copyright (c) 2021 Bedlam Software
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,15 +20,14 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-#
 FROM ubuntu:20.04
 LABEL org.label-schema.description="This service provides a flexible base image for linux development environments." \
-    org.label-schema.license="MIT"\
+    org.label-schema.license="MIT" \
     org.label-schema.name="bdlm/dev" \
     org.label-schema.schema-version="1.0" \
     org.label-schema.url="https://github.com/bdlm/dev/blob/master/README.md" \
     org.label-schema.vcs-url="https://github.com/bdlm/dev" \
-    org.label-schema.vendor="mkenney@webbedlam.com"
+    org.label-schema.vendor="bdlm@webbedlam.com"
 
 # Load support scripts and resources
 COPY bin/dev /usr/local/bin/dev

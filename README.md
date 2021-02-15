@@ -1,31 +1,34 @@
-# .bdlmrc
+# dev
 
-`.bdlmrc` provides a rich `bash` shell environment aimed at software developers, but should be useful for for all types of digital content creation.
+`dev` provides a rich [`bash`](https://github.com/bdlm/.bdlm/blob/main/README.md)-based project-oriented shell environment for software developers, but should be useful for for all types of digital content creation.
 
 ## ABOUT
 
-This project began as a way to easily move a consistent working enviroment around from system to system, but quickly became a full-fledged, well-rounded IDE. The goal of this project is to have a fully isolated, lightweight, consistent, virtual environment dedicated to each individual project someone may be working on.
+This project began as a way to easily move a consistent working enviroment around from system to system, but quickly became a well-rounded IDE. The goal of this project is to have a fully isolated, lightweight, consistent, virtual environment dedicated to an individual project.
 
-The "environments" are managed by an intuitive CLI tool, each one containing common development tools needed for most day-to-day tasks (code development, run scripts in various langunages, etc.). The `dev` CLI tool allows treating a `docker` container instance, via the [volume mount system](https://docs.docker.com/storage/volumes/), as an individual project. Essentially, a fully dedicated, extremely lightweight, [Ubuntu 20.04 LTS (Focal Fossa) 64-bit Linux](https://releases.ubuntu.com/20.04/) instance dedicated to a single project. The [docker image](https://hub.docker.com/r/bdlm/.bdlmrc) can easily be extended to suit your own needs.
-
-Because
+The "environments" are managed by an intuitive CLI tool, each one containing common development tools needed for most day-to-day tasks (code development, script execution in various langunages, etc.). The `dev` CLI tool allows treating a `docker` container instance, via the [volume mount system](https://docs.docker.com/storage/volumes/), as an individual project. Essentially, a fully dedicated, extremely lightweight, [Ubuntu 20.04 LTS (Focal Fossa) 64-bit Linux](https://releases.ubuntu.com/20.04/) instance dedicated to a single project. The [docker image](https://hub.docker.com/r/bdlm/.bdlmrc) can easily be extended to suit the specific needs of a project.
 
 ## Installation
 
-Installation is really just copying a fairly simple bash script into your path, but the script makes use of [Docker](https://www.docker.com/) and assumes that you can [run `docker` commands without sudo](https://docs.docker.com/engine/install/linux-postinstall/):
+Installation is really just a matter of copying a bash script into your path, but the script makes use of [Docker](https://www.docker.com/) and assumes that you can [run `docker` commands without sudo](https://docs.docker.com/engine/install/linux-postinstall/):
+
+### Docker
 
 1. Install docker on your system. This command varies from system to system so you're on your own, but there are tons of [instructions online](https://www.google.com/search?q=install+docker&oq=install+docker&aqs=chrome.0.0l2j69i60l3j0.1975j0j1&sourceid=chrome&ie=UTF-8) so it should be easy. For example, if you happen to be using a Debian-based system it's as simple as `sudo apt-get install docker`. If you're on a Mac, things are less simple but still [pretty easy](https://docs.docker.com/engine/installation/mac/).
 1. Linux users will want to make sure your user can [run `docker` commands without sudo](https://docs.docker.com/engine/install/linux-postinstall/).
-1. Mac users will need to add some core utilities before proceeding to get super unusual rarely used unique functionality like `realpath` (some barebones Linux distributions may need to install some similar packages)...
+
+### `dev`
+
+1. MacOS users will need to add some core utilities before proceeding in order to get super unusual rarely used unique functionality such as `realpath` (some barebones Linux distributions may need to install some similar packages)...
   * Install [Homebrew](http://brew.sh/)
   * Run `brew install coreutils`
   * Add `/usr/local/opt/coreutils/libexec/gnubin` to your path (see the output of `brew install coreutils` for the exact path)
 1. Select an installation directory in your path for the `dev` utility (lets assume `/usr/bin`) and run:
-  * `sudo wget -nv -O /usr/bin/dev https://raw.githubusercontent.com/bdlm/.bdlmrc/master/bin/dev`
+  * `sudo wget -nv -O /usr/bin/dev https://raw.githubusercontent.com/bdlm/dev/master/bin/dev`
   * `sudo chmod +rwx /usr/bin/dev` (write permission lets it `self-update` as any user).
   * `dev self-update`
 
-### Docker image
+## Docker image
 
 * [bdlm/.bdlmrc](https://hub.docker.com/r/bdlm/.bdlmrc)
 
@@ -47,21 +50,21 @@ Several additional directories are also automatically mounted if they exist to p
 * `~/.vim`
 * `~/.vimrc`
 
-#### Powerline
+### Powerline
 
 [Powerline](https://github.com/powerline/powerline) is installed and enabled in the default `tmux` and `vim` configurations. You can easily override it with your own configuration files by passing the `--tmux` or `--vimrc` options when starting a new instance with the `init` or `restart` commands.
 
 If you do want to use `powerline`, you may want to install and use a compatible font in your terminal emulator. I use [iTerm 2](https://www.iterm2.com/) with the [Fira Code](https://github.com/tonsky/FiraCode) font without any issues. If you're using iTerm, you should also uncheck the "_Treat ambiguous-width characters as double width_" setting.
 
-#### Common packages
+### Common packages
 
 * curl dialog emacs exuberant-ctags fonts-powerline git graphviz htop less libfreetype6-dev libjpeg62-turbo-dev libmcrypt-dev libpng12-dev libbz2-dev libaio1 locate man powerline python python-dev python3 python3-dev python-pip python-powerline python-powerline-doc rsync rsyslog ruby sbcl slime sudo tcpdump telnet tmux unzip wget vim-nox vim-addon-manager
 
-#### Node packages
+### Node packages
 
 * nodejs:v5 build-essential npm:v3.8 bower:v1.7 grunt-cli:v1.1 gulp-cli:v1.2 yo:v1.7 generator-webapp
 
-#### Oracle packages
+### Oracle packages
 
 * instantclient:v11.2 basic devel sqlplus
 

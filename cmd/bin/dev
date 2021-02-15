@@ -53,6 +53,8 @@ function _devenv_show_usage {
                                     compiling the tags file.
         -d, --daemonize             Continue running the container after
                                     detaching
+        --image=IMAGE:TAG           Specify a specific image to use for a
+                                    container.
         --network=NETWORK           Specify an additional network to attach the
                                     container to. May be specified multiple times.
         -p PATH, --path=PATH        Specify the project path
@@ -128,14 +130,14 @@ function _devenv_show_help {
              starting a daemon. If you forget to daemonize an instance, you can
              start it with the 'unpause' command after you detach.
 
+         --network=NETWORK
+             Specify an additional network to attach the container to. This
+             option may be specified multiple times.
+
          -p PATH, --path=PATH
              Specify the project path, this directory is mounted into /src
              inside the container. If omitted, the project path is set to the
              current directory.
-
-         --network=NETWORK
-             Specify an additional network to attach the container to. This
-             option may be specified multiple times.
 
          -t TARGET, --target=TARGET
              Specify an instance name. If omitted, current instances will be
@@ -1193,6 +1195,12 @@ while :; do
             ;;
         --volume=?*)
             _devenv_additional_volumes+=(${1#*=})
+            ;;
+        #
+        # alternate image to use
+        #
+        --image=?*)
+            CONTAINER_IMAGE+=(${1#*=})
             ;;
         #
         # networks to attach to
