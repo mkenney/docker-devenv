@@ -22,12 +22,12 @@
 # SOFTWARE.
 #
 FROM ubuntu:20.04
-LABEL org.label-schema.description="This service provides a flexible base for linux development environments." \
+LABEL org.label-schema.description="This service provides a flexible base image for linux development environments." \
     org.label-schema.license="MIT"\
-    org.label-schema.name="DevEnv" \
+    org.label-schema.name="bdlm/dev" \
     org.label-schema.schema-version="1.0" \
-    org.label-schema.url="https://github.com/bdlm/.bdlmrc/blob/master/README.md" \
-    org.label-schema.vcs-url="https://github.com/bdlm/.bdlmrc" \
+    org.label-schema.url="https://github.com/bdlm/dev/blob/master/README.md" \
+    org.label-schema.vcs-url="https://github.com/bdlm/dev" \
     org.label-schema.vendor="mkenney@webbedlam.com"
 
 # Load support scripts and resources
@@ -37,7 +37,7 @@ COPY assets /tmp/assets
 # Global configurations
 WORKDIR /tmp
 ENV DEBIAN_FRONTEND=noninteractive \
-    IS_DEVENV=true \
+    __IS_DEVENV=true \
     HOSTNAME=devenv \
     PATH=/root/bin:$PATH \
     TERM=xterm-256color \
@@ -77,12 +77,14 @@ RUN set -x \
     && apt-get install -qqy \
         autogen \
         automake \
+        bash-completion \
         build-essential \
         clickhouse-client \
         cmake \
         curl \
         default-jdk \
         dialog \
+        docker.io \
         exuberant-ctags \
         gcc \
         git \
@@ -108,6 +110,7 @@ RUN set -x \
         openssh-client \
         openssh-server \
         php \
+        postgresql-client \
         powerline \
         python3 \
         python3-dev \
@@ -130,9 +133,11 @@ RUN set -x \
     # Golang
     && apt-get remove golang \
     && apt-get autoremove \
-    && wget -c https://golang.org/dl/go1.15.2.linux-amd64.tar.gz \
-    && shasum -a 256 go1.15.2.linux-amd64.tar.gz \
-    && tar -C /usr/local -xvzf go1.15.2.linux-amd64.tar.gz
+    && wget -c https://golang.org/dl/go1.15.8.linux-amd64.tar.gz \
+    && shasum -a 256 go1.15.8.linux-amd64.tar.gz \
+    && tar -C /usr/local -xvzf go1.15.8.linux-amd64.tar.gz \
+    && ln -s /usr/local/go/bin/go /usr/local/bin/go \
+    && ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 
 # npm and node tools
 RUN npm install -g \
@@ -176,31 +181,29 @@ RUN curl -OL https://github.com/tmux/tmux/releases/download/2.4/tmux-2.4.tar.gz 
     && rm -f tmux-2.4.tar.gz \
     && rm -rf tmux-2.4
 
-# Oracle instantclient
-ENV ORACLE_VERSION_LONG=11.2.0.3.0-2
-ENV ORACLE_VERSION_SHORT=11.2
-ENV ORACLE_HOME=/usr/lib/oracle/${ORACLE_VERSION_SHORT}/client64
+# Oracle instantclient - don't poke it
+ENV ORACLE_HOME=/usr/lib/oracle/11.2/client64
 ENV LD_LIBRARY_PATH=${ORACLE_HOME}/lib
 ENV TNS_ADMIN=/home/dev/.oracle/network/admin
-ENV CFLAGS="-I/usr/include/oracle/${ORACLE_VERSION_SHORT}/client64/"
+ENV CFLAGS="-I/usr/include/oracle/11.2/client64/"
 ENV NLS_LANG=American_America.AL32UTF8
-COPY oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb /tmp/oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb
-COPY oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb /tmp/oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb
-COPY oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb /tmp/oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb
+COPY assets/oracle/oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb /tmp/oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb
+COPY assets/oracle/oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb /tmp/oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb
+COPY assets/oracle/oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb /tmp/oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb
 RUN set -x \
     && groupadd dba -g 201 -o \
     && useradd oracle -u 102 -o -s /bin/bash -m -g dba \
     && echo "oracle:password" | chpasswd \
     && cd /tmp \
-    && dpkg -i oracle-instantclient${ORACLE_VERSION_SHORT}-basic_${ORACLE_VERSION_LONG}_amd64.deb \
-    && dpkg -i oracle-instantclient${ORACLE_VERSION_SHORT}-devel_${ORACLE_VERSION_LONG}_amd64.deb \
-    && dpkg -i oracle-instantclient${ORACLE_VERSION_SHORT}-sqlplus_${ORACLE_VERSION_LONG}_amd64.deb \
+    && dpkg -i oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb \
+    && dpkg -i oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb \
+    && dpkg -i oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb \
     && mkdir -p /oracle/product \
     && ln -s $ORACLE_HOME /oracle/product/latest \
     && mkdir -p /oracle/product/latest/network/admin \
-    && rm -f /oracle-instantclient${ORACLE_VERSION_SHORT}-basic_${ORACLE_VERSION_LONG}_amd64.deb \
-    && rm -f /oracle-instantclient${ORACLE_VERSION_SHORT}-devel_${ORACLE_VERSION_LONG}_amd64.deb \
-    && rm -f /oracle-instantclient${ORACLE_VERSION_SHORT}-sqlplus_${ORACLE_VERSION_LONG}_amd64.deb
+    && rm -f /oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb \
+    && rm -f /oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb \
+    && rm -f /oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb
 
 # Kubernetes support
 RUN set -x \
@@ -217,42 +220,32 @@ RUN set -x \
     && rm -f terraform_0.14.6_linux_amd64.zip
 
 # Powerline config
-COPY assets/powerline/ /usr/share/powerline/
+COPY assets/usr/share/powerline/ /usr/share/powerline/
 RUN mkdir -p /usr/local/powerline \
     && ln -s /usr/share/powerline/bindings/tmux/powerline.conf /usr/local/powerline/powerline.conf
 
-# PostgreSQL support
-RUN apt-get install -qqy postgresql-client
-
-# MySQL / MariaDB support
-RUN apt-get install -qqy mysql-client
-
 # Fetch/configure various resources
 RUN set -x \
-    && mkdir -p /root/src/github.com/mkenney \
-    && git clone https://github.com/bdlm/didyoumean.git /root/src/github.com/bdlm/didyoumean \
-    && git clone https://github.com/bdlm/didyoumean.git /root/src/github.com/bdlm/.bdlmrc \
-    && git clone https://github.com/mkenney/git-import.git /root/src/github.com/mkenney/git-import \
-    && git clone https://github.com/mkenney/.dotfiles.git /root/src/github.com/mkenney/.dotfiles
+    && mkdir -p /usr/local/src \
+    && git clone https://github.com/bdlm/.bdlm.git         /usr/local/src/github.com/bdlm/.bdlm \
+    && sed -i'' 's/C-space/M-space/g' /usr/local/src/github.com/bdlm/.bdlm/tmux/.tmux.conf
+COPY assets/home/dev/.bdlm/prompt/prompt.sh /usr/local/src/github.com/bdlm/.bdlm/prompt/prompt.sh
 
 # Configure user shells
+#COPY assets/etc/profile.d/bdlm /etc/profile.d/bdlm
+#COPY assets/etc/profile.d/bdlm.sh /etc/profile.d/bdlm.sh
 RUN set -x \
-    && cp -f /tmp/assets/etc/profile /etc/profile \
     #
-    && cp -R /root/src/github.com/mkenney/.dotfiles /root/.dotfiles \
-    && cd /root \
-    && cd .dotfiles \
-    && git submodule update --init --recursive \
+    && cp -R /usr/local/src/github.com/bdlm/.bdlm /root/.bdlm \
     # initialize shell scripts
-    && cd /root \
-    && ./.dotfiles/init.sh \
+    && /root/.bdlm/init.sh --force \
     # YouCompleteMe support
     && cd /root/.vim/bundle/YouCompleteMe \
     && ./install.py \
     && cd /root/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/tern_runtime \
     && npm install --production \
     # YouCompleteMe support
-    && rsync -a /root/.dotfiles/ /root/src/github.com/mkenney/.dotfiles/
+    && rsync -a /root/.bdlm/ /usr/local/src/github.com/bdlm/.bdlm/
 
 # Configure user account
 RUN set -x \
@@ -263,17 +256,18 @@ RUN set -x \
     && echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
     && mkdir -p /home/dev/go \
     # .dotfiles
-    && rsync -a /root/.dotfiles/ /home/dev/.dotfiles/ \
-    && chown -R dev:dev /home/dev/.dotfiles \
+    && rsync -a /root/.bdlm/ /home/dev/.bdlm/ \
+    && chown -R dev:dev /home/dev/.bdlm \
     && cd /home/dev \
-    && sudo -u dev ./.dotfiles/init.sh
+    && sudo -u dev ./.bdlm/init.sh --force \
+    # docker
+    && usermod -aG docker dev
 
 # per-user pip installs
 RUN set -x \
     # awscli
     && pip3 install --upgrade --user awscli \
     && sudo -u dev pip3 install --upgrade --user awscli
-
 
 # SSH keys and mount scripts
 RUN set -x \
@@ -291,7 +285,7 @@ RUN set -x \
 
 # Configure environments
 ENV K8S_STATUS_LINE=disabled
-RUN echo "set tags=/src/tags.devenv,./tags.devenv"          | tee /root/.vimrc        >> /home/dev/.vimrc        \
+RUN echo "set tags=/src/tags.devenv,./tags.devenv"             | tee /root/.vimrc        >> /home/dev/.vimrc        \
     && echo "export ORACLE_HOME=$(echo $ORACLE_HOME)"          | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export LD_LIBRARY_PATH=$(echo $LD_LIBRARY_PATH)"  | tee /root/.bash_profile >> /home/dev/.bash_profile \
     && echo "export TNS_ADMIN=$(echo $TNS_ADMIN)"              | tee /root/.bash_profile >> /home/dev/.bash_profile \
@@ -308,7 +302,7 @@ RUN echo "set tags=/src/tags.devenv,./tags.devenv"          | tee /root/.vimrc  
 # ~ fin ~
 ##############################################################################
 
-# generate the initial locate database
+# generate the locate database
 # cleanup apt-get cache
 # add devenv support scripts
 # remove repo resources
@@ -318,7 +312,7 @@ RUN updatedb \
     && cp /tmp/assets/attach.sh / \
     && cp /tmp/assets/build-tags.sh / \
     && cp /tmp/assets/init.sh / \
-    && rm -rf /tmp/assets
+    && rm -rf /tmp/*
 
 USER dev
 VOLUME ["/src"]

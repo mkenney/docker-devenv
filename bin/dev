@@ -28,7 +28,7 @@ COMMAND=$(basename ${0})
 COMMAND_PATH=$0
 CONTAINER_SUFFIX=.devenv
 #CONTAINER_IMAGE='ghcr.io/bdlm/bdlmrc:latest'
-CONTAINER_IMAGE='mkenney/devenv:latest'
+CONTAINER_IMAGE='bdlm/dev:latest'
 OS=$(uname)
 PAGER=less
 if [ "Darwin" = "$OS" ]; then
@@ -79,6 +79,7 @@ function _devenv_show_usage {
         pause [TARGET]              Pause a running environment
         restart [TARGET]            Kill and re-initialize an environment
         rename [TARGET] NEW_NAME    Rename an environment
+        scratch                     Create and attach to an unnamed environment
         self-update                 Update to the latest docker image
         unpause [TARGET]            Start a paused environment
 
@@ -252,6 +253,14 @@ function _devenv_show_help {
                  ${COMMAND} rename TARGET NEW_NAME
                  ${COMMAND} -t TARGET rename NEW_NAME
 
+         scratch
+             Create and attach to an unnamed environment without an empty source
+             volume. Automatically destroy the environment when detaching unless
+             daemonized with the --daemonize flag.
+
+             EXAMPLES
+                 ${COMMAND} -t TARGET -d scratch
+
          self-update
              Update to the latest 'mkenney/devenv' docker image and '${COMMAND}'
              control script.
@@ -310,8 +319,34 @@ function _devenv_pause_container {
 # @param environment name returned by _devenv_list_environments
 function _devenv_unpause_container {
     if [ "true" == "$(_devenv_is_paused ${1})" ]; then
-        echo "Restoring '$1'..."
+        echo "Unpausing '$1'..."
         docker unpause ${1}${CONTAINER_SUFFIX} > /dev/null
+    else
+        echo "Container '$1' is not running"
+    fi
+    running='false'
+}
+
+# Stop a dev container
+#
+# @param environment name returned by _devenv_list_environments
+function _devenv_stop_container {
+    if [ "true" == "$(_devenv_is_running ${1})" ]; then
+        echo "Stopping '$1'..."
+        docker stop ${1}${CONTAINER_SUFFIX} > /dev/null
+    else
+        echo "Container '$1' is not running"
+    fi
+    running='false'
+}
+
+# Start a dev container
+#
+# @param environment name returned by _devenv_list_environments
+function _devenv_start_container {
+    if [ "true" == "$(_devenv_is_paused ${1})" ]; then
+        echo "Starting '$1'..."
+        docker start ${1}${CONTAINER_SUFFIX} > /dev/null
     else
         echo "Container '$1' is not running"
     fi
@@ -339,15 +374,16 @@ function _devenv_build_tags {
 
 # Start a dev container
 #
-# $1 TARGET
-# $2 PATH
-# $3 .tmux.conf path
-# $4 .vimrc path
-# $5 Daemonize flag
-# $6 ctags excludes, comma-separated string
-# $7 Custom tmux prefix string, i.e. 'C-b'
-# $8 List of volume mount strings
-# $9 List of Docker networks
+#  $1 TARGET
+#  $2 PATH
+#  $3 .tmux.conf path
+#  $4 .vimrc path
+#  $5 Daemonize flag
+#  $6 ctags excludes, comma-separated string
+#  $7 Custom tmux prefix string, i.e. 'C-b'
+#  $8 List of volume mount strings
+#  $9 List of Docker networks
+# $10 Treat as scratch container
 #
 function _devenv_create_container {
 
@@ -360,94 +396,106 @@ function _devenv_create_container {
     local _tmux_prefix=$7
     local _additional_volumes="$8"
     local _additional_networks="$9"
+    local _is_scratch="${10}"
 
     if [ "true" == "$(_devenv_is_running ${_target})" ]; then
         echo "Container '${_target}' is already running"
     else
 
-        #--storage-opt=\"dm.no_warn_on_loop_devices=true\" \
+        #--storage-opt=\"dm.no_warn_on_loop_devices=true\"
         docker_run_args="
-            -itd \
+            -itd
             -e __IS_DEVENV=true
-            -e __DEVENV=$_target$CONTAINER_SUFFIX
-            -h $_target \
-            -e HOSTNAME=$_target \
-            -e POWERLINE_HOST_HOSTNAME=$(hostname) \
-            -e PROJECT_PATH=/src \
-            --add-host docker:127.0.0.1 \
-            -e TERM=$TERM \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -v $_path:/src:rw \
-            -w /src \
-            --label project_path=$_path \
-            --name $_target$CONTAINER_SUFFIX
+            -e __DEVENV=${_target}${CONTAINER_SUFFIX}
+            -h ${_target}
+            -e HOSTNAME=${_target}
+            -e POWERLINE_HOST_HOSTNAME=$(hostname)
+            -e PROJECT_PATH=/src
+            --add-host docker:127.0.0.1
+            -e TERM=${TERM}
+            -v /var/run/docker.sock:/var/run/docker.sock
+            -w /src
+            --name ${_target}${CONTAINER_SUFFIX}
         ";
+
+        # scratch-related args
+        path_label="--label project_path=${_path}"
+        scratch_env_var=
+        scratch_label=
+        src_volume_mount="-v $_path:/src:rw"
+        if [ "true" = "$_is_scratch" ]; then
+            path_label=
+            scratch_env_var="-e __IS_SCRATCH=true"
+            scratch_label="--label scratch=${_is_scratch}"
+            src_volume_mount=
+        fi
+        docker_run_args="${docker_run_args} ${path_label} ${src_volume_mount} ${scratch_env_var} ${scratch_label}"
 
         # Mount the .ssh/ directory
         if [ -d "$HOME/.ssh" ]; then
-            docker_run_args="$docker_run_args -v $HOME/.ssh/:/home/dev/.ssh/:ro"
+            docker_run_args="${docker_run_args} -v $HOME/.ssh/:/home/dev/.ssh/:ro"
         fi
         # Mount the .kube/ directory
         if [ -d "$HOME/.kube" ]; then
-            docker_run_args="$docker_run_args -v $HOME/.kube/:/home/dev/.kube/:ro"
+            docker_run_args="${docker_run_args} -v $HOME/.kube/:/home/dev/.kube/:ro"
         fi
         # Mount the .aws/ directory
         if [ -d "$HOME/.aws" ]; then
-            docker_run_args="$docker_run_args -v $HOME/.aws/:/home/dev/.aws/:ro"
+            docker_run_args="${docker_run_args} -v $HOME/.aws/:/home/dev/.aws/:ro"
         fi
         # Mount the .oracle/ directory
         if [ -d "$HOME/.oracle" ]; then
-            docker_run_args="$docker_run_args -v $HOME/.oracle/:/home/dev/.oracle/:ro"
+            docker_run_args="${docker_run_args} -v $HOME/.oracle/:/home/dev/.oracle/:ro"
         fi
         # Mount the .config/ directory
         if [ -d "$HOME/.config" ]; then
-            docker_run_args="$docker_run_args -v $HOME/.config/:/home/dev/.config/:ro"
+            docker_run_args="${docker_run_args} -v $HOME/.config/:/home/dev/.config/:ro"
         fi
         # Mount the .helm/ directory
         if [ -d "$HOME/.helm" ]; then
-            docker_run_args="$docker_run_args -v $HOME/.helm/:/home/dev/.helm/:ro"
+            docker_run_args="${docker_run_args} -v $HOME/.helm/:/home/dev/.helm/:ro"
         fi
         # Mount the .npm/ directory
         if [ -d "$HOME/.npm" ]; then
-            docker_run_args="$docker_run_args -v $HOME/.npm/:/home/dev/.npm/:ro"
+            docker_run_args="${docker_run_args} -v $HOME/.npm/:/home/dev/.npm/:ro"
         fi
 #        # Include the .gitconfig
 #        if [ -f "$HOME/.gitconfig" ]; then
-#            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitconfig:ro"
+#            docker_run_args="${docker_run_args} -v $HOME/.gitconfig:/home/dev/.gitconfig:ro"
 #        fi
 #        # Include the .gitignore_global
 #        if [ -f "$HOME/.gitignore_global" ]; then
-#            docker_run_args="$docker_run_args -v $HOME/.gitconfig:/home/dev/.gitignore_global:ro"
+#            docker_run_args="${docker_run_args} -v $HOME/.gitconfig:/home/dev/.gitignore_global:ro"
 #        fi
         # tmux config path
         if [ -f "$_tmux_conf" ]; then
-            docker_run_args="$docker_run_args -v $(realpath $_tmux_conf):/home/dev/.tmux.conf:ro"
+            docker_run_args="${docker_run_args} -v $(realpath $_tmux_conf):/home/dev/.tmux.conf:ro"
         fi
         # vim resources
         if [ -f "$_vimrc" ]; then
-            docker_run_args="$docker_run_args -v $(realpath $_vimrc):/home/dev/$(basename $_vimrc):ro"
-            docker_run_args="$docker_run_args -v $(dirname $(realpath $_vimrc))/.vim/undodir:/home/dev/.vim/undodir:rw"
+            docker_run_args="${docker_run_args} -v $(realpath $_vimrc):/home/dev/$(basename $_vimrc):ro"
+            docker_run_args="${docker_run_args} -v $(dirname $(realpath $_vimrc))/.vim/undodir:/home/dev/.vim/undodir:rw"
         else
-            docker_run_args="$docker_run_args -v $HOME/.vim/undodir:/home/dev/.vim/undodir:rw"
-            docker_run_args="$docker_run_args -v $HOME/.vim/data:/home/dev/.vim/data:rw"
+            docker_run_args="${docker_run_args} -v $HOME/.vim/undodir:/home/dev/.vim/undodir:rw"
+            docker_run_args="${docker_run_args} -v $HOME/.vim/data:/home/dev/.vim/data:rw"
         fi
         # daemonize
         if [ "true" == "$_daemonize" ]; then
-            docker_run_args="$docker_run_args --label daemonize=${_daemonize}"
+            docker_run_args="${docker_run_args} --label daemonize=${_daemonize}"
         fi
         # ctags excludes
         if [ "-" != "$_ctags_excludes" ]; then
-            docker_run_args="$docker_run_args -e CTAGS_EXCLUDES=$_ctags_excludes"
+            docker_run_args="${docker_run_args} -e CTAGS_EXCLUDES=$_ctags_excludes"
         fi
         # custom tmux prefix key
         if [ "-" != "$_tmux_prefix" ]; then
-            docker_run_args="$docker_run_args -e TMUX_PREFIX=$_tmux_prefix"
+            docker_run_args="${docker_run_args} -e TMUX_PREFIX=$_tmux_prefix"
         fi
         # additional volumes
         if [ "-" != "$_additional_volumes" ]; then
             IFS=',' read -r -a volumes <<< "$_additional_volumes"
             for volume in "${volumes[@]}"; do
-                docker_run_args="$docker_run_args -v $volume"
+                docker_run_args="${docker_run_args} -v $volume"
             done
         fi
 
@@ -460,6 +508,7 @@ function _devenv_create_container {
             IFS=',' read -r -a networks <<< "$_additional_networks"
             for network in "${networks[@]}"; do
                 echo "Connecting network $network..."
+                echo; echo; echo;
                 docker network connect $network $_target$CONTAINER_SUFFIX
             done
         fi
@@ -468,7 +517,7 @@ function _devenv_create_container {
         _devenv_build_tags ${_target}
         if [ "true" != "$_daemonize" ]; then
             _devenv_pause_container ${_target}
-        else
+        elif [ "true" != "$_daemonize" ]; then
             echo "Running '$_target' as a daemon"
         fi
     fi
@@ -490,6 +539,15 @@ function _devenv_is_daemonized {
     daemonize=$(docker inspect -f "{{json .Config.Labels.daemonize }}" ${container_name}${CONTAINER_SUFFIX})
     daemonize=${daemonize/\"/}
     echo ${daemonize%\"}
+}
+
+# Get the scratch label from an existing container
+function _devenv_is_scratch {
+    local container_name scratch
+    container_name=${1}
+    scratch=$(docker inspect -f "{{json .Config.Labels.scratch }}" ${container_name}${CONTAINER_SUFFIX})
+    scratch=${scratch/\"/}
+    echo ${scratch%\"}
 }
 
 # Attach to a dev environment
@@ -954,21 +1012,22 @@ function _devenv_error_nesting_containers {
 ")
 
     memes+=("
-    ░░░░▄▄▄▄▀▀▀▀▀▀▀▀▄▄▄▄▄▄
-    ░░░░█░░░░▒▒▒▒▒▒▒▒▒▒▒▒░░▀▀▄
-    ░░░█░░░▒▒▒▒▒▒░░░░░░░░▒▒▒░░█
-    ░░█░░░░░░▄██▀▄▄░░░░░▄▄▄░░░█
-    ░▀▒▄▄▄▒░█▀▀▀▀▄▄█░░░██▄▄█░░░█
-    █▒█▒▄░▀▄▄▄▀░░░░░░░░█░░░▒▒▒▒▒█
-    █▒█░█▀▄▄░░░░░█▀░░░░▀▄░░▄▀▀▀▄▒█
-    ░█▀▄░█▄░█▀▄▄░▀░▀▀░▄▄▀░░░░█░░█
-    ░░█░░▀▄▀█▄▄░█▀▀▀▄▄▄▄▀▀█▀██░█
-    ░░░█░░██░░▀█▄▄▄█▄▄█▄████░█
-    ░░░░█░░░▀▀▄░█░░░█░███████░█
-    ░░░░░▀▄░░░▀▀▄▄▄█▄█▄█▄█▄▀░░█
-    ░░░░░░░▀▄▄░▒▒▒▒░░░░░░░░░░█
-    ░░░░░░░░░░▀▀▄▄░▒▒▒▒▒▒▒▒▒▒░█
-    ░░░░░░░░░░░░░░▀▄▄▄▄▄░░░░░█
+    ░░░░▄▄▄▄▀▀▀▀▀▀▀▀▄▄▄▄▄▄░░░░░░░░░
+    ░░░░█░░░░▒▒▒▒▒▒▒▒▒▒▒▒░░▀▀▄░░░░░
+    ░░░█░░░▒▒▒▒▒▒░░░░░░░░▒▒▒░░█░░░░
+    ░░█░░░░░░▄██▀▄▄░░░░░▄▄▄░░░█░░░░
+    ░▀▒▄▄▄▒░█▀▀▀▀▄▄█░░░██▄▄█░░░█░░░
+    █▒█▒▄░▀▄▄▄▀░░░░░░░░█░░░▒▒▒▒▒█░░
+    █▒█░█▀▄▄░░░░░█▀░░░░▀▄░░▄▀▀▀▄▒█░
+    ░█▀▄░█▄░█▀▄▄░▀░▀▀░▄▄▀░░░░█░░█░░
+    ░░█░░▀▄▀█▄▄░█▀▀▀▄▄▄▄▀▀█▀██░█░░░
+    ░░░█░░██░░▀█▄▄▄█▄▄█▄████░█░░░░░
+    ░░░░█░░░▀▀▄░█░░░█░███████░█░░░░
+    ░░░░░▀▄░░░▀▀▄▄▄█▄█▄█▄█▄▀░░█░░░░
+    ░░░░░░░▀▄▄░▒▒▒▒░░░░░░░░░░█░░░░░
+    ░░░░░░░░░░▀▀▄▄░▒▒▒▒▒▒▒▒▒▒░█░░░░
+    ░░░░░░░░░░░░░░▀▄▄▄▄▄░░░░░█░░░░░
+    ░░░░░░░░░░░░░░░░░░░░▀▀▀▀▀▀░░░░░
 ")
 
     memes+=("
@@ -1089,6 +1148,7 @@ function _devenv_error_nesting_containers {
 _devenv_path=""
 _devenv_target=""
 _devenv_daemonize="false"
+_devenv_scratch="false"
 _devenv_ctags_excludes=()
 _devenv_tmux_prefix='-'
 _devenv_additional_volumes=()
@@ -1290,18 +1350,40 @@ while :; do
                 _devenv_show_usage
             fi
             ;;
+        scratch)
+            _devenv_command=scratch
+            _devenv_scratch="true"
+            if [ "" == "$_devenv_target" ]; then
+                _devenv_target=$2
+                shift
+            fi
+            ;;
         self-update)
             _devenv_command=$1
             _devenv_target='n/a'
            ;;
-        start|unpause)
-            _devenv_command='start'
+        unpause)
+            _devenv_command='unpause'
             if [ "" == "$_devenv_target" ]; then
                 _devenv_target=$2
                 shift
             fi
             ;;
         stop|pause)
+            _devenv_command='pause'
+            if [ "" == "$_devenv_target" ]; then
+                _devenv_target=$2
+                shift
+            fi
+            ;;
+        start)
+            _devenv_command='start'
+            if [ "" == "$_devenv_target" ]; then
+                _devenv_target=$2
+                shift
+            fi
+            ;;
+        stop)
             _devenv_command='stop'
             if [ "" == "$_devenv_target" ]; then
                 _devenv_target=$2
@@ -1380,6 +1462,9 @@ fi
 if [ "" == "${_devenv_daemonize}" ]; then
     _devenv_daemonize='-'
 fi
+if [ "" == "${_devenv_scratch}" ]; then
+    _devenv_scratch='-'
+fi
 
 _devenv_ctags_excludes=${_devenv_ctags_excludes[@]}
 _devenv_ctags_excludes=$(echo $_devenv_ctags_excludes | sed "s/ /,/g")
@@ -1417,6 +1502,7 @@ if [ "attach" == "${_devenv_command}" ]; then
         _devenv_unpause_container ${_devenv_container_name}
     fi
     _devenv_attach ${_devenv_container_name}
+    _paused=$(_devenv_is_paused ${_devenv_container_name})
     if [ "true" == "$_paused" ] && [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
         _devenv_pause_container ${_devenv_container_name}
     fi
@@ -1442,7 +1528,7 @@ elif [ "build-tags" == "${_devenv_command}" ]; then
 elif [ "init" == "${_devenv_command}" ]; then
     if [ "true" == "${_devenv_target_exists}" ] && [ "true" == "$(_devenv_is_exited ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_exited
-    elif [ "true" == "${_devenv_target_exists}" ] && [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+    elif [ "true" == "${_devenv_target_exists}" ] && [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ] && [ "false" == "$(_devenv_is_scratch ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_stopped
     elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
         _devenv_error_target_exists_running
@@ -1483,21 +1569,54 @@ elif [ "rename" == "${_devenv_command}" ]; then
     _devenv_rename_container ${_devenv_container_name} ${_devenv_secondary_command}
 
 
+# Initiate a scratch environment
+elif [ "scratch" == "${_devenv_command}" ]; then
+    _devenv_container_name="scratch-$$"
+    if [ "true" == "${_devenv_target_exists}" ] && [ "true" == "$(_devenv_is_exited ${_devenv_container_name})" ]; then
+        _devenv_error_target_exists_exited
+    elif [ "true" == "${_devenv_target_exists}" ] && [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+        _devenv_error_target_exists_stopped
+    elif [ "true" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+        _devenv_error_target_exists_running
+    fi
+
+    # scratch containers return a temporary name
+    _devenv_create_container ${_devenv_container_name} ${_devenv_project_path} ${_tmux_conf_path} ${_vimrc_conf_path} ${_devenv_daemonize} ${_devenv_ctags_excludes[@]} ${_devenv_tmux_prefix} "${_devenv_additional_volumes}" "${_devenv_additional_networks}" ${_devenv_scratch}
+    if [ "false" == "$(_devenv_is_running ${_devenv_container_name})" ]; then
+        _devenv_error_target_not_running $_devenv_container_name
+    fi
+    _paused=$(_devenv_is_paused ${_devenv_container_name})
+    if [ "true" == "$_paused" ]; then
+        _devenv_unpause_container ${_devenv_container_name}
+    fi
+    _devenv_attach ${_devenv_container_name}
+    _paused=$(_devenv_is_paused ${_devenv_container_name})
+    if [ "true" != "$(_devenv_is_daemonized $_devenv_container_name)" ]; then
+        _devenv_kill_container ${_devenv_container_name}
+    else
+        echo "scratch container '${_devenv_container_name} has been daemonized and must be cleaned up manually."
+    fi
+
 # Update to the latest image
 # @todo Update this script from github too...
 elif [ "self-update" == "${_devenv_command}" ]; then
     _devenv_self_update
 
-
 # Unpause a paused container
-elif [ "start" == "${_devenv_command}" ]; then
+elif [ "unpause" == "${_devenv_command}" ]; then
     _devenv_unpause_container ${_devenv_container_name}
 
-
 # Pause a running container
-elif [ "stop" == "${_devenv_command}" ]; then
+elif [ "pause" == "${_devenv_command}" ]; then
     _devenv_pause_container ${_devenv_container_name}
 
+# Start a stopped container
+elif [ "start" == "${_devenv_command}" ]; then
+    _devenv_start_container ${_devenv_container_name}
+
+# Stop a running container
+elif [ "stop" == "${_devenv_command}" ]; then
+    _devenv_stop_container ${_devenv_container_name}
 
 # Unknown command
 else
