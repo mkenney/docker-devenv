@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ##############################################################################
 # The MIT License (MIT)
@@ -427,7 +427,8 @@ function _devenv_create_container {
             path_label=
             scratch_env_var="-e __IS_SCRATCH=true"
             scratch_label="--label scratch=${_is_scratch}"
-            src_volume_mount=
+            mkdir -p /tmp/${_target}
+            src_volume_mount="-v /tmp/${_target}:/src:rw"
         fi
         docker_run_args="${docker_run_args} ${path_label} ${src_volume_mount} ${scratch_env_var} ${scratch_label}"
 

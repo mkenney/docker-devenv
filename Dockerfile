@@ -198,10 +198,7 @@ RUN set -x \
     && dpkg -i oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb \
     && mkdir -p /oracle/product \
     && ln -s $ORACLE_HOME /oracle/product/latest \
-    && mkdir -p /oracle/product/latest/network/admin \
-    && rm -f /oracle-instantclient11.2-basic_11.2.0.3.0-2_amd64.deb \
-    && rm -f /oracle-instantclient11.2-devel_11.2.0.3.0-2_amd64.deb \
-    && rm -f /oracle-instantclient11.2-sqlplus_11.2.0.3.0-2_amd64.deb
+    && mkdir -p /oracle/product/latest/network/admin
 
 # Kubernetes support
 RUN set -x \
@@ -225,9 +222,9 @@ RUN mkdir -p /usr/local/powerline \
 # Fetch/configure various resources
 RUN set -x \
     && mkdir -p /usr/local/src \
-    && git clone https://github.com/bdlm/.bdlm.git         /usr/local/src/github.com/bdlm/.bdlm \
+    && git clone https://github.com/bdlm/.bdlm.git /usr/local/src/github.com/bdlm/.bdlm \
     && sed -i'' 's/C-space/M-space/g' /usr/local/src/github.com/bdlm/.bdlm/tmux/.tmux.conf
-COPY assets/home/dev/.bdlm/prompt/prompt.sh /usr/local/src/github.com/bdlm/.bdlm/prompt/prompt.sh
+COPY assets/usr/local/src/github.com/bdlm/.bdlm/prompt/prompt.sh /usr/local/src/github.com/bdlm/.bdlm/prompt/prompt.sh
 
 # Configure user shells
 #COPY assets/etc/profile.d/bdlm /etc/profile.d/bdlm

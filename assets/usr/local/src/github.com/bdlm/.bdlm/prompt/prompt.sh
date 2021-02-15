@@ -4,7 +4,7 @@
 
 # Load color definitions
 if [ "1" != "$__BDLM_CLR" ]; then
-    source ~/.bdlm/bash/color
+    source ~/.bdlm/color/color.sh
 fi
 
 # state tracking
@@ -36,9 +36,7 @@ kp() {
 #fi
 
 __prompt_command() {
-    # always first to capture the last shell error
-    local last_status=$?
-
+    local last_status=$? # always first to capture the last shell error
     local -a ps1_lines
 
     # detect directory changes
@@ -93,7 +91,6 @@ __prompt_command() {
     fi
     export __BDLM_PROMPT_SSH
 
-
     # error state
     cursorprompt="→ "
     errorstate=
@@ -102,7 +99,7 @@ __prompt_command() {
         errorstate="(\[${__BDLM_CLR_FG_124}\]$last_status\[${__BDLM_CLR_RST_ALL}\]) "
     fi
 
-    # Line 1 - host info, current path
+    # 3-line status prompt
     ps1_lines+="\n┌ ${__BDLM_PROMPT_USER}${__BDLM_PROMPT_SSH}${__BDLM_PROMPT_TOOLS}"
     ps1_lines+="\n│ \[${__BDLM_CLR_FG_115}\]\t\[${__BDLM_CLR_RST_ALL}\] - ${__BDLM_CLR_FG_250}${__BDLM_PROMPT_PWD}${__BDLM_CLR_RST_ALL}"
     ps1_lines+="\n└ ${errorstate}${cursorprompt}"
