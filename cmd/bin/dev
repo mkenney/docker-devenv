@@ -27,8 +27,8 @@
 COMMAND=$(basename ${0})
 COMMAND_PATH=$0
 CONTAINER_SUFFIX=.devenv
-#CONTAINER_IMAGE='ghcr.io/bdlm/bdlmrc:latest'
-CONTAINER_IMAGE='bdlm/dev:latest'
+CONTAINER_IMAGE='ghcr.io/bdlm/dev:scratch'
+#CONTAINER_IMAGE='bdlm/dev:latest'
 OS=$(uname)
 PAGER="less --quit-if-one-screen --ignore-case --status-column --quit-on-intr --LONG-PROMPT --silent --tilde --RAW-CONTROL-CHARS"
 if [ "Linux" = "$OS" ]; then

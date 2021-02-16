@@ -14,7 +14,7 @@ DEFAULT_PATH=/usr/local/bin
 __BDEV_INSTALLER_URL=https://raw.githubusercontent.com/bdlm/dev/master/install.sh
 __BDEV_INSTALLER_LOCAL=/tmp/dev-installer.sh
 
-__BDEV_EXECUTABLE_URL=https://raw.githubusercontent.com/bdlm/dev/master/bin/dev
+__BDEV_EXECUTABLE_URL=https://raw.githubusercontent.com/bdlm/dev/master/cmd/bin/dev
 __BDEV_EXECUTABLE_TMPFILE=/tmp/dev.tmp
 __BDEV_EXECUTABLE_NAME=dev
 __BDEV_EXECUTABLE_PATH=
