@@ -23,6 +23,7 @@ jobs:
                     registry: ghcr.io
                     username: ${{ github.repository_owner }}
                     password: ${{ secrets.GITHUB_TOKEN }}
+            # base
             -   name: Build base image
                 uses: docker/build-push-action@v2
                 with:
@@ -33,6 +34,7 @@ jobs:
                         ghcr.io/bdlm/dev:latest
                         ghcr.io/bdlm/dev:scratch
                         ghcr.io/bdlm/dev:base
+            # golang
             -   name: Build golang image
                 uses: docker/build-push-action@v2
                 with:
@@ -41,6 +43,7 @@ jobs:
                     push: ${{ github.event_name != 'pull_request' }}
                     tags: |
                         ghcr.io/bdlm/dev:go
+            # node
             -   name: Build node image
                 uses: docker/build-push-action@v2
                 with:
@@ -49,6 +52,7 @@ jobs:
                     push: ${{ github.event_name != 'pull_request' }}
                     tags: |
                         ghcr.io/bdlm/dev:node
+            # php
             -   name: Build php image
                 uses: docker/build-push-action@v2
                 with:
@@ -57,6 +61,7 @@ jobs:
                     push: ${{ github.event_name != 'pull_request' }}
                     tags: |
                         ghcr.io/bdlm/dev:php
+            # python
             -   name: Build python image
                 uses: docker/build-push-action@v2
                 with:
@@ -65,6 +70,7 @@ jobs:
                     push: ${{ github.event_name != 'pull_request' }}
                     tags: |
                         ghcr.io/bdlm/dev:python
+            # typescript
             -   name: Build typescript image
                 uses: docker/build-push-action@v2
                 with:
