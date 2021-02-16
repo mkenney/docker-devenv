@@ -29,9 +29,6 @@ LABEL org.label-schema.description="This service provides a flexible base image 
     org.label-schema.vcs-url="https://github.com/bdlm/dev" \
     org.label-schema.vendor="bdlm@webbedlam.com"
 
-# Load support scripts and resources
-COPY bin/dev /usr/local/bin/dev
-
 # Global configurations
 WORKDIR /tmp
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -296,10 +293,12 @@ RUN echo "set tags=/src/tags.devenv,./tags.devenv"             | tee /root/.vimr
 # ~ fin ~
 ##############################################################################
 
+# load support scripts and resources
 # generate the locate database
 # cleanup apt-get cache
 # add devenv support scripts
 # remove repo resources
+COPY bin/dev /usr/local/bin/dev
 COPY assets/attach.sh /attach.sh
 COPY assets/build-tags.sh /build-tags.sh
 COPY assets/init.sh /init.sh
