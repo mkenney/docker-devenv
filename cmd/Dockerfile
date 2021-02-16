@@ -57,8 +57,7 @@ ENV UTF8_LOCALE=en_US \
     LANGUAGE=en_US.UTF-8
 
 # Upgrades
-RUN cd / \
-    && mkdir -p /src \
+RUN mkdir -p /src \
     && apt-get -qq update \
     && apt-get install -qqy apt-utils \
     && apt-get -qq upgrade \
@@ -68,8 +67,7 @@ RUN cd / \
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv 0xE0C56BD4 \
     && echo "deb http://repo.yandex.ru/clickhouse/deb/stable/ main/" | tee /etc/apt/sources.list.d/clickhouse.list \
     && apt-get update
-RUN set -x \
-    && apt-get install -qqy \
+RUN apt-get install -qqy \
         autogen \
         automake \
         bash-completion \
@@ -124,9 +122,10 @@ RUN set -x \
         telnet \
         unzip \
         vim-nox \
-        wget \
-    # Golang
-    && apt-get remove golang \
+        wget
+
+# Golang
+RUN apt-get remove golang \
     && apt-get autoremove \
     && wget -c https://golang.org/dl/go1.15.8.linux-amd64.tar.gz \
     && shasum -a 256 go1.15.8.linux-amd64.tar.gz \
@@ -134,7 +133,7 @@ RUN set -x \
     && ln -s /usr/local/go/bin/go /usr/local/bin/go \
     && ln -s /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 
-# npm and node tools
+# Node and Npm tools
 RUN npm install -g \
     bower \
     grunt-cli \
@@ -142,7 +141,7 @@ RUN npm install -g \
     markdown-styles \
     typescript
 
-# Latest vim from source
+# Latest Vim from source
 RUN git clone https://github.com/vim/vim \
     && cd vim \
     && make distclean \
@@ -162,10 +161,9 @@ RUN git clone https://github.com/vim/vim \
     && update-alternatives --install /usr/bin/editor editor /usr/local/bin/vim 1 \
     && update-alternatives --set editor /usr/local/bin/vim \
     && update-alternatives --install /usr/bin/vi vi /usr/local/bin/vim 1 \
-    && update-alternatives --set vi /usr/local/bin/vim \
-    && vim --version
+    && update-alternatives --set vi /usr/local/bin/vim
 
-# Current tmux from source
+# Current Tmux from source
 RUN curl -OL https://github.com/tmux/tmux/releases/download/2.4/tmux-2.4.tar.gz \
     && tar xf tmux-2.4.tar.gz \
     && cd tmux-2.4 \
@@ -176,7 +174,7 @@ RUN curl -OL https://github.com/tmux/tmux/releases/download/2.4/tmux-2.4.tar.gz 
     && rm -f tmux-2.4.tar.gz \
     && rm -rf tmux-2.4
 
-# Oracle instantclient - don't poke it
+# Oracle instantclient - don't poke it...
 ENV ORACLE_HOME=/usr/lib/oracle/11.2/client64
 ENV LD_LIBRARY_PATH=${ORACLE_HOME}/lib
 ENV TNS_ADMIN=/home/dev/.oracle/network/admin
@@ -223,36 +221,33 @@ RUN set -x \
 COPY assets/usr/local/src/github.com/bdlm/.bdlm/prompt/prompt.sh /usr/local/src/github.com/bdlm/.bdlm/prompt/prompt.sh
 
 # Configure user shells
-#COPY assets/etc/profile.d/bdlm /etc/profile.d/bdlm
-#COPY assets/etc/profile.d/bdlm.sh /etc/profile.d/bdlm.sh
+# do this in the user home directory, most scripts use either $HOME or ~ in some way.
 RUN set -x \
-    #
-    && cp -R /usr/local/src/github.com/bdlm/.bdlm /root/.bdlm \
-    # initialize shell scripts
+    # initialize bdlm shell configurations
+    && ln -s /usr/local/src/github.com/bdlm/.bdlm /root/.bdlm \
     && /root/.bdlm/init.sh --force \
-    # YouCompleteMe support
+    # compile YouCompleteMe Vim plugin
     && cd /root/.vim/bundle/YouCompleteMe \
     && ./install.py \
     && cd /root/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/tern_runtime \
-    && npm install --production \
-    # YouCompleteMe support
-    && rsync -a /root/.bdlm/ /usr/local/src/github.com/bdlm/.bdlm/
+    && npm install --production
 
 # Configure user account
 RUN set -x \
     # Add a dev user
     && groupadd dev \
     && useradd dev -s /bin/bash -m -g dev -G root \
+    # password
     && echo "dev:password" | chpasswd \
+    # sudo
     && echo "dev ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers \
+    # golang
     && mkdir -p /home/dev/go \
-    # .dotfiles
-    && rsync -a /root/.bdlm/ /home/dev/.bdlm/ \
-    && chown -R dev:dev /home/dev/.bdlm \
-    && cd /home/dev \
-    && sudo -u dev ./.bdlm/init.sh --force \
     # docker
-    && usermod -aG docker dev
+    && usermod -aG docker dev \
+    # shell configuration
+    && ln -s /usr/local/src/github.com/bdlm/.bdlm /home/dev/.bdlm \
+    && sudo -u dev /home/dev/.bdlm/init.sh --force
 
 # per-user pip installs
 RUN set -x \
