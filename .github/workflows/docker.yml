@@ -30,7 +30,7 @@ jobs:
                     context: ./cmd
                     file: ./cmd/Dockerfile
                     push: ${{ github.event_name != 'pull_request' }}
-                    no-cache: true
+                    #no-cache: true
                     tags: |
                         ghcr.io/bdlm/dev:latest
                         ghcr.io/bdlm/dev:scratch
