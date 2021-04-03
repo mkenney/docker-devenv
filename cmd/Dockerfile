@@ -66,7 +66,8 @@ RUN mkdir -p /src \
 # Main apt-get installs
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv 0xE0C56BD4 \
     && echo "deb http://repo.yandex.ru/clickhouse/deb/stable/ main/" | tee /etc/apt/sources.list.d/clickhouse.list \
-    && apt-get update
+    && apt-get update \
+    && groupadd docker -g 901 -o
 RUN apt-get install -qqy \
         autogen \
         automake \
@@ -123,6 +124,12 @@ RUN apt-get install -qqy \
         unzip \
         vim-nox \
         wget
+
+# docker-compose
+RUN curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
+    && chmod +x /usr/local/bin/docker-compose \
+    && rm -f /usr/bin/docker-compose \
+    && ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 # Golang
 RUN apt-get remove golang \
@@ -207,6 +214,13 @@ RUN set -x \
     && mv terraform /usr/local/bin/terraform \
     && chmod 0755 /usr/local/bin/terraform \
     && rm -f terraform_0.14.6_linux_amd64.zip
+
+# redis
+RUN wget http://download.redis.io/redis-stable.tar.gz \
+    && tar xvzf redis-stable.tar.gz \
+    && cd redis-stable \
+    && make \
+    && make install
 
 # Powerline config
 COPY assets/usr/share/powerline/ /usr/share/powerline/

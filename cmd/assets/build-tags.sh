@@ -17,4 +17,6 @@ if [ "" != "$CTAGS_EXCLUDES" ]; then # defined by `docker run`
 fi
 
 # --fields=+l for Valloric/YouCompleteMe support
-ctags-exuberant --fields=+l --exclude=.git --exclude=.vim --exclude=node_modules --exclude=vendor $ctags_flags -f /src/tags.devenv --append -R $PROJECT_PATH > /dev/null 2>&1
+if [ ! -f /src/.bdlmdev.tags ] || [ "force" = "$1" ]; then
+    ctags-exuberant --fields=+l --exclude=.git --exclude=.vim --exclude=node_modules --exclude=vendor $ctags_flags -f /src/.bdlmdev.tags --append -R $PROJECT_PATH > /dev/null 2>&1
+fi

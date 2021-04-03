@@ -1,7 +1,7 @@
 version: '3.5'
 services:
     devenv:
-        image: ghcr.io/bdlm/dev:scratch
+        image: ghcr.io/bdlm/dev:base
         build:
             context: .
             dockerfile: ./Dockerfile
